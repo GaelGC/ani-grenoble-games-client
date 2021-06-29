@@ -1,0 +1,22 @@
+{
+  "name": "ani-grenoble-games-client",
+  "version": "0.1.0",
+  "description": "Client for the Ani Grenoble games",
+  "scripts": {
+    "build": "tsc --build src/app && copyfiles -f src/user/index.html app_dist/user/",
+    "run": "npm run build && electron app_dist/main.js"
+  },
+  "keywords": [
+    "Ani-Grenoble",
+    "Ani-Games",
+    "anime",
+    "games"
+  ],
+  "author": "Gael GC",
+  "license": "ISC",
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "electron": "^13.1.4",
+    "typescript": "^4.3.4"
+  }
+}
