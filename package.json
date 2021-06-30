@@ -4,7 +4,7 @@
   "description": "Client for the Ani Grenoble games",
   "scripts": {
     "build": "tsc --build src/app && tsc --build src/user && tsc --build src/admin && copyfiles -f src/user/*.html app_dist/user/ && copyfiles -f src/admin/*.html app_dist/admin/",
-    "run": "npm run build && electron app_dist/main.js"
+    "run": "npm run build && electron --no-user-gesture-required app_dist/main.js"
   },
   "keywords": [
     "Ani-Grenoble",
@@ -18,5 +18,6 @@
     "copyfiles": "^2.4.1",
     "electron": "^13.1.4",
     "typescript": "^4.3.4"
-  }
+  },
+  "dependencies": {}
 }
