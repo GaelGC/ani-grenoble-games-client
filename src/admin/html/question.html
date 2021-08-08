@@ -5,6 +5,18 @@
         <br/>
     </template>
 </div>
+<hr>
 <div>
-    <input type="number" id="question-score">
+    Score: <input type="number" id="question-score">
+</div>
+<div>
+    Winners:
+    <div id="winners-selection-div">
+        <template id="winners-selection-template">
+            <div id="winners-selection-template-div">
+                <button id="winners-selection-template-name"></button>
+            </div>
+        </template>
+    </div>
+    <button onclick="submit_winners(); this.disabled = true;">Confirmer</button>
 </div>
