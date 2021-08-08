@@ -61,3 +61,10 @@ app.on('ready', async () => {
 ipcMain.on('admin_debug_panel', (_, req) => {
     debug(ctx, req);
 });
+
+ipcMain.on('add_player', (_, name) => {
+    ctx.state.players.push({
+        name: name,
+        score: 0
+    });
+});

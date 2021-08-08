@@ -1,4 +1,5 @@
 import { BlindTestQuestion, parse } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { GameState } from 'ani-grenoble-games-format/dist/GameState'
 import { ipcRenderer } from 'electron';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

@@ -1,4 +1,5 @@
-import { BlindTestQuestion, parse } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { BlindTestQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { GameState } from 'ani-grenoble-games-format/dist/GameState'
 import { BrowserWindow, ipcMain, ipcRenderer } from 'electron';
 import path = require("path");
 
@@ -8,6 +9,9 @@ export class context {
     constructor(user_window: BrowserWindow, admin_window: BrowserWindow) {
         this.user_window = user_window;
         this.admin_window = admin_window;
+        this.state = {
+            players: []
+        };
         this.give_hint_listener = (_, hint) => {
             console.log(hint);
             this.user_window.webContents.send('hint', hint);
@@ -26,8 +30,11 @@ export class context {
         await this.admin_window.loadURL(adminHTML);
         this.user_window.webContents.send('question-data', q);
         this.admin_window.webContents.send('question-data', q);
+        this.user_window.webContents.send('game-state-data', this.state);
+        this.admin_window.webContents.send('game-state-data', this.state);
     }
     user_window: BrowserWindow;
     admin_window: BrowserWindow;
+    state: GameState;
     give_hint_listener: (event: any, hint: string) => void;
 }
