@@ -1,16 +1,24 @@
 <!DOCTYPE html>
-  <head>
-    <title>Admin</title>
-  </head>
-  <body onload="load_main()">
-    <script type="text/javascript">var exports = {};</script>
-    <script type="text/javascript" src="/js/main.js"></script>
-    <a href="/html/debug.html">Debug panel</a>
-    <form>
-      <label for="new-team-name">Nom de l'équipe :</label>
-      <input id="new-team-name" name="name">
-      <input type="submit" id="add-team-button" value="Rajouter">
-    </form>
-    <div id="teams"></div>
-  </body>
+<head>
+  <title>Admin</title>
+</head>
+<body onload="load_main()">
+  <script type="text/javascript">var exports = {};</script>
+  <script type="text/javascript" src="/js/main.js"></script>
+  <a href="/html/debug.html">Debug panel</a>
+  <form>
+    <label for="new-team-name">Nom de l'équipe :</label>
+    <input id="new-team-name" name="name">
+    <input type="submit" id="add-team-button" value="Rajouter">
+  </form>
+  <div id="teams">
+    <template id="team-template">
+      <div id="team-template-div">
+        <div id="team-template-name"></div>
+        <button id="team-template-remove">✖</button>
+        <br/>
+      </div>
+    </template>
+  </div>
+</body>
 </html>

@@ -68,3 +68,7 @@ ipcMain.on('add_player', (_, name) => {
         score: 0
     });
 });
+
+ipcMain.on('del_player', (_, name) => {
+    ctx.state.players = ctx.state.players.filter(x => x.name != name);
+});
