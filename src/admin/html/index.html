@@ -11,8 +11,8 @@
   <button href="/html/debug.html" onclick="debug();">Debug panel</button>
   <form>
     <label for="new-team-name">Nom de l'équipe :</label>
-    <input id="new-team-name" name="name">
-    <input type="submit" id="add-team-button" value="Rajouter">
+    <input id="new-team-name" name="name" oninput="onTeamNameFieldChange(this.value);">
+    <input type="submit" id="add-team-button" value="Rajouter" disabled="true" onclick="onAddTeamButtonClick();">
   </form>
   <div id="teams">
     <template id="team-template">
