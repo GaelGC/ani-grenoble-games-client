@@ -3,6 +3,16 @@ import { ipcRenderer } from 'electron'
 let teamCounter = 0
 const names: string[] = []
 
+function onTeamNumberChange () {
+    // If there are not teams, we should disable the game buttons.
+    // eslint-disable-next-line no-undef
+    const buttons = document.getElementsByClassName('game-button') as HTMLCollectionOf<HTMLButtonElement>
+    for (let buttonIdx = 0; buttonIdx < buttons.length; buttonIdx++) {
+        const button = buttons.item(buttonIdx)!
+        button.disabled = names.length === 0
+    }
+}
+
 export function onAddTeamButtonClick () {
     const nameField = (document.getElementById('new-team-name')! as HTMLInputElement)
     const name = nameField.value
@@ -18,10 +28,12 @@ export function onAddTeamButtonClick () {
         ipcRenderer.send('del_player', name)
         names.splice(names.indexOf(name), 1)
         onTeamNameFieldChange(nameField.value)
+        onTeamNumberChange()
     }
     names.push(name)
     teamsDiv!.appendChild(clone)
     ipcRenderer.send('add_player', name)
+    onTeamNumberChange()
 
     // Disallow sending the same input twice.
     const button = document.getElementById('add-team-button')! as HTMLButtonElement
