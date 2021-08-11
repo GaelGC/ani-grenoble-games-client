@@ -80,6 +80,7 @@ export class Context {
             const url = 'file:///html/index.html'
             await window.loadURL(url)
         }
+        await this.mainPageChange.waitForElem()
 
         ipcMain.removeListener('add_player', addPlayerListener)
         ipcMain.removeListener('del_player', delPlayerListener)
