@@ -1,75 +1,142 @@
-import { BlindTestQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { BlindTestQuestion, Question } from 'ani-grenoble-games-format/dist/QuestionTypes'
 import { GameState, QuestionWinners } from 'ani-grenoble-games-format/dist/GameState'
-import { BrowserWindow, ipcMain, ipcRenderer } from 'electron';
-import path = require("path");
+import { BrowserWindow, ipcMain, IpcMainEvent } from 'electron'
+import { debug } from './debug'
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-class Semaphore {
-    constructor(name: string) {
-        ipcMain.on(name, () => {
-            this.count++;
-        });
-    }
-    async wait() {
-        while (this.count == 0) {
-            await delay(1);
-        }
-    }
-    count = 0;
-};
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 class Queue<T> {
-    constructor(name: string) {
-        ipcMain.on(name, (_, elem) => {
-            this.elems.push(elem);
-        });
-    }
-    async get(): Promise<T> {
-        while (this.elems.length == 0) {
-            await delay(1);
+    handler: (_: IpcMainEvent, elem: T) => void;
+    name: string;
+    constructor (name: string) {
+        this.name = name
+        this.handler = (_, elem) => {
+            this.elems.push(elem)
         }
-        const elem = this.elems[0];
-        this.elems.splice(1);
-        return elem;
+        ipcMain.on(name, this.handler)
     }
-    elems = new Array<T>();
+
+    destroy () {
+        ipcMain.removeListener(this.name, this.handler)
+    }
+
+    peek (): T {
+        const elem = this.elems[0]
+        return elem
+    }
+
+    async get (): Promise<T> {
+        await this.waitForElem()
+        const elem = this.peek()
+        this.elems.splice(0, 1)
+        return elem
+    }
+
+    async waitForElem (): Promise<void> {
+        while (this.elems.length === 0) {
+            await delay(1)
+        }
+    }
+
+    elems: Array<T> = [];
 };
 
-export class context {
-    constructor(user_window: BrowserWindow, admin_window: BrowserWindow) {
-        this.user_window = user_window;
-        this.admin_window = admin_window;
+class Semaphore extends Queue<void> {
+    async wait () {
+        return this.get()
+    }
+}
+
+export class Context {
+    constructor (userWindow: BrowserWindow, adminWindow: BrowserWindow) {
+        this.userWindow = userWindow
+        this.adminWindow = adminWindow
         this.state = {
             players: []
-        };
-        this.give_hint_listener = (_, hint) => {
-            console.log(hint);
-            this.user_window.webContents.send('hint', hint);
-        };
-        ipcMain.on('give-hint', this.give_hint_listener);
+        }
+        this.giveHintListener = (_, hint) => {
+            console.log(hint)
+            this.userWindow.webContents.send('hint', hint)
+        }
+        ipcMain.on('give-hint', this.giveHintListener)
     }
 
-    destroy() {
-        ipcMain.removeListener('give-hint', this.give_hint_listener)
+    async setupTeams () {
+        const addPlayerListener = (_: IpcMainEvent, name: string) => {
+            this.state.players.push({
+                name: name,
+                score: 0
+            })
+        }
+
+        const delPlayerListener = (_: IpcMainEvent, name: string) => {
+            this.state.players = this.state.players.filter(x => x.name !== name)
+        }
+
+        ipcMain.on('add_player', addPlayerListener)
+        ipcMain.on('del_player', delPlayerListener)
+
+        for (const window of [this.userWindow, this.adminWindow]) {
+            const url = 'file:///html/index.html'
+            await window.loadURL(url)
+        }
+
+        ipcMain.removeListener('add_player', addPlayerListener)
+        ipcMain.removeListener('del_player', delPlayerListener)
     }
 
-    async start_blindtest_question(q: BlindTestQuestion) {
-        const userHTML = 'file:///html/blindtest.html';
-        const adminHTML = 'file:///html/blindtest.html';
-        await this.user_window.loadURL(userHTML);
-        await this.admin_window.loadURL(adminHTML);
-        this.user_window.webContents.send('question-data', q);
-        this.admin_window.webContents.send('question-data', q);
-        await this.adminQuestionWaiter.wait();
-        this.user_window.webContents.send('game-state-data', this.state);
-        this.admin_window.webContents.send('game-state-data', this.state);
-        const winners = await this.winnersQueue.get();
+    async run () {
+        await this.setupTeams()
+        await this.runMain()
     }
-    user_window: BrowserWindow;
-    admin_window: BrowserWindow;
+
+    async runMain () {
+        while (true) {
+            const page = await this.mainPageChange.get()
+            if (page === 'debug') {
+                this.debug()
+            } else {
+                throw Error(`Invalid main page ${page} requested`)
+            }
+        }
+    }
+
+    async debug () {
+        const uri = 'file:///html/debug.html'
+        const debugPageQueue = new Queue<string>('debug-page-change')
+        while (true) {
+            this.adminWindow.loadURL(uri)
+            const page = await debugPageQueue.get()
+            await debug(this, page)
+        }
+    }
+
+    destroy () {
+        ipcMain.removeListener('give-hint', this.giveHintListener)
+    }
+
+    async startQuestion (q: Question, htmlPath: string): Promise<QuestionWinners> {
+        // eslint-disable-next-line node/no-path-concat
+        const uri = `file:///html/${htmlPath}`
+        await this.userWindow.loadURL(uri)
+        await this.adminWindow.loadURL(uri)
+        this.userWindow.webContents.send('question-data', q)
+        this.adminWindow.webContents.send('question-data', q)
+        await this.adminQuestionWaiter.wait()
+        this.userWindow.webContents.send('game-state-data', this.state)
+        this.adminWindow.webContents.send('game-state-data', this.state)
+        return this.winnersQueue.get()
+    }
+
+    async startBlindtestQuestion (q: BlindTestQuestion): Promise<QuestionWinners> {
+        return this.startQuestion(q, 'blindtest.html')
+    }
+
+    userWindow: BrowserWindow;
+    adminWindow: BrowserWindow;
     state: GameState;
-    adminQuestionWaiter = new Semaphore("admin_question_ready");
-    give_hint_listener: (event: any, hint: string) => void;
-    winnersQueue = new Queue<QuestionWinners>("admin-send-winners");
+    adminQuestionWaiter = new Semaphore('admin_question_ready');
+    giveHintListener: (event: any, hint: string) => void;
+    winnersQueue = new Queue<QuestionWinners>('admin-send-winners');
+    mainPageChange = new Queue<string>('main-menu');
 }

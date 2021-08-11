@@ -1,74 +1,47 @@
-import { app, BrowserWindow, ipcMain, protocol, session } from 'electron';
-import { debug } from './debug';
-import path = require("path");
-import { context } from './context';
-import { ProtocolRequest, ProtocolResponse } from 'electron/main';
+import { app, BrowserWindow, session, ProtocolResponse } from 'electron'
+import { Context } from './context'
 
-var ctx: context;
+let ctx: Context
 
 app.on('ready', async () => {
-    console.log('App is ready');
-    
+    console.log('App is ready')
+
     for (const partitionName of ['user', 'admin']) {
-        const partition = `persist:${partitionName}`;
-        const selectedSession = session.fromPartition(partition);
+        const partition = `persist:${partitionName}`
+        const selectedSession = session.fromPartition(partition)
         selectedSession.protocol.interceptFileProtocol('file', (request, callback) => {
-            console.log(request.url);
-            var url = request.url.substr(7);
+            console.log(request.url)
+            let url = request.url.substr(7)
             if (url.length !== 0 && url[0] === '/') {
-                url = request.url.substr(7);
+                url = request.url.substr(7)
+                // eslint-disable-next-line node/no-path-concat
                 url = `${__dirname}/${partitionName}/${url}`
             }
-            console.log(url);
-            callback({ path: url });
-        });
+            console.log(url)
+            const response: ProtocolResponse = { path: url }
+            callback(response)
+        })
         selectedSession.protocol.registerFileProtocol('question', (request, callback) => {
-            var url = request.url.replace('question://', '');
-            console.log(url);
-            callback({ path: url });
-        });
+            const url = request.url.replace('question://', '')
+            console.log(url)
+            const response: ProtocolResponse = { path: url }
+            callback(response)
+        })
     }
-    
-    const admin = new BrowserWindow({
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-            partition: 'persist:admin',
-        },
-        width: 600,
-        height: 400
-    });
-    
-    const user = new BrowserWindow({
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-            partition: 'persist:user',
-        },
-        width: 600,
-        height: 400
-    });
-    
-    const userHTML = 'file:///html/index.html';
-    const adminHTML = 'file:///html/index.html';
-    
-    await user.loadURL(userHTML);
-    await admin.loadURL(adminHTML);
-    ctx = new context(user, admin);
-});
 
-
-ipcMain.on('admin_debug_panel', (_, req) => {
-    debug(ctx, req);
-});
-
-ipcMain.on('add_player', (_, name) => {
-    ctx.state.players.push({
-        name: name,
-        score: 0
-    });
-});
-
-ipcMain.on('del_player', (_, name) => {
-    ctx.state.players = ctx.state.players.filter(x => x.name != name);
-});
+    const windows = new Map<string, BrowserWindow>()
+    for (const key of ['admin', 'user']) {
+        const window = new BrowserWindow({
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+                partition: `persist:${key}`
+            },
+            width: 600,
+            height: 400
+        })
+        windows.set(key, window)
+    }
+    ctx = new Context(windows.get('user')!, windows.get('admin')!)
+    await ctx.run()
+})

@@ -1,5 +1,5 @@
-import { app, ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron'
 
-function song() {
-    ipcRenderer.send('admin_debug_panel', 'song')
+export function song () {
+    ipcRenderer.send('debug-page-change', 'song')
 }

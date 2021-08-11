@@ -1,6 +1,4 @@
-import { app, ipcRenderer } from 'electron';
-import { BlindTestQuestion, parse } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { ipcRenderer } from 'electron'
 
-ipcRenderer.on('question-data', (_, q) => {
-    const question: BlindTestQuestion = q;
-});
+ipcRenderer.on('question-data', (_, q: unknown) => {
+})

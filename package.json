@@ -15,9 +15,16 @@
   "author": "Gael GC",
   "license": "ISC",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.29.1",
+    "@typescript-eslint/parser": "^4.29.1",
     "copyfiles": "^2.4.1",
     "electron": "^13.1.4",
-    "typescript": "^4.3.4"
+    "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.24.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "typescript": "^4.3.5"
   },
   "dependencies": {}
 }

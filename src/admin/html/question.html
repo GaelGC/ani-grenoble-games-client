@@ -1,22 +1,23 @@
+<!DOCTYPE html>
 <div id="answer"></div>
 <div id="hints">
-    <template id="hint-template">
-        <button id="hint-button"></button>
-        <br/>
+  <template id="hint-template">
+    <button id="hint-button"></button>
+    <br />
+  </template>
+</div>
+<hr />
+<div>
+  Score: <input type="number" id="question-score" />
+</div>
+<div>
+  Winners:
+  <div id="winners-selection-div">
+    <template id="winners-selection-template">
+      <div id="winners-selection-template-div">
+        <button id="winners-selection-template-name"></button>
+      </div>
     </template>
-</div>
-<hr>
-<div>
-    Score: <input type="number" id="question-score">
-</div>
-<div>
-    Winners:
-    <div id="winners-selection-div">
-        <template id="winners-selection-template">
-            <div id="winners-selection-template-div">
-                <button id="winners-selection-template-name"></button>
-            </div>
-        </template>
-    </div>
-    <button onclick="submit_winners(); this.disabled = true;">Confirmer</button>
+  </div>
+  <button onclick="submitWinners(); this.disabled = true;">Confirmer</button>
 </div>

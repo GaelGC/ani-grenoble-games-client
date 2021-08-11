@@ -1,3 +1,3 @@
-import { ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron'
 
-ipcRenderer.send('user_ready');
+ipcRenderer.send('user_ready')
