@@ -1,4 +1,4 @@
-import { BlindTestQuestion, Question } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { BlindTestQuestion, Question, QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
 import { GameState, QuestionWinners } from 'ani-grenoble-games-format/dist/GameState'
 import { BrowserWindow, ipcMain, IpcMainEvent } from 'electron'
 import { debug } from './debug'
@@ -130,6 +130,10 @@ export class Context {
 
     async startBlindtestQuestion (q: BlindTestQuestion): Promise<QuestionWinners> {
         return this.startQuestion(q, 'blindtest.html')
+    }
+
+    async startQuoteQuestion (q: QuoteQuestion): Promise<QuestionWinners> {
+        return this.startQuestion(q, 'quote.html')
     }
 
     userWindow: BrowserWindow;

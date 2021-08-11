@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { BlindTestQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { BlindTestQuestion, QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
 
 export async function debug (ctx: Context, req: string) {
     if (req === 'song') {
@@ -13,6 +13,18 @@ export async function debug (ctx: Context, req: string) {
         }
         console.log(question)
         await ctx.startBlindtestQuestion(question)
+    } else if (req === 'quote') {
+        const question: QuoteQuestion = {
+            audio: 'question://D:/440.mp3',
+            text: 'What frequency is this ?',
+            name: 'Quote',
+            type: 'QuoteQuestion',
+            points: 2,
+            answer: '440Hz',
+            hints: ['440', 'Hertz']
+        }
+        console.log(question)
+        await ctx.startQuoteQuestion(question)
     } else {
         throw Error(`Unknwon debug request ${req}`)
     }
