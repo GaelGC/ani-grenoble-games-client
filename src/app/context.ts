@@ -117,6 +117,11 @@ export class Context {
     }
 
     async startQuestion (q: Question, htmlPath: string): Promise<QuestionWinners> {
+        const answerCallback = (_: IpcMainEvent) => {
+            this.userWindow.webContents.send('answer', q.answer)
+        }
+        ipcMain.on('reveal-answer', answerCallback)
+
         // eslint-disable-next-line node/no-path-concat
         const uri = `file:///html/${htmlPath}`
         await this.userWindow.loadURL(uri)
@@ -126,7 +131,10 @@ export class Context {
         await this.adminQuestionWaiter.wait()
         this.userWindow.webContents.send('game-state-data', this.state)
         this.adminWindow.webContents.send('game-state-data', this.state)
-        return this.winnersQueue.get()
+        return this.winnersQueue.get().then(winners => {
+            ipcMain.removeListener('reveal-answer', answerCallback)
+            return winners
+        })
     }
 
     async startBlindtestQuestion (q: BlindTestQuestion): Promise<QuestionWinners> {

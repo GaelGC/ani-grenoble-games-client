@@ -67,3 +67,7 @@ ipcRenderer.on('game-state-data', (_, s) => {
         insertedButton.onclick = () => buttonHandler(player.name, insertedButton)
     }
 })
+
+export function revealAnswer () {
+    ipcRenderer.send('reveal-answer')
+}

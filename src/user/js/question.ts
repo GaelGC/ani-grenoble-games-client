@@ -23,3 +23,8 @@ ipcRenderer.on('hint', async (_, hint: string) => {
     clone.getElementById('hint')!.textContent = hint
     document.getElementById('hints')?.appendChild(clone)
 })
+
+ipcRenderer.on('answer', async (_, answer: string) => {
+    const answerDiv = document.getElementById('answer')!
+    answerDiv.textContent = answer
+})
