@@ -1,7 +1,8 @@
-import { BlindTestQuestion, Question, QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
 import { GameState, QuestionWinners } from 'ani-grenoble-games-format/dist/GameState'
 import { BrowserWindow, ipcMain, IpcMainEvent } from 'electron'
 import { debug } from './debug'
+import { IpcMainInvokeEvent } from 'electron/main'
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -116,7 +117,7 @@ export class Context {
         ipcMain.removeListener('give-hint', this.giveHintListener)
     }
 
-    async startQuestion (q: Question, htmlPath: string): Promise<QuestionWinners> {
+    async startQuestion (q: Question, htmlPath: string, onStart?: () => Promise<unknown>): Promise<QuestionWinners> {
         const answerCallback = (_: IpcMainEvent) => {
             this.userWindow.webContents.send('answer', q.answer)
         }
@@ -131,6 +132,9 @@ export class Context {
         await this.adminQuestionWaiter.wait()
         this.userWindow.webContents.send('game-state-data', this.state)
         this.adminWindow.webContents.send('game-state-data', this.state)
+        if (onStart !== undefined) {
+            onStart()
+        }
         return this.winnersQueue.get().then(winners => {
             ipcMain.removeListener('reveal-answer', answerCallback)
             return winners
@@ -143,6 +147,46 @@ export class Context {
 
     async startQuoteQuestion (q: QuoteQuestion): Promise<QuestionWinners> {
         return this.startQuestion(q, 'quote.html')
+    }
+
+    async startHangedManQuestion (q: HangedManQuestion): Promise<QuestionWinners> {
+        let currentTeamIdx = 0
+        const usedLetters: string[] = []
+        let answerLetters = q.answer.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')
+
+        const setTeam = (idx: number) => {
+            for (const window of [this.adminWindow.webContents, this.userWindow.webContents]) {
+                window.send('current-team', idx)
+            }
+        }
+
+        const letterHandler = (_: IpcMainInvokeEvent, letter: string) => {
+            letter = letter.toLowerCase()
+            if (usedLetters.includes(letter)) {
+                return false
+            }
+            usedLetters.push(letter)
+            this.userWindow.webContents.send('letter', letter)
+            if (answerLetters.includes(letter)) {
+                const idx = answerLetters.indexOf(letter)
+                answerLetters = answerLetters.substr(0, idx) + answerLetters.substr(idx + 1)
+            } else {
+                currentTeamIdx = (currentTeamIdx + 1) % this.state.players.length
+                setTeam(currentTeamIdx)
+            }
+            return true
+        }
+        ipcMain.handle('hanged-man-letter', letterHandler)
+
+        const winners = this.startQuestion(q, 'hanged_man.html', () => {
+            setTeam(currentTeamIdx)
+            this.adminWindow.webContents.send('init')
+            return delay(1)
+        })
+        return winners.then((winner) => {
+            ipcMain.removeHandler('hanged-man-letter')
+            return winner
+        })
     }
 
     userWindow: BrowserWindow;

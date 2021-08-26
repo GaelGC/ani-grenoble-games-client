@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { BlindTestQuestion, QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { BlindTestQuestion, HangedManQuestion, QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
 
 export async function debug (ctx: Context, req: string) {
     if (req === 'song') {
@@ -25,6 +25,16 @@ export async function debug (ctx: Context, req: string) {
         }
         console.log(question)
         await ctx.startQuoteQuestion(question)
+    } else if (req === 'hanged_man') {
+        const question: HangedManQuestion = {
+            name: 'Hanged man',
+            type: 'HangedManQuestion',
+            points: 2,
+            answer: 'This is a test of the HangedMan game',
+            hints: []
+        }
+        console.log(question)
+        await ctx.startHangedManQuestion(question)
     } else {
         throw Error(`Unknwon debug request ${req}`)
     }

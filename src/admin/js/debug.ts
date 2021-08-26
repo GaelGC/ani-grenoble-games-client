@@ -7,3 +7,7 @@ export function song () {
 export function quote () {
     ipcRenderer.send('debug-page-change', 'quote')
 }
+
+export function hangedMan () {
+    ipcRenderer.send('debug-page-change', 'hanged_man')
+}

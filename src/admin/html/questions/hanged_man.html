@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <title>Admin</title>
+</head>
+
+<body>
+  <script type="text/javascript">var exports = {};</script>
+  <script type="text/javascript" src="/js/question.js"></script>
+  <script type="text/javascript" src="/js/questions/hanged_man.js"></script>
+  <div id="word-div"></div>
+  <hr />
+  current team: <div id="current-team-div"></div>
+  <form onsubmit="return false;">
+    <input id="letter-input" oninput="onLetterChoice(this.value);" disabled="true">
+  </form>
+  <hr />
+  <div id="used-letter-div"></div>
+  <div id="question-div"></div>
+</body>
+
+</html>
