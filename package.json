@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "description": "Client for the Ani Grenoble games",
   "scripts": {
-    "build": "tsc --build src/app && tsc --build src/user/js && tsc --build src/admin/js && copyfiles -f src/user/html/**/*.html app_dist/user/html/ && copyfiles -f src/admin/html/**/*.html app_dist/admin/html/",
+    "build": "tsc --build src/app && tsc --build src/user/js && tsc --build src/admin/js && copyfiles -f src/user/html/**/*.html app_dist/user/html/ && copyfiles -f src/admin/html/**/*.html app_dist/admin/html/ && copyfiles -f src/user/css/*.css app_dist/user/css/ && copyfiles -f src/user/img/*.jpg app_dist/user/img/ && copyfiles -f src/user/img/*.png app_dist/user/img/",
     "run": "npm run build && electron --no-user-gesture-required app_dist/main.js"
   },
   "keywords": [

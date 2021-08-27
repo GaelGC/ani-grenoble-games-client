@@ -1,0 +1,22 @@
+body{
+  background-image: url('../img/background.jpg');
+  color: white;
+  text-align: center;
+  font : 2em "Open Sans", sans-serif;
+}
+
+header{
+  display: flex;
+	flex-wrap:  wrap;
+  justify-content: space-between;
+}
+
+#notFix{
+  display: flex;
+	flex-wrap:  wrap;
+}
+
+#smallImg{
+	max-width: 15vw;
+	height: auto;
+}

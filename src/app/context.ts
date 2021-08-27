@@ -59,31 +59,37 @@ export class Context {
             this.userWindow.webContents.send('hint', hint)
         }
         ipcMain.on('give-hint', this.giveHintListener)
-    }
 
-    async setupTeams () {
-        const addPlayerListener = (_: IpcMainEvent, name: string) => {
+        // J'ai ajout� les deux "on", dans le constructeur, sur le m�me shema que les hint.
+        // J'ai du coup retir� ce qu'il y avait plus bas !
+        // Et le "name" s'affiche bien dans le console... MAIS pas detect� dans main.ts de user
+        this.sendAddPlayer = (_, name) => {
             this.state.players.push({
                 name: name,
                 score: 0
             })
+            console.log(name)
+            this.userWindow.webContents.send('player_add', name)
         }
+        ipcMain.on('add_player', this.sendAddPlayer)
 
-        const delPlayerListener = (_: IpcMainEvent, name: string) => {
+        this.sendDeletePlayer = (_, name) => {
             this.state.players = this.state.players.filter(x => x.name !== name)
+            console.log(name)
+            this.userWindow.webContents.send('player_delete', name)
         }
+        ipcMain.on('del_player', this.sendDeletePlayer)
+    }
 
-        ipcMain.on('add_player', addPlayerListener)
-        ipcMain.on('del_player', delPlayerListener)
-
+    async setupTeams () {
+        // Un peu plus vide ici, du coup...
         for (const window of [this.userWindow, this.adminWindow]) {
             const url = 'file:///html/index.html'
             await window.loadURL(url)
         }
+        const url = 'file:///html/index.html'
+        await this.userWindow.loadURL(url)
         await this.mainPageChange.waitForElem()
-
-        ipcMain.removeListener('add_player', addPlayerListener)
-        ipcMain.removeListener('del_player', delPlayerListener)
     }
 
     async run () {
@@ -113,7 +119,10 @@ export class Context {
     }
 
     destroy () {
+    // J'ai ajout� les remove ici
         ipcMain.removeListener('give-hint', this.giveHintListener)
+        ipcMain.removeListener('add_player', this.sendAddPlayer)
+        ipcMain.removeListener('del_player', this.sendDeletePlayer)
     }
 
     async startQuestion (q: Question, htmlPath: string, onStart?: () => Promise<unknown>): Promise<QuestionWinners> {
@@ -199,11 +208,14 @@ export class Context {
         })
     }
 
+    // Et les variables pour les evenements ici
     userWindow: BrowserWindow;
     adminWindow: BrowserWindow;
     state: GameState;
     adminQuestionWaiter = new Semaphore('admin_question_ready');
     giveHintListener: (event: any, hint: string) => void;
+    sendAddPlayer: (event: any, name: string) => void;
+    sendDeletePlayer: (event: any, name: string) => void;
     winnersQueue = new Queue<QuestionWinners>('admin-send-winners');
     mainPageChange = new Queue<string>('main-menu');
 }
