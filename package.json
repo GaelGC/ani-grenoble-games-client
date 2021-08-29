@@ -1,6 +1,6 @@
 {
   "name": "ani-grenoble-games-client",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Client for the Ani Grenoble games",
   "scripts": {
     "build": "tsc --build src/app && tsc --build src/user/js && tsc --build src/admin/js && copyfiles -f src/user/html/**/*.html app_dist/user/html/ && copyfiles -f src/admin/html/**/*.html app_dist/admin/html/",
@@ -26,7 +26,7 @@
     "typescript": "^4.4.2"
   },
   "dependencies": {
-    "@gaelgc/ani-grenoble-games-format": "^0.3.4",
+    "@gaelgc/ani-grenoble-games-format": "^0.4.1",
     "electron": "^13.2.3"
   }
 }

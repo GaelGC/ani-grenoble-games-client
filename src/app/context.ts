@@ -1,4 +1,4 @@
-import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, IpcMainEvent } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
@@ -146,6 +146,17 @@ export class Context {
 
     async startQuoteQuestion (q: QuoteQuestion): Promise<QuestionWinners> {
         return this.startQuestion(q, 'quote.html')
+    }
+
+    async starImagesQuestion (q: ImagesQuestion): Promise<QuestionWinners> {
+        const imgHandler = (_: IpcMainInvokeEvent, img: string) => {
+            this.userWindow.webContents.send('show-image', img)
+        }
+        ipcMain.on('show-image', imgHandler)
+        return this.startQuestion(q, 'images.html').then(winners => {
+            ipcMain.removeListener('show-image', imgHandler)
+            return winners
+        })
     }
 
     async startHangedManQuestion (q: HangedManQuestion): Promise<QuestionWinners> {

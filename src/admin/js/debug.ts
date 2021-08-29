@@ -11,3 +11,7 @@ export function quote () {
 export function hangedMan () {
     ipcRenderer.send('debug-page-change', 'hanged_man')
 }
+
+export function imageQuizz () {
+    ipcRenderer.send('debug-page-change', 'images')
+}

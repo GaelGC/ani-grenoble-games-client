@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { BlindTestQuestion, HangedManQuestion, QuoteQuestion } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, QuoteQuestion, ImagesQuestion } from '@gaelgc/ani-grenoble-games-format'
 
 export async function debug (ctx: Context, req: string) {
     if (req === 'song') {
@@ -36,6 +36,17 @@ export async function debug (ctx: Context, req: string) {
         }
         console.log(question)
         await ctx.startHangedManQuestion(question)
+    } else if (req === 'images') {
+        const question: ImagesQuestion = {
+            name: 'two images, one answer',
+            type: 'ImagesQuestion',
+            points: 2,
+            answer: 'three',
+            images: ['question://D:/one.jpg', 'question://D:/two.jpg'],
+            hints: []
+        }
+        console.log(question)
+        await ctx.starImagesQuestion(question)
     } else {
         throw Error(`Unknwon debug request ${req}`)
     }
