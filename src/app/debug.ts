@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { BlindTestQuestion, HangedManQuestion, QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { BlindTestQuestion, HangedManQuestion, QuoteQuestion } from '@gaelgc/ani-grenoble-games-format'
 
 export async function debug (ctx: Context, req: string) {
     if (req === 'song') {

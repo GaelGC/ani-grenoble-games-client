@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import { GameState, Player } from 'ani-grenoble-games-format/dist/GameState'
+import { Player, GameState } from '@gaelgc/ani-grenoble-games-format'
 
 let players: Player[] = []
 let currentTeam: Player

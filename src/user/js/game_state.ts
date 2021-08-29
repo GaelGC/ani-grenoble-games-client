@@ -1,4 +1,4 @@
-import { GameState } from 'ani-grenoble-games-format/dist/GameState'
+import { GameState } from '@gaelgc/ani-grenoble-games-format'
 import { ipcRenderer } from 'electron'
 
 ipcRenderer.on('game-state-data', (_, s) => {

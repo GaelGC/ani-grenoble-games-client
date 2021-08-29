@@ -1,5 +1,4 @@
-import { BlindTestQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
-import { GameState, QuestionWinners } from 'ani-grenoble-games-format/dist/GameState'
+import { GameState, QuestionWinners, BlindTestQuestion } from '@gaelgc/ani-grenoble-games-format'
 import { ipcRenderer } from 'electron'
 
 export function onHintClick (id: string) {

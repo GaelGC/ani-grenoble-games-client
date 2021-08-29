@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import { QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { QuoteQuestion } from '@gaelgc/ani-grenoble-games-format'
 
 ipcRenderer.on('question-data', (_, q) => {
     const question: QuoteQuestion = q

@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import { HangedManQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
+import { HangedManQuestion } from '@gaelgc/ani-grenoble-games-format'
 
 let word = ''
 let shownWord = ''

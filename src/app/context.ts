@@ -1,5 +1,4 @@
-import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion } from 'ani-grenoble-games-format/dist/QuestionTypes'
-import { GameState, QuestionWinners } from 'ani-grenoble-games-format/dist/GameState'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, IpcMainEvent } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
