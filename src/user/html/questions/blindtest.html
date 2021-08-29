@@ -3,6 +3,26 @@
 
 <head>
   <title>Admin</title>
+  <!-- Temporary code to handle fitting the image in the browser window.
+        https://stackoverflow.com/a/14696457
+  -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    .imgbox {
+      display: grid;
+      height: 100%;
+    }
+
+    .center-fit {
+      max-width: 100%;
+      max-height: 100vh;
+      margin: auto;
+    }
+  </style>
 </head>
 
 <body>
@@ -11,6 +31,10 @@
   <script type="text/javascript" src="/js/game_state.js"></script>
   <script type="text/javascript" src="/js/questions/blindtest.js"></script>
   <div id="question-div"></div>
+  <hr />
+  <div class="imgbox">
+    <img id="image-loc" class="center-fit" />
+  </div>
   <hr />
   <div id="game-state-div"></div>
 </body>

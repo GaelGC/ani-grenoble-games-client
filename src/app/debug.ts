@@ -9,7 +9,8 @@ export async function debug (ctx: Context, req: string) {
             type: 'BlindTestQuestion',
             points: 1,
             answer: '440Hz',
-            hints: ['440', 'Hertz']
+            hints: ['440', 'Hertz'],
+            answerImage: 'question://D:/440.jpg'
         }
         console.log(question)
         await ctx.startBlindtestQuestion(question)
