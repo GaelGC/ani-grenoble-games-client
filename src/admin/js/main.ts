@@ -25,14 +25,14 @@ export function onAddTeamButtonClick () {
     clone.getElementById('team-template-name')!.textContent = name
     clone.getElementById('team-template-remove')!.onclick = () => {
         teamsDiv!.removeChild(document.getElementById(id)!)
-        ipcRenderer.send('del_player', name)
+        ipcRenderer.send('del_player', name, id)
         names.splice(names.indexOf(name), 1)
         onTeamNameFieldChange(nameField.value)
         onTeamNumberChange()
     }
     names.push(name)
     teamsDiv!.appendChild(clone)
-    ipcRenderer.send('add_player', name)
+    ipcRenderer.send('add_player', name, id)
     onTeamNumberChange()
 
     // Disallow sending the same input twice.

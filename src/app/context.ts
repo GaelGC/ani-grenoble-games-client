@@ -60,29 +60,90 @@ export class Context {
         }
         ipcMain.on('give-hint', this.giveHintListener)
 
+<<<<<<< Updated upstream
         // J'ai ajout� les deux "on", dans le constructeur, sur le m�me shema que les hint.
         // J'ai du coup retir� ce qu'il y avait plus bas !
         // Et le "name" s'affiche bien dans le console... MAIS pas detect� dans main.ts de user
         this.sendAddPlayer = (_, name) => {
+=======
+<<<<<<< Updated upstream
+    async setupTeams () {
+        const addPlayerListener = (_: IpcMainEvent, name: string) => {
+=======
+        this.sendAddPlayer = (_, name, id) => {
+            let rgb = ''
+
+            if (id === 'team-div-0') {
+                rgb = 'EC1F1F'
+            } else if (id === 'team-div-1') {
+                rgb = '2541DC'
+            } else if (id === 'team-div-2') {
+                rgb = '2FC215'
+            } else if (id === 'team-div-3') {
+                rgb = 'D0E613'
+            } else if (id === 'team-div-4') {
+                rgb = '01FDF5'
+            } else if (id === 'team-div-5') {
+                rgb = '860EF1'
+            } else if (id === 'team-div-6') {
+                rgb = 'FDA101'
+            } else if (id === 'team-div-7') {
+                rgb = 'F32BCF'
+            } else {
+                rgb = colorOf(name + name)
+            }
+
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
             this.state.players.push({
                 name: name,
                 score: 0
             })
+<<<<<<< Updated upstream
             console.log(name)
             this.userWindow.webContents.send('player_add', name)
+=======
+<<<<<<< Updated upstream
+=======
+
+
+            this.userWindow.webContents.send('player_add', name, id, rgb)
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
         }
         ipcMain.on('add_player', this.sendAddPlayer)
 
+<<<<<<< Updated upstream
         this.sendDeletePlayer = (_, name) => {
             this.state.players = this.state.players.filter(x => x.name !== name)
             console.log(name)
             this.userWindow.webContents.send('player_delete', name)
+=======
+<<<<<<< Updated upstream
+        const delPlayerListener = (_: IpcMainEvent, name: string) => {
+            this.state.players = this.state.players.filter(x => x.name !== name)
+=======
+        this.sendDeletePlayer = (_, name, id) => {
+            this.state.players = this.state.players.filter(x => x.name !== name)
+            this.userWindow.webContents.send('player_delete', name, id)
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
         }
         ipcMain.on('del_player', this.sendDeletePlayer)
     }
 
+<<<<<<< Updated upstream
     async setupTeams () {
         // Un peu plus vide ici, du coup...
+=======
+<<<<<<< Updated upstream
+        ipcMain.on('add_player', addPlayerListener)
+        ipcMain.on('del_player', delPlayerListener)
+
+=======
+    async setupTeams () {
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
         for (const window of [this.userWindow, this.adminWindow]) {
             const url = 'file:///html/index.html'
             await window.loadURL(url)
@@ -214,8 +275,86 @@ export class Context {
     state: GameState;
     adminQuestionWaiter = new Semaphore('admin_question_ready');
     giveHintListener: (event: any, hint: string) => void;
+<<<<<<< Updated upstream
     sendAddPlayer: (event: any, name: string) => void;
     sendDeletePlayer: (event: any, name: string) => void;
+=======
+<<<<<<< Updated upstream
+=======
+    sendAddPlayer: (event: any, name: string, id: string) => void;
+    sendDeletePlayer: (event: any, name: string, id: string) => void;
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
     winnersQueue = new Queue<QuestionWinners>('admin-send-winners');
     mainPageChange = new Queue<string>('main-menu');
+}
+
+// Cr�ation d'une couleur pour un string donn�
+function colorOf (name: string) {
+    const charArray = name.split('')
+    let sizeOf = charArray.length
+    while (sizeOf % 3 !== 0) {
+        sizeOf -= 1
+    }
+
+    let firstInt: number = 0
+    let secondInt: number = 0
+    let thirdInt: number = 0
+
+    for (let i = 0; i < sizeOf; i++) {
+        if (i < (sizeOf / 3)) {
+            firstInt += charArray[i].toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0)
+        } else if (i < (sizeOf / 3) * 2) {
+            secondInt += charArray[i].toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0)
+        } else {
+            thirdInt += charArray[i].toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0)
+        }
+    }
+
+    firstInt = firstInt % 16
+    secondInt = secondInt % 16
+    thirdInt = thirdInt % 16
+
+    const firstHexa = hexaOfInt(firstInt)
+    const secondHexa = hexaOfInt(secondInt)
+    const thirdHexa = hexaOfInt(thirdInt)
+
+    let avg = (firstInt + secondInt + thirdInt) / 3
+    avg = avg % 16
+    const avgHexa = hexaOfInt(avg)
+
+    const rgb = firstHexa + avgHexa + secondHexa + avgHexa + thirdHexa + avgHexa
+
+    return rgb.toString()
+}
+
+function hexaOfInt (int: number) {
+    const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    if (!numbers.includes(int)) {
+        switch (int) {
+        case 10: {
+            return 'A'
+        }
+        case 11: {
+            return 'B'
+        }
+        case 12: {
+            return 'C'
+        }
+        case 13: {
+            return 'D'
+        }
+        case 14: {
+            return 'E'
+        }
+        case 15: {
+            return 'F'
+        }
+        default: {
+            return '0'
+        }
+        }
+    } else {
+        return int.toString()
+    }
 }
