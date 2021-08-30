@@ -1,15 +1,9 @@
 body{
 	background-image: url('../img/background.jpg');
 	color: white;
-<<<<<<< Updated upstream
-	font : 2em "Open Sans", sans-serif;
-	text-align: center;
-	margin: auto;
-=======
 	font : 3em "Open Sans", sans-serif;
 	text-align: center;
 	margin: 1em;
->>>>>>> Stashed changes
 }
 
 #neonPink{
@@ -25,46 +19,6 @@ body{
 	      0 0 151px #D18ACA;
 }
 
-<<<<<<< Updated upstream
-#mainTitle{
-	visibility: visible;
-}
-
-#teams{
-	visibility: collapse;
-	margin : 1.5em;
-}
-
-#gameSelect{
-	visibility: collapse;
-	margin : 1.5em;
-}
-
-#bigImg{
-	max-width: 50vw;
-	height: auto;
-}
-
-#smallImg{
-	max-width: 25vw;
-	height: auto;
-}
-
-#gameSelect div {
-	margin : 4em;
-}
-
-#gameSelect div div{
-	display: flex;
-	flex-wrap:  wrap;
-	margin : 1em;
-	justify-content: space-between;
-}
-
-#gameSelect div div p{
-	margin : 1em;
-}
-=======
 p{
 	margin-inline-start: 0px
 }
@@ -79,4 +33,3 @@ p{
 	max-width: 35vw;
 	height: auto;
 }
->>>>>>> Stashed changes
