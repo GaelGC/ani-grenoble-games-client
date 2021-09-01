@@ -1,24 +1,37 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <title>Admin</title>
-</head>
+  <head>
+    <title>User</title>
+    <link rel="stylesheet" href="../css/hanged_man.css">
+  </head>
 
 <body>
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/question.js"></script>
   <script type="text/javascript" src="/js/game_state.js"></script>
   <script type="text/javascript" src="/js/questions/hanged_man.js"></script>
-  <div id="question-div"></div>
-  <hr />
-  <div id="team-div"></div>
-  <hr />
-  <div id="word-div" style="font-family: monospace;"></div>
-  <hr />
-  <div id="used-letter-div"></div>
-  <hr />
-  <div id="game-state-div"></div>
+
+  <header>
+
+    <img src="../img/logoH.png" id="smallImg">
+    <h1 class="neonPink">Hanged Man</h1>
+    <h2 class="neonPink">00/00</h2>
+
+    <div id="gameHeart">
+
+      <div id="game-state-div"></div>
+  
+      <div id="hanged-div">
+        <div id="team-div"></div>
+        <div id="word-div" style="font-family: monospace;"></div>
+        <div id="used-letter-div"></div>
+        <div id="question-div"></div>
+      </div>
+  
+    </div>
+
+  </header>
 </body>
 
 </html>

@@ -2,30 +2,8 @@
 <html>
 
 <head>
-  <!-- Temporary code to handle fitting the image in the browser window.
-        https://stackoverflow.com/a/14696457
-  -->
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-    }
-
-    .imgbox {
-      display: grid;
-      height: 100%;
-    }
-
-    .center-fit {
-      max-width: 100%;
-      max-height: 100vh;
-      margin: auto;
-    }
-
-  </style>
   <title>User</title>
   <link rel="stylesheet" href="../css/blindtest.css">
-
 </head>
 
 <body>
@@ -36,20 +14,18 @@
 
 
   <header>
-
     <img src="../img/logoH.png" id="smallImg">
     <h1 class="neonPink">BlindTest</h1>
     <h2 class="neonPink">00/00</h2>
-
   </header>
-
-  <div class="imgbox">
-    <img id="image-loc" class="center-fit" />
-  </div>
 
   <div id="gameHeart">
 
     <div id="game-state-div"></div>
+
+    <div class="imgbox">
+      <img id="image-loc" class="center-fit" />
+    </div>
 
     <div id="question-div"></div>
 

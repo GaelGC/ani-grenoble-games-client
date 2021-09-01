@@ -5,17 +5,22 @@ body{
   font : 2em "Open Sans", sans-serif;
   margin: auto;
   margin-top: 2em;
+  overflow-wrap: break-word;
+  height: 50vw;
 }
 
 header{
   display: flex;
 	flex-wrap:  wrap;
-justify-content: space-around;
+  justify-content: space-around;
+  margin-bottom: 1em;
 }
 
 #gameHeart{
   display: flex;
 	flex-wrap:  wrap;
+  justify-content: space-around;
+  height: 30vw;
 }
 
 #smallImg{
@@ -30,11 +35,9 @@ justify-content: space-around;
 }
 
 #question-div{
-  width: 80%;
+  width: 15%;
   height: 100%;
-  display: flex;
-	flex-wrap:  wrap;
-  justify-content: space-around;
+  justify-content: center;
 }
 
 .neonPink{
@@ -49,3 +52,15 @@ justify-content: space-around;
 	      0 0 102px #D18ACA,
 	      0 0 151px #D18ACA;
 }
+
+  .imgbox {
+  display: grid;
+  height: 100%;
+  width: 65%;
+  }
+
+  .center-fit {
+  max-width: 100%;
+  max-height: 100vh;
+  margin: auto;
+  }
