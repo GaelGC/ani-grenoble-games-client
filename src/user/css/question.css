@@ -1,28 +1,9 @@
 #hints{
     font-size: 1.5em;
     padding-top: 1em;
-	color: #fff;
-	text-shadow:
-		0 0 7px #fff,
-		0 0 10px #fff,
-		0 0 21px #fff,
-		0 0 42px #D18ACA,
-		0 0 82px #D18ACA,
-		0 0 92px #D18ACA,
-		0 0 102px #D18ACA,
-		0 0 151px #D18ACA;
 }
 
 #answer{
     font-size: 2em;
-	color: #fff;
-	text-shadow:
-		0 0 7px #fff,
-		0 0 10px #fff,
-		0 0 21px #fff,
-		0 0 42px #D18ACA,
-		0 0 82px #D18ACA,
-		0 0 92px #D18ACA,
-		0 0 102px #D18ACA,
-		0 0 151px #D18ACA;
 }
+

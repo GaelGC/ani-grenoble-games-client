@@ -11,16 +11,21 @@
   <script type="text/javascript" src="/js/question.js"></script>
   <script type="text/javascript" src="/js/game_state.js"></script>
   <script type="text/javascript" src="/js/questions/hanged_man.js"></script>
+  <script type="text/javascript" src="/js/3d/torus.js"></script>
 
-  <header>
-
-    <img src="../img/logoH.png" id="smallImg">
-    <h1 class="neonPink">Hanged Man</h1>
-    <h2 class="neonPink">00/00</h2>
+    <div id="shadow">
+      <div id="game-state-div"></div>
+      <img src="../img/decoOrang1.png" id="deco">
+    </div>
+  
+    <header>
+      <div id="fullTitle">
+        <canvas id="3d"></canvas>
+        <h1 id="titre">Hanged Man</h1>
+      </div>
+    </header>
 
     <div id="gameHeart">
-
-      <div id="game-state-div"></div>
   
       <div id="hanged-div">
         <div id="team-div"></div>
@@ -31,7 +36,6 @@
   
     </div>
 
-  </header>
 </body>
 
 </html>

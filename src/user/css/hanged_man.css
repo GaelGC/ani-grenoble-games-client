@@ -1,0 +1,107 @@
+body{
+  background-image: url('../img/backgroundOrang.jpg');
+    text-align: center;
+    font : 2em "Open Sans", sans-serif;
+    margin: auto;
+    overflow-wrap: break-word;
+    height: 50vw;
+  }
+
+  /* State pan */
+
+#shadow{
+  width: 15%;
+  height: 85%;
+  background-color: rgb(57, 57, 57, 0.9);
+  position: absolute;
+  left: 20px;
+}
+
+#game-state-div{
+  margin: 0px;
+  box-shadow:
+    5 5 2rem #DEA716;
+  padding-top: 2em;
+}
+
+#deco{
+  position: absolute;
+  top: 93%;
+  width: 100%;
+  left: 0px;
+  height: auto;
+}
+
+/* Top */
+  
+  header{
+    display: flex;
+      flex-wrap:  wrap;
+    justify-content: space-around;
+    margin-bottom: 1em;
+  }
+
+  #fullTitle{
+    display: flex;
+    flex-wrap:  wrap;
+  }
+  
+  #titre{
+    position: relative;
+    right: 100px;
+    top: 60px;
+    color: #DEA716;
+    text-shadow:
+          0 0 4px #DEA716,
+          0 0 5px #DEA716,
+          0 0 10px #DEA716;
+  }
+  
+  #3d{
+    width: 200px;
+    height: 200px;
+  }
+
+  /* Game */
+  
+  #gameHeart{
+    display: flex;
+      flex-wrap:  wrap;
+    justify-content: space-around;
+    height: 30vw;
+  }
+  
+#hanged-div {
+    font-size: 3em;
+    width: 65%;
+    margin: auto;
+    margin-left: 4em;
+    color: #fff;
+        text-shadow:
+        0 0 4px #DEA716,
+        0 0 5px #DEA716,
+        0 0 10px #DEA716;
+}
+
+#used-letter-div{
+    margin-top: 1em;
+    font-size: 1em;
+}
+
+  /* Answer & Hints */
+
+  #question-div{
+    height: 100%;
+    justify-content: center;
+    margin-top: 0.5em;
+  }
+
+  #answer{
+    font-size: 1.5em;
+  }
+
+  #hints{
+    visibility: collapse;
+  }
+
+  

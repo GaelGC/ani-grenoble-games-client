@@ -37,8 +37,10 @@ ipcRenderer.on('game-state-data', (_, s) => {
                 rgb = colorOf(player.name + player.name)
             }
 
-            clone.getElementById('team-template-name')!.style.textShadow = ' 0 0 7px #fff,0 0 10px #fff,0 0 21px #fff,0 0 42px #' + rgb + ',0 0 82px #' + rgb + ',0 0 92px #' + rgb + ',  0 0 102px #' + rgb + ',0 0 151px #' + rgb
-            clone.getElementById('team-template-score')!.style.textShadow = ' 0 0 7px #fff,0 0 10px #fff,0 0 21px #fff,0 0 42px #' + rgb + ',0 0 82px #' + rgb + ',0 0 92px #' + rgb + ',  0 0 102px #' + rgb + ',0 0 151px #' + rgb
+            clone.getElementById('team-template-name')!.style.textShadow = ' 0 0 4px #' + rgb + ',0 0 5px #' + rgb + ',0 0 10px #' + rgb
+            clone.getElementById('team-template-score')!.style.textShadow = ' 0 0 4px #' + rgb + ',0 0 5px #' + rgb + ',0 0 10px #' + rgb
+            clone.getElementById('team-template-name')!.style.color = '#' + rgb
+            clone.getElementById('team-template-score')!.style.color = '#' + rgb
 
             document.getElementById('teams')?.appendChild(clone)
             id++

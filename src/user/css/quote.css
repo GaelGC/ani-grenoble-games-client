@@ -1,0 +1,117 @@
+body{
+  background-image: url('../img/backgroundGreen.png');
+    text-align: center;
+    font : 2em "Open Sans", sans-serif;
+    margin: auto;
+    overflow-wrap: break-word;
+    height: 50vw;
+  }
+
+  /* State pan */
+
+#shadow{
+  width: 15%;
+  height: 85%;
+  background-color: rgb(57, 57, 57, 0.9);
+  position: absolute;
+  left: 20px;
+}
+
+#game-state-div{
+  margin: 0px;
+  box-shadow:
+    5 5 2rem #1FC445;
+  padding-top: 2em;
+}
+
+#deco{
+  position: absolute;
+  top: 93%;
+  width: 100%;
+  left: 0px;
+  height: auto;
+}
+
+/* Top */
+  
+  header{
+    display: flex;
+      flex-wrap:  wrap;
+    justify-content: space-around;
+    margin-bottom: 1em;
+  }
+
+  #fullTitle{
+    display: flex;
+    flex-wrap:  wrap;
+  }
+
+  #titre{
+    position: relative;
+    right: 100px;
+    top: 60px;
+    color: #1FC445;
+    text-shadow:
+          0 0 4px #1FC445,
+          0 0 5px #1FC445,
+          0 0 10px #1FC445;
+  }
+  
+  #3d{
+    width: 200px;
+    height: 200px;
+  }
+
+  
+/* Game */
+
+#gameHeart{
+  display: flex;
+  flex-wrap:  wrap;
+  height: 30vw;
+  justify-content: space-around;
+  margin-left: 10em;
+}
+  
+#quote-div {
+    font-size: 3em;
+    margin: auto;
+    margin-right: 0.5em;
+    margin-left: 0.5px;
+    color: #fff;
+    text-shadow:
+        0 0 4px #1FC445,
+        0 0 5px #1FC445,
+        0 0 10px #1FC445;
+}
+
+ /* Answer & Hints */
+
+ #question-div{
+  width: 25%;
+  height: 100%;
+  justify-content: center;
+  box-shadow:
+    0 0 4px #1FC445,
+    0 0 5px #1FC445,
+    0 0 10px #1FC445;
+    margin-top: 0.5em;
+}
+
+#answer{
+  margin-top: 0.5em;
+  color: #1FC445;
+  text-shadow:
+  0 0 4px #1FC445,
+  0 0 5px #1FC445,
+  0 0 10px #1FC445;
+}
+
+#hints{
+  color: #1FC445;
+  text-shadow:
+  0 0 4px #1FC445,
+  0 0 5px #1FC445,
+  0 0 10px #1FC445;
+}
+  
