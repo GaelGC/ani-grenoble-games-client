@@ -1,7 +1,8 @@
-import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, IpcMainEvent } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
+import { readFileSync } from 'fs'
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -116,9 +117,35 @@ export class Context {
         while (true) {
             const page = await this.mainPageChange.get()
             if (page === 'debug') {
-                this.debug()
+                await this.debug()
+            } else if (page === 'random') {
+                await this.randomGame()
             } else {
                 throw Error(`Invalid main page ${page} requested`)
+            }
+        }
+    }
+
+    async randomGame () {
+        const uri = 'file:///html/random.html'
+        const pickedFile = new Queue<string>('pack-file')
+        this.adminWindow.loadURL(uri)
+        const fileName = await pickedFile.get()
+        const json = readFileSync(fileName).toString()
+        const parsed = parseQuestions(json)
+        if (parsed.err) {
+            throw parsed.val
+        }
+        const questions = parsed.val
+        while (questions.questions.length !== 0) {
+            const questionIdx = Math.floor(Math.random() * questions.questions.length)
+            console.log(questionIdx)
+            const question = questions.questions[questionIdx]
+            console.log(question)
+            questions.questions.splice(questionIdx, 1)
+            const winners = await this.startGenericQuestion(question)
+            for (const winner of winners.players) {
+                this.state.players.find(x => x.name === winner)!.score += winners.points
             }
         }
     }
@@ -161,6 +188,25 @@ export class Context {
             ipcMain.removeListener('reveal-answer', answerCallback)
             return winners
         })
+    }
+
+    async startGenericQuestion (q: Question): Promise<QuestionWinners> {
+        type questionType = ((q: Question) => Promise<QuestionWinners>)
+        // We cast the functions to accept all Questions. The reason why this
+        // is safer than it looks like is that the type field could not be
+        // different from the actual type of the question. Maybe mapped types
+        // could help to have a cleaner thing here, need to take a look later.
+        const map: Map<string, questionType> = new Map([
+            ['BlindTestQuestion', this.startBlindtestQuestion.bind(this) as questionType],
+            ['QuoteQuestion', this.startQuoteQuestion.bind(this) as questionType],
+            ['HangedManQuestion', this.startHangedManQuestion.bind(this) as questionType],
+            ['ImagesQuestion', this.starImagesQuestion.bind(this) as questionType]
+        ])
+        if (map.has(q.type)) {
+            return map.get(q.type)!(q)
+        } else {
+            throw Error(`Uknown question type ${q.type}`)
+        }
     }
 
     async startBlindtestQuestion (q: BlindTestQuestion): Promise<QuestionWinners> {

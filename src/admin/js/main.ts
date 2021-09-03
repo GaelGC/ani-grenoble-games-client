@@ -49,6 +49,10 @@ export function debug () {
     ipcRenderer.send('main-menu', 'debug')
 }
 
+export function random () {
+    ipcRenderer.send('main-menu', 'random')
+}
+
 export function onTeamNameFieldChange (name: string) {
     const invalid = name.length === 0 || names.includes(name)
     const button = document.getElementById('add-team-button')! as HTMLButtonElement
