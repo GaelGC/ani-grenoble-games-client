@@ -39,8 +39,15 @@ export function submitWinners () {
     ipcRenderer.send('admin-send-winners', response)
 }
 
+export function updateWinners () {
+    const response: QuestionWinners = {
+        points: Number((document.getElementById('question-score') as HTMLInputElement).value),
+        players: winners
+    }
+    ipcRenderer.send('admin-update-winners', response)
+}
+
 const buttonHandler = (name: string, insertedButton: HTMLButtonElement) => {
-    console.log(insertedButton.style.borderStyle)
     if (winners.includes(name)) {
         winners = winners.filter(x => x !== name)
         insertedButton.style.backgroundColor = ''
@@ -48,6 +55,7 @@ const buttonHandler = (name: string, insertedButton: HTMLButtonElement) => {
         winners.push(name)
         insertedButton.style.backgroundColor = '#00ff00'
     }
+    updateWinners()
 }
 
 ipcRenderer.on('game-state-data', (_, s) => {

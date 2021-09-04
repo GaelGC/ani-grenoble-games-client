@@ -172,6 +172,11 @@ export class Context {
         }
         ipcMain.on('reveal-answer', answerCallback)
 
+        const updateWinnersCallback = (_: IpcMainEvent, winners: QuestionWinners) => {
+            this.userWindow.webContents.send('update-winners', winners)
+        }
+        ipcMain.on('admin-update-winners', updateWinnersCallback)
+
         // eslint-disable-next-line node/no-path-concat
         const uri = `file:///html/${htmlPath}`
         await this.userWindow.loadURL(uri)
@@ -186,6 +191,7 @@ export class Context {
         }
         return this.winnersQueue.get().then(winners => {
             ipcMain.removeListener('reveal-answer', answerCallback)
+            ipcMain.removeListener('admin-update-winners', updateWinnersCallback)
             return winners
         })
     }

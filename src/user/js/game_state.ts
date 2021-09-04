@@ -1,5 +1,13 @@
-import { GameState } from '@gaelgc/ani-grenoble-games-format'
+import { GameState, QuestionWinners } from '@gaelgc/ani-grenoble-games-format'
 import { ipcRenderer } from 'electron'
+
+ipcRenderer.on('update-winners', async (_, winners: QuestionWinners) => {
+    for (const teamDiv of Array.from(document.getElementsByClassName('team-div'))) {
+        const name = teamDiv.getElementsByClassName('team-name').item(0)!.textContent!
+        const text = winners.players.includes(name) ? '+' + winners.points : ''
+        teamDiv.getElementsByClassName('team-score-update').item(0)!.textContent = text
+    }
+})
 
 ipcRenderer.on('game-state-data', (_, s) => {
     console.log('rezfzefzefz')

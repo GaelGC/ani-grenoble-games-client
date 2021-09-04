@@ -8,7 +8,7 @@
 </div>
 <hr />
 <div>
-  Score: <input type="number" id="question-score" />
+  Score: <input type="number" id="question-score" onchange="updateWinners();" />
   <button onclick="revealAnswer(this); this.disabled = true;">Confirmer la réponse</button>
 </div>
 <div>
