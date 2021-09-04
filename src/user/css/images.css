@@ -89,6 +89,11 @@ body{
     margin: auto;
     }
 
+    #images-div{
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
 
 
      /* Answer & Hints */
