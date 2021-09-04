@@ -6,5 +6,5 @@ ipcRenderer.on('show-image', (_, image: string) => {
     const clone = document.importNode(template.content, true)
     const cloneImg = <HTMLImageElement>clone.getElementById('image-elem')
     cloneImg.src = image
-    imagesDiv.appendChild(cloneImg)
+    imagesDiv.appendChild(clone)
 })
