@@ -1,8 +1,9 @@
 import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions } from '@gaelgc/ani-grenoble-games-format'
-import { BrowserWindow, ipcMain, IpcMainEvent } from 'electron'
+import { BrowserWindow, ipcMain, IpcMainEvent, ProtocolResponse, session } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
 import { readFileSync } from 'fs'
+import { dirname } from 'path'
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -98,6 +99,22 @@ export class Context {
             this.userWindow.webContents.send('player_delete', name, id)
         }
         ipcMain.on('del_player', this.sendDeletePlayer)
+
+        for (const partitionName of ['user', 'admin']) {
+            const partition = `persist:${partitionName}`
+            const selectedSession = session.fromPartition(partition)
+            selectedSession.protocol.registerFileProtocol('question', (request, callback) => {
+                console.log(request.url)
+                console.log(this.packPath)
+                const url = request.url.replace('question://', '')
+                let response: ProtocolResponse = { path: url }
+                if (url.length === 0 || url[0] !== '/') {
+                    response = { path: this.packPath + url }
+                }
+                console.log(response)
+                callback(response)
+            })
+        }
     }
 
     async setupTeams () {
@@ -136,6 +153,7 @@ export class Context {
         if (parsed.err) {
             throw parsed.val
         }
+        this.packPath = dirname(fileName) + '/'
         const questions = parsed.val
         while (questions.questions.length !== 0) {
             const questionIdx = Math.floor(Math.random() * questions.questions.length)
@@ -284,6 +302,7 @@ export class Context {
     sendDeletePlayer: (event: any, name: string, id: string) => void;
     winnersQueue = new Queue<QuestionWinners>('admin-send-winners');
     mainPageChange = new Queue<string>('main-menu');
+    packPath: string = ''
 }
 
 // Cr�ation d'une couleur pour un string donn�
