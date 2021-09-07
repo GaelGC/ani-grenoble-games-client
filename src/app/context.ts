@@ -87,7 +87,8 @@ export class Context {
 
             this.state.players.push({
                 name: name,
-                score: 0
+                score: 0,
+                color: rgb
             })
 
             this.userWindow.webContents.send('player_add', name, id, rgb)
@@ -166,6 +167,12 @@ export class Context {
                 this.state.players.find(x => x.name === winner)!.score += winners.points
             }
         }
+
+        const winUri = 'file:///html/random_game_winners.html'
+        await this.userWindow.loadURL(winUri)
+        Array.from(this.state.players).sort((x, y) => y.score - x.score).forEach(player => {
+            this.userWindow.webContents.send('player_add', player)
+        })
     }
 
     async debug () {
