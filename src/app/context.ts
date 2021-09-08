@@ -1,4 +1,4 @@
-import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet, GooseBoard, parseGooseBoard, Slot } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, IpcMainEvent, ProtocolResponse, session } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
@@ -158,15 +158,55 @@ export class Context {
         return parsed.val
     }
 
+    async waitForGooseBoardSelection (): Promise<GooseBoard> {
+        const pickedFile = new Queue<string>('goose-board-file')
+        const fileName = await pickedFile.get()
+        const json = readFileSync(fileName).toString()
+        const parsed = parseGooseBoard(json)
+        if (parsed.err) {
+            throw parsed.val
+        }
+        this.packPath = dirname(fileName) + '/'
+        return parsed.val
+    }
+
+    getGooseQuestion (questions: QuestionSet, selector: Slot): Question {
+        const compatible = questions.questions.filter(x => {
+            if (selector.type === 'TagSelector') {
+                if (x.tags === undefined) {
+                    return false
+                }
+                for (const tag of selector.tags) {
+                    if (!x.tags.includes(tag)) {
+                        return false
+                    }
+                }
+                return true
+            } else if (selector.type === 'TypeSelector') {
+                return selector.types.includes(x.type)
+            }
+            return false
+        })
+        if (compatible.length === 0) {
+            throw Error('Could not find compatible question')
+        }
+        const idx = Math.floor(Math.random() * compatible.length)
+        questions.questions.splice(questions.questions.indexOf(compatible[idx]), 1)
+        return compatible[idx]
+    }
+
     async gooseGame () {
         this.userWindow.webContents.send('game-select')
         const pack = this.waitForPackSelection()
+        const boardPromise = this.waitForGooseBoardSelection()
         const initUri = 'file:///html/game_of_the_goose_init.html'
         this.adminWindow.loadURL(initUri)
         const questions = await pack
+        const board = await boardPromise
         const rollQueue = new Queue<void>('roll-dice')
         const startQueue = new Queue<void>('start-question')
         const rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
+
         while (true) {
             const gameUri = 'file:///html/game_of_the_goose.html'
             this.adminWindow.loadURL(gameUri)
@@ -176,7 +216,9 @@ export class Context {
             this.userWindow.webContents.send('roll', roll)
             await rollAnimationDoneQueue.get()
             this.adminWindow.webContents.send('roll-ack')
-            await this.winnersQueue.get()
+            const question = this.getGooseQuestion(questions, board.slots[0])
+            await startQueue.get()
+            await this.startGenericQuestion(question)
         }
     }
 

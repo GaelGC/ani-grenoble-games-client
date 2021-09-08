@@ -6,6 +6,10 @@ export function roll () {
     button.disabled = true
 }
 
+export function start () {
+    ipcRenderer.send('start-question')
+}
+
 ipcRenderer.on('roll-ack', () => {
     const rollButton = <HTMLButtonElement>document.getElementById('roll-button')
     const startButton = <HTMLButtonElement>document.getElementById('start-button')
