@@ -1,4 +1,4 @@
-import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, IpcMainEvent, ProtocolResponse, session } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
@@ -138,17 +138,16 @@ export class Context {
                 await this.debug()
             } else if (page === 'random') {
                 await this.randomGame()
+            } else if (page === 'game-of-the-goose') {
+                await this.gooseGame()
             } else {
                 throw Error(`Invalid main page ${page} requested`)
             }
         }
     }
 
-    async randomGame () {
-        this.userWindow.webContents.send('game-select')
-        const uri = 'file:///html/random.html'
+    async waitForPackSelection (): Promise<QuestionSet> {
         const pickedFile = new Queue<string>('pack-file')
-        this.adminWindow.loadURL(uri)
         const fileName = await pickedFile.get()
         const json = readFileSync(fileName).toString()
         const parsed = parseQuestions(json)
@@ -156,7 +155,29 @@ export class Context {
             throw parsed.val
         }
         this.packPath = dirname(fileName) + '/'
-        const questions = parsed.val
+        return parsed.val
+    }
+
+    async gooseGame () {
+        this.userWindow.webContents.send('game-select')
+        const pack = this.waitForPackSelection()
+        const initUri = 'file:///html/game_of_the_goose_init.html'
+        this.adminWindow.loadURL(initUri)
+        const questions = await pack
+        while (true) {
+            const gameUri = 'file:///html/game_of_the_goose.html'
+            this.adminWindow.loadURL(gameUri)
+            this.userWindow.loadURL(gameUri)
+            await this.winnersQueue.get()
+        }
+    }
+
+    async randomGame () {
+        this.userWindow.webContents.send('game-select')
+        const pack = this.waitForPackSelection()
+        const initUri = 'file:///html/random.html'
+        this.adminWindow.loadURL(initUri)
+        const questions = await pack
         while (questions.questions.length !== 0) {
             const questionIdx = Math.floor(Math.random() * questions.questions.length)
             console.log(questionIdx)

@@ -53,6 +53,10 @@ export function random () {
     ipcRenderer.send('main-menu', 'random')
 }
 
+export function gameOfTheGoose () {
+    ipcRenderer.send('main-menu', 'game-of-the-goose')
+}
+
 export function onTeamNameFieldChange (name: string) {
     const invalid = name.length === 0 || names.includes(name)
     const button = document.getElementById('add-team-button')! as HTMLButtonElement
