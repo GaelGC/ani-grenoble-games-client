@@ -164,10 +164,18 @@ export class Context {
         const initUri = 'file:///html/game_of_the_goose_init.html'
         this.adminWindow.loadURL(initUri)
         const questions = await pack
+        const rollQueue = new Queue<void>('roll-dice')
+        const startQueue = new Queue<void>('start-question')
+        const rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
         while (true) {
             const gameUri = 'file:///html/game_of_the_goose.html'
             this.adminWindow.loadURL(gameUri)
             this.userWindow.loadURL(gameUri)
+            await rollQueue.get()
+            const roll = Math.ceil(Math.random() * 6)
+            this.userWindow.webContents.send('roll', roll)
+            await rollAnimationDoneQueue.get()
+            this.adminWindow.webContents.send('roll-ack')
             await this.winnersQueue.get()
         }
     }
