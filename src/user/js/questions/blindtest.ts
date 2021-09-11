@@ -8,6 +8,6 @@ ipcRenderer.on('question-data', (_, q: BlindTestQuestion) => {
 })
 
 ipcRenderer.on('answer', async (_, answer: string) => {
-    const img = <HTMLImageElement>document.getElementById('image-loc')
-    img.src = question.answerImage
+    const imgDiv = document.getElementById('imgbox')!
+    imgDiv.style.backgroundImage = 'url(' + question.answerImage + ')'
 })

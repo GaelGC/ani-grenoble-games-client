@@ -67,7 +67,7 @@ export class Context {
             if (id === 'team-div-0') {
                 rgb = 'EC1F1F'
             } else if (id === 'team-div-1') {
-                rgb = '2541DC'
+                rgb = '6064DE'
             } else if (id === 'team-div-2') {
                 rgb = '2FC215'
             } else if (id === 'team-div-3') {
@@ -127,6 +127,7 @@ export class Context {
     }
 
     async randomGame () {
+        this.userWindow.webContents.send('game-select')
         const uri = 'file:///html/random.html'
         const pickedFile = new Queue<string>('pack-file')
         this.adminWindow.loadURL(uri)
@@ -151,6 +152,7 @@ export class Context {
     }
 
     async debug () {
+        this.userWindow.webContents.send('game-select')
         const uri = 'file:///html/debug.html'
         const debugPageQueue = new Queue<string>('debug-page-change')
         while (true) {

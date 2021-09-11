@@ -74,6 +74,7 @@ body{
 }
   
 #quote-div {
+    width: 65%;
     font-size: 3em;
     margin: auto;
     margin-right: 0.5em;

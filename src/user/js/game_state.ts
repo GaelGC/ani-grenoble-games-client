@@ -28,7 +28,7 @@ ipcRenderer.on('game-state-data', (_, s) => {
             if (id === 0) {
                 rgb = 'EC1F1F'
             } else if (id === 1) {
-                rgb = '2541DC'
+                rgb = '6064DE'
             } else if (id === 2) {
                 rgb = '2FC215'
             } else if (id === 3) {
@@ -50,6 +50,9 @@ ipcRenderer.on('game-state-data', (_, s) => {
             clone.getElementById('team-template-name')!.style.color = '#' + rgb
             clone.getElementById('team-template-score')!.style.color = '#' + rgb
 
+            // clone.getElementById('team-score-update')!.style.textShadow = ' 0 0 4px #FFFFFF,0 0 5px #FFFFFF,0 0 10px #FFFFFF'
+            // clone.getElementById('team-score-update')!.style.color = '#FFFFFF'
+
             document.getElementById('teams')?.appendChild(clone)
             id++
         }
@@ -58,7 +61,6 @@ ipcRenderer.on('game-state-data', (_, s) => {
     xhttp.send()
 })
 
-// Cr�ation d'une couleur pour un string donn� A DEGAGER BIENTOT
 function colorOf (name: string) {
     const charArray = name.split('')
     let sizeOf = charArray.length

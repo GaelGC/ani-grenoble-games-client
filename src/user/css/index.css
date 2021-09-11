@@ -56,12 +56,75 @@ p{
 }
 
 #teams{
-	display: flex;
-	flex-wrap:  wrap;
-	justify-content: space-between;
+	display: grid;
+	overflow-wrap: break-word;
+	grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
 #bigImg{
 	max-width: 35vw;
 	height: auto;
+}
+
+#squareLogo{
+  border: 0.2rem dashed #3D90ED;
+  border-radius: 2rem;
+  padding: 0.2em;
+}
+#titleB{
+	color: #3D90ED;
+    text-shadow:
+          0 0 4px #3D90ED,
+          0 0 5px #3D90ED,
+          0 0 10px #3D90ED;
+}
+
+#coneLogo{
+	border: 0.2rem dashed #1FC445;
+	border-radius: 2rem;
+	padding: 0.2em;
+  }
+
+  #titleG{
+	color: #1FC445;
+    text-shadow:
+          0 0 4px #1FC445,
+          0 0 5px #1FC445,
+          0 0 10px #1FC445;
+}
+
+  #torusLogo{
+	border: 0.2rem dashed #DEA716;
+	border-radius: 2rem;
+	padding: 0.2em;
+}
+#titleO{
+	color: #DEA716;
+    text-shadow:
+          0 0 4px #DEA716,
+          0 0 5px #DEA716,
+          0 0 10px #DEA716;
+}
+
+#sphereLogo{
+	border: 0.2rem dashed #f062e3;
+	border-radius: 2rem;
+	padding: 0.2em;
+}
+
+#titleP{
+	color: #f062e3;
+    text-shadow:
+          0 0 4px #f062e3,
+          0 0 5px #f062e3,
+          0 0 10px #f062e3;
+}
+
+#gameCat{
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr 1fr;
+	align-content: space-around;
+	height: auto;
+	padding: 0.5em;
+	visibility: hidden;
 }
