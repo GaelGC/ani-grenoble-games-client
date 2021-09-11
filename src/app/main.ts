@@ -21,12 +21,6 @@ app.on('ready', async () => {
             const response: ProtocolResponse = { path: url }
             callback(response)
         })
-        selectedSession.protocol.registerFileProtocol('question', (request, callback) => {
-            const url = request.url.replace('question://', '')
-            console.log(url)
-            const response: ProtocolResponse = { path: url }
-            callback(response)
-        })
     }
 
     const windows = new Map<string, BrowserWindow>()
