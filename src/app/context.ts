@@ -1,4 +1,4 @@
-import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet, GooseBoard, parseGooseBoard, Slot } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet, GooseBoard, parseGooseBoard, Slot, Player } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, IpcMainEvent, ProtocolResponse, session } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
@@ -207,6 +207,7 @@ export class Context {
         const startQueue = new Queue<void>('start-question')
         const rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
 
+        let teamIdx = 0
         while (true) {
             const gameUri = 'file:///html/game_of_the_goose.html'
             this.adminWindow.loadURL(gameUri)
@@ -217,8 +218,25 @@ export class Context {
             await rollAnimationDoneQueue.get()
             this.adminWindow.webContents.send('roll-ack')
             const question = this.getGooseQuestion(questions, board.slots[0])
+            question.points = roll
             await startQueue.get()
-            await this.startGenericQuestion(question)
+            const tempPlayer: Player = {
+                name: this.state.players[teamIdx].name,
+                score: 0,
+                color: this.state.players[teamIdx].color
+            }
+            const tempState: GameState = {
+                players: [tempPlayer]
+            }
+            tempState.players[0].score = 0
+            const result = await this.startGenericQuestion(question, tempState)
+            if (result.players.length > 0) {
+                this.state.players[teamIdx].score += result.points
+                if (this.state.players[teamIdx].score >= board.slots.length) {
+                    return
+                }
+            }
+            teamIdx = (teamIdx + 1) % this.state.players.length
         }
     }
 
@@ -264,7 +282,7 @@ export class Context {
         ipcMain.removeListener('del_player', this.sendDeletePlayer)
     }
 
-    async startQuestion (q: Question, htmlPath: string, onStart?: () => Promise<unknown>): Promise<QuestionWinners> {
+    async startQuestion (q: Question, htmlPath: string, state ?: GameState, onStart?: () => Promise<unknown>): Promise<QuestionWinners> {
         const answerCallback = (_: IpcMainEvent) => {
             this.userWindow.webContents.send('answer', q.answer)
         }
@@ -282,8 +300,9 @@ export class Context {
         this.userWindow.webContents.send('question-data', q)
         this.adminWindow.webContents.send('question-data', q)
         await this.adminQuestionWaiter.wait()
-        this.userWindow.webContents.send('game-state-data', this.state)
-        this.adminWindow.webContents.send('game-state-data', this.state)
+        const questionState = state === undefined ? this.state : state
+        this.userWindow.webContents.send('game-state-data', questionState)
+        this.adminWindow.webContents.send('game-state-data', questionState)
         if (onStart !== undefined) {
             onStart()
         }
@@ -294,8 +313,8 @@ export class Context {
         })
     }
 
-    async startGenericQuestion (q: Question): Promise<QuestionWinners> {
-        type questionType = ((q: Question) => Promise<QuestionWinners>)
+    async startGenericQuestion (q: Question, state ?: GameState): Promise<QuestionWinners> {
+        type questionType = ((q: Question, state ?: GameState) => Promise<QuestionWinners>)
         // We cast the functions to accept all Questions. The reason why this
         // is safer than it looks like is that the type field could not be
         // different from the actual type of the question. Maybe mapped types
@@ -307,32 +326,32 @@ export class Context {
             ['ImagesQuestion', this.starImagesQuestion.bind(this) as questionType]
         ])
         if (map.has(q.type)) {
-            return map.get(q.type)!(q)
+            return map.get(q.type)!(q, state)
         } else {
             throw Error(`Uknown question type ${q.type}`)
         }
     }
 
-    async startBlindtestQuestion (q: BlindTestQuestion): Promise<QuestionWinners> {
-        return this.startQuestion(q, 'blindtest.html')
+    async startBlindtestQuestion (q: BlindTestQuestion, state ?: GameState): Promise<QuestionWinners> {
+        return this.startQuestion(q, 'blindtest.html', state)
     }
 
-    async startQuoteQuestion (q: QuoteQuestion): Promise<QuestionWinners> {
-        return this.startQuestion(q, 'quote.html')
+    async startQuoteQuestion (q: QuoteQuestion, state ?: GameState): Promise<QuestionWinners> {
+        return this.startQuestion(q, 'quote.html', state)
     }
 
-    async starImagesQuestion (q: ImagesQuestion): Promise<QuestionWinners> {
+    async starImagesQuestion (q: ImagesQuestion, state ?: GameState): Promise<QuestionWinners> {
         const imgHandler = (_: IpcMainInvokeEvent, img: string) => {
             this.userWindow.webContents.send('show-image', img)
         }
         ipcMain.on('show-image', imgHandler)
-        return this.startQuestion(q, 'images.html').then(winners => {
+        return this.startQuestion(q, 'images.html', state).then(winners => {
             ipcMain.removeListener('show-image', imgHandler)
             return winners
         })
     }
 
-    async startHangedManQuestion (q: HangedManQuestion): Promise<QuestionWinners> {
+    async startHangedManQuestion (q: HangedManQuestion, state ?: GameState): Promise<QuestionWinners> {
         let currentTeamIdx = 0
         const usedLetters: string[] = []
         let answerLetters = q.answer.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')
@@ -361,7 +380,7 @@ export class Context {
         }
         ipcMain.handle('hanged-man-letter', letterHandler)
 
-        const winners = this.startQuestion(q, 'hanged_man.html', () => {
+        const winners = this.startQuestion(q, 'hanged_man.html', state, () => {
             setTeam(currentTeamIdx)
             this.adminWindow.webContents.send('init')
             return delay(1)
