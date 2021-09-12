@@ -3,12 +3,27 @@
 
 <head>
   <title>User</title>
+  <link rel="stylesheet" type="text/css" href="../css/game_of_goose.css">
+  <meta charset="utf-8" />
 </head>
 
 <body>
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/game_of_goose.js"></script>
+
+  Current player: <span id="player-div"></span>
   <div id="roll-div"></div>
+  <div id="players-pawn-div"></div>
+  <div id="board-div">
+    <div class="grid center-fit in-middle" id="grid-div">
+      <template id="board-cell-template">
+        <div id="template-cell">
+          <div id="template-padding-cell"></div>
+          <div id="template-text-cell" class="slot-text"></div>
+        </div>
+      </template>
+    </div>
+  </div>
 </body>
 
 </html>

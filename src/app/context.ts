@@ -210,8 +210,10 @@ export class Context {
         let teamIdx = 0
         while (true) {
             const gameUri = 'file:///html/game_of_the_goose.html'
-            this.adminWindow.loadURL(gameUri)
-            this.userWindow.loadURL(gameUri)
+            await this.adminWindow.loadURL(gameUri)
+            await this.userWindow.loadURL(gameUri)
+            this.userWindow.webContents.send('board', board)
+            this.userWindow.webContents.send('players', this.state.players, teamIdx)
             await rollQueue.get()
             const roll = Math.ceil(Math.random() * 6)
             this.userWindow.webContents.send('roll', roll)
