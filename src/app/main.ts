@@ -26,6 +26,7 @@ app.on('ready', async () => {
     const windows = new Map<string, BrowserWindow>()
     for (const key of ['admin', 'user']) {
         const window = new BrowserWindow({
+            autoHideMenuBar: true,
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
