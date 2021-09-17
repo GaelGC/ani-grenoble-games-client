@@ -9,5 +9,7 @@ ipcRenderer.on('question-data', (_, q: BlindTestQuestion) => {
 
 ipcRenderer.on('answer', async (_, answer: string) => {
     const imgDiv = document.getElementById('imgbox')!
+    question.answerImage = encodeURI(question.answerImage)
     imgDiv.style.backgroundImage = 'url(' + question.answerImage + ')'
+    imgDiv.style.backgroundSize = 'cover'
 })

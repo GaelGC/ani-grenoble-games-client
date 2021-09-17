@@ -107,7 +107,7 @@ export class Context {
             selectedSession.protocol.registerFileProtocol('question', (request, callback) => {
                 console.log(request.url)
                 console.log(this.packPath)
-                const url = request.url.replace('question://', '')
+                const url = decodeURI(request.url.replace('question://', ''))
                 let response: ProtocolResponse = { path: url }
                 if (url.length === 0 || url[0] !== '/') {
                     response = { path: this.packPath + url }
@@ -132,8 +132,8 @@ export class Context {
     }
 
     async runMain () {
+        const page = await this.mainPageChange.get()
         while (true) {
-            const page = await this.mainPageChange.get()
             if (page === 'debug') {
                 await this.debug()
             } else if (page === 'random') {
@@ -219,7 +219,7 @@ export class Context {
             this.userWindow.webContents.send('roll', roll)
             await rollAnimationDoneQueue.get()
             this.adminWindow.webContents.send('roll-ack')
-            const question = this.getGooseQuestion(questions, board.slots[0])
+            const question = this.getGooseQuestion(questions, board.slots[Math.min(board.slots.length - 1, roll + this.state.players[teamIdx].score)])
             question.points = roll
             await startQueue.get()
             const tempPlayer: Player = {
