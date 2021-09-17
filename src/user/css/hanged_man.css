@@ -98,6 +98,10 @@ body{
 
   #answer{
     font-size: 0.5em;
+    text-shadow:
+        0 0 4px #FFB900,
+        0 0 5px #FFB900,
+        0 0 10px #FFB900;
   }
 
   #hints{
