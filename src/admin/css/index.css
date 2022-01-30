@@ -1,0 +1,437 @@
+body {
+    color : white;
+    background: #120F17;
+    justify-content: center;
+    font-size: 2em;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin : auto;
+    font-weight: 600;
+}
+
+label{
+  margin-top: 0.5em;
+}
+
+h1{
+  text-align: center;
+  margin: 0px;
+}
+
+#button{
+    display: inline-flex;
+    justify-content: center;
+    margin-top: 5%;
+    width: 100%;
+    text-align: center;
+}
+
+#teams{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+#teams div{
+  display: flex;
+}
+
+#add-team-button{
+  border: none;
+  color: #120F17;
+  font-weight: 600;
+  font-size: 0.8em;
+  text-align: start;
+}
+
+#add-team-button:hover{
+  color: #332a41;
+}
+
+.team-template-remove{
+  border: null;
+  background-color: #120F17;
+}
+
+img{
+    width: 32px;
+}
+
+#teams div button{
+  background-color: #120F17;
+  border : solid #120F17;
+  color: white;
+  font-weight: 600;
+  font-size: 0.6em;
+  margin-top: 0.2em;
+}
+
+form{
+  text-align: center;
+  display: grid;
+  margin-left: 20%;
+  margin-right: 20%;
+  margin-bottom: 5%;
+}
+
+/* Effet fond */
+
+@keyframes hud-inner-left {
+    from {
+        transform: translate(-100%);
+   }
+    to {
+        transform: translate(0%);
+   }
+}
+@keyframes hud-inner-right {
+    from {
+        transform: translate(100%);
+   }
+    to {
+        transform: translate(0%);
+   }
+}
+@keyframes hud-top {
+    from {
+        transform: translate(0, -100%);
+   }
+    to {
+        transform: translate(0, 0);
+   }
+}
+@keyframes hud-bottom {
+    from {
+        transform: translate(0, 100%);
+   }
+    to {
+        transform: translate(0%);
+   }
+}
+@keyframes fade-in {
+    from {
+        opacity: 0;
+   }
+    50% {
+        opacity: 0;
+   }
+    to {
+        opacity: 1;
+   }
+}
+
+/* #bafeb6 */
+.c-hud {
+    --hud-background: #120F17;
+    --hud-foreground: #ecececa6;
+    --hud-content: white;
+    --hud-content-spacing: 2rem;
+    background-color: var(--hud-background);
+    box-sizing: border-box;
+    display: flex;
+    height: 100%;
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+.c-hud:before, .c-hud:after {
+    background-color: var(--hud-background);
+    content: '';
+    height: 5vh;
+    position: absolute;
+    width: 100%;
+    z-index: 2;
+}
+.c-hud:before {
+    animation: hud-top 1s;
+    box-shadow: inset 0 -1px var(--hud-foreground), 0 0 3px var(--hud-foreground);
+}
+.c-hud:after {
+    animation: hud-bottom 1s;
+    bottom: 0;
+    box-shadow: inset 0 1px var(--hud-foreground), 0 0 3px var(--hud-foreground);
+}
+.c-hud__inner {
+    animation: fade-in 1s;
+    background-image: url('data:image/svg+xml,%3C%3Fxml version="1.0" encoding="utf-8"%3F%3E%3C!-- Generator: Adobe Illustrator 24.2.0, SVG Export Plug-In . SVG Version: 6.00 Build 0) --%3E%3Csvg version="1.1" id="plot-guides" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 120 240" style="enable-background:new 0 0 120 240;" xml:space="preserve"%3E%3Cstyle type="text/css"%3E .st0%7Bfill:%23ECECEC;fill-opacity:1.0;%7D%0A%3C/style%3E%3Cpath id="p" class="st0" d="M0,0v8h0.5V0.5H8V0H0z"/%3E%3Cpolygon id="p_2_" class="st0" points="8,119.5 8,120.5 0.5,120.5 0.5,128 0,128 0,112 0.5,112 0.5,119.5 "/%3E%3Cpath id="p_1_" class="st0" d="M0,240v-8h0.5v7.5H8v0.5H0z"/%3E%3Cpath id="p_7_" class="st0" d="M120,0v8h-0.5V0.5H112V0H120z"/%3E%3Cpolygon id="p_6_" class="st0" points="112,119.5 112,120.5 119.5,120.5 119.5,128 120,128 120,112 119.5,112 119.5,119.5 "/%3E%3Cpath id="p_4_" class="st0" d="M120,240v-8h-0.5v7.5H112v0.5H120z"/%3E%3C/svg%3E%0A');
+    background-position: center center;
+    background-repeat: repeat;
+    background-size: 120px 240px;
+    height: 100%;
+    pointer-events: none;
+    position: fixed;
+    width: 100%;
+}
+.c-hud__inner:before, .c-hud__inner:after {
+    background-repeat: repeat-y;
+    background-size: 5px 15px;
+    content: '';
+    height: 100%;
+    position: absolute;
+    width: 2.5vw;
+    z-index: 2;
+}
+.c-hud__inner:before {
+    animation: hud-inner-left 1s;
+    background-image: url('data:image/svg+xml,%3C%3Fxml version="1.0" encoding="utf-8"%3F%3E%3C!-- Generator: Adobe Illustrator 24.2.0, SVG Export Plug-In . SVG Version: 6.00 Build 0) --%3E%3Csvg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 10 30" style="enable-background:new 0 0 10 30;" xml:space="preserve"%3E%3Cstyle type="text/css"%3E .st0%7Bopacity:1.0;fill:%23ECECEC;enable-background:new ;%7D%0A%3C/style%3E%3Cg id="Layer_2_1_"%3E%3Cg id="Layer_4"%3E%3Cpath id="ruler-border-tight-opaque" class="st0" d="M10,0H0v1h10V0z M10,29H0v1h10V29z M10,5H0v2h10V5z M10,11H0v2h10V11z M10,17 H0v2h10V17z M10,23H0v2h10V23z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E%0A');
+    background-position: center right;
+}
+.c-hud__inner:after {
+    animation: hud-inner-right 1s;
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 30"%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill:%23ECECEC;opacity:1.0;%7D%3C/style%3E%3C/defs%3E%3Cg id="Layer_2" data-name="Layer 2"%3E%3Cg id="Layer_4" data-name="Layer 4"%3E%3Cpath id="ruler-border-tight-opaque" class="cls-1" d="M10,0H0V1H10Zm0,29H0v1H10Z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+    background-position: center left;
+    right: 0;
+}
+.c-hud__content {
+    animation: fade-in 2s;
+    box-sizing: border-box;
+    color: var(--hud-content);
+    height: 100%;
+    padding: calc(5vh + var(--hud-content-spacing)) calc(2.5vw + var(--hud-content-spacing));
+    position: absolute;
+    width: 100%;
+}
+
+/* Boutons */
+
+:root {
+    --glitched-duration: 0.9s;
+  }
+
+  button.cyberpunk2077,
+  a.cyberpunk2077 {
+    --background-color: #ecececa6;
+    display: block;
+    border: none;
+    border-radius: 0%;
+    font-size: 1.5rem;
+    line-height: 100%;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    font-family: "Advent Pro", arial;
+    padding: 25px 50px;
+    margin: 10px;
+    position: relative;
+    color: white;
+    border-right: 3px solid white;
+    clip-path: polygon(
+      -15px 0%,
+      calc(100% + 15px) 0%,
+      calc(100% + 15px) 100%,
+      20px 100%,
+      -15px calc(100% - 35px)
+    );
+    cursor: pointer;
+    background-color: var(--background-color);
+    outline: none;
+  }
+  
+  button.cyberpunk2077:hover,
+  a.cyberpunk2077:hover,
+  button.cyberpunk2077:focus,
+  a.cyberpunk2077:focus {
+    animation-name: hover;
+    animation-duration: var(--glitched-duration);
+    animation-iteration-count: infinite;
+    animation-timing-function: linear; 
+  }
+  
+  button.cyberpunk2077:after,
+  a.cyberpunk2077:after {
+    content: "R-25";
+    display: block;
+    position: absolute;
+    bottom: 0px;
+    right: 25px;
+    padding: 2px 2px 0px 2px;
+    font-size: 0.6rem;
+    line-height: 9px;
+    color: white;
+    background-color: #120F17;
+    border-left: 2px solid white;
+  }
+  
+  button.cyberpunk2077:hover:after,
+  a.cyberpunk2077:hover:after,
+  button.cyberpunk2077:focus:after,
+  a.cyberpunk2077:focus:after {
+    animation-name: hoverafter;
+    animation-duration: var(--glitched-duration);
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+  
+  button.cyberpunk2077:before,
+  a.cyberpunk2077:before {
+    --outside: 4px;
+    content: "";
+    position: absolute;
+    display: none;
+    background-color: var(--background-color);
+    width: calc(100% + (var(--outside) * 2));
+    height: 12px;
+    top: 0px;
+    left: calc(0px - 1px - var(--outside));
+    border-left: 2px solid white;
+    border-right: 2px solid white;
+  }
+  
+  button.cyberpunk2077:hover:before,
+  a.cyberpunk2077:hover:before,
+  button.cyberpunk2077:focus:before,
+  a.cyberpunk2077:focus:before {
+    display: block;
+    animation-name: hoverbefore;
+    animation-duration: var(--glitched-duration);
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+  
+  @keyframes hover {
+    0% {
+      transform: skew(0deg);
+    }
+    60% {
+      transform: skew(0deg);
+    }
+    61% {
+      transform: skew(10deg);
+    }
+    70% {
+      transform: skew(10deg);
+    }
+    71% {
+      transform: skew(0deg);
+    }
+    100% {
+      transform: skew(0deg);
+    }
+  }
+  
+  @keyframes hoverbefore {
+    0% {
+      display: none;
+      top: 0px;
+    }
+    10% {
+      display: none;
+      top: 0px;
+    }
+    11% {
+      display: block;
+      top: 10px;
+      left: calc(0px - 0px - var(--outside));
+    }
+    29% {
+      top: 10px;
+    }
+    30% {
+      display: none;
+      top: 0px;
+    }
+    50% {
+      display: none;
+      top: 0px;
+    }
+    51% {
+      display: block;
+      top: 55px;
+      filter: blur(1px);
+      height: 22px;
+    }
+    90% {
+      display: block;
+      top: 55px;
+      height: 22px;
+    }
+    91% {
+      filter: blur(0px);
+      display: none;
+      top: 0px;
+      height: 12px;
+    }
+    100% {
+      display: none;
+      top: 0px;
+    }
+  }
+  
+  @keyframes hoverafter {
+    0% {
+      right: 45px;
+    }
+  
+    10% {
+      right: 45px;
+    }
+    11% {
+      right: 35px;
+    }
+    20% {
+      transform: skew(0deg);
+    }
+    21% {
+      transform: skew(-10deg);
+    }
+    40% {
+      transform: skew(-10deg);
+    }
+    41% {
+      transform: skew(0deg);
+    }
+    49% {
+      right: 35px;
+    }
+    50% {
+      right: 55px;
+    }
+  
+    60% {
+      right: 55px;
+    }
+    61% {
+      right: 35px;
+    }
+    70% {
+      transform: skew(0deg);
+    }
+    71% {
+      transform: skew(10deg);
+    }
+    80% {
+      transform: skew(10deg);
+    }
+    81% {
+      transform: skew(0deg);
+    }
+    100% {
+      right: 35px;
+    }
+  }
+
+/* Form fields */
+
+#form{
+  display: inherit;
+  width: calc(100% - 30px);
+  border: 25px solid #ecececa6;
+  border-left: 5px solid #ecececa6;
+  border-right: 5px solid #ecececa6;
+  border-bottom: 10px solid #ecececa6;
+  background-color: #ecececa6;
+  clip-path: polygon(
+    0px 25px,
+    26px 0px,
+    calc(60% - 25px) 0px,
+    60% 25px,
+    100% 25px,
+    100% calc(100% - 10px),
+    calc(100% - 15px) calc(100% - 10px),
+    calc(80% - 10px) calc(100% - 10px),
+    calc(80% - 15px) calc(100% - 0px),
+    10px calc(100% - 0px),
+    0% calc(100% - 10px)
+  );
+  margin-bottom: 10px;
+  padding: 12px;
+}

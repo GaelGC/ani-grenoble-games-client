@@ -1,0 +1,177 @@
+#answer{
+    text-align: center;
+    font-size: 1.5em;
+}
+
+#hints{
+    display: flex;
+    justify-content: center;
+}
+
+#hints button{
+    margin : 0.3em;
+    font-size: 1em;
+}
+
+#winners-selection-div{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    justify-content: center;
+}
+
+#question-div{
+  justify-content: center;
+  text-align: center;
+}
+
+#winner{
+  justify-content: center;
+  text-align: center;
+}
+
+/* */
+
+#score{
+  background-color: #ecececa6;
+  border: 2px #ecececa6 solid;
+  clip-path: polygon(85% 0, 100% 30%, 100% 100%, 75% 100%, 65% 88%, 35% 88%, 25% 100%, 0 100%, 0 30%, 15% 0);
+  width: 15em;
+  height: 6em;
+  margin: 0px;
+  display: inline-block;
+}
+
+#score button{
+  background: none;
+  border: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 0.8em;
+    font-weight: 500;
+    color: white;
+    padding-top: 0;
+    width: auto;
+}
+
+input[type="number"] {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+.number-input {
+  color: #120F17;
+  display: inline-flex;
+}
+
+.number-input,
+.number-input * {
+  box-sizing: border-box;
+}
+
+.number-input button {
+  color: #120F17;
+  outline:none;
+  -webkit-appearance: none;
+  border: none;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  cursor: pointer;
+  margin: 0;
+  position: relative;
+  background: none;
+}
+
+.number-input button:before,
+.number-input button:after {
+  display: inline-block;
+  position: absolute;
+  content: '';
+  width: 1rem;
+  height: 2px;
+  background-color: white;
+  transform: translate(-50%, -50%);
+}
+
+.number-input button.plus:after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.number-input input[type=number] {
+  font-family: sans-serif;
+  max-width: 5rem;
+  padding: .5rem;
+  border: solid #ececec00;
+  border-width: 0 2px;
+  font-size: 2rem;
+  height: 3rem;
+  font-weight: bold;
+  text-align: center;
+  color: white;
+  background: none;
+}
+
+/* */
+
+/* Boutons */
+
+  button.cyberpunk2077,
+  a.cyberpunk2077 {
+    --background-color: #ecececa6;
+    border: none;
+    border-radius: 0%;
+    font-size: 0.85rem;
+    line-height: 100%;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 300;
+    font-family: "Advent Pro", arial;
+    padding: 15px 25px;
+    margin: 5px;
+    position: relative;
+    color: white;
+    border-right: 2px solid white;
+    clip-path: polygon(
+      -5px 0%,
+      calc(100% + 5px) 0%,
+      calc(100% + 5px) 100%,
+      10px 100%,
+      -5px calc(100% - 15px)
+    );
+    cursor: pointer;
+    background-color: var(--background-color);
+    outline: none;
+    width: 50%;
+  }
+
+  button.cyberpunk2077:before,
+  a.cyberpunk2077:before {
+    --outside: 2px;
+    content: "";
+    position: absolute;
+    display: none;
+    background-color: var(--background-color);
+    width: calc(100% + (var(--outside) * 2));
+    height: 6px;
+    top: 0px;
+    left: calc(0px - 1px - var(--outside));
+    border-left: 2px solid white;
+    border-right: 2px solid white;
+  }
+
+  button.cyberpunk2077:hover,
+  a.cyberpunk2077:hover {
+    --background-color: #aaaaaaa6;
+    background-color: var(--background-color);
+  }
+
+  button.form1{
+    clip-path: polygon(65% 0, 100% 30%, 100% 100%, 0 100%, 0 30%, 35% 0);
+  }
+

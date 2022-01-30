@@ -6,11 +6,17 @@
   <title>Admin</title>
 </head>
 
-<body>
+<body  class="c-hud">
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/question.js"></script>
   <script type="text/javascript" src="/js/questions/hanged_man.js"></script>
-  <div id="word-div"></div>
+  <link rel="stylesheet" href="../css/hanged_man.css">
+
+  <div class="c-hud__inner"></div>
+
+  <div  class="c-hud__content" >
+
+    <div id="word-div"></div>
   <hr />
   current team: <div id="current-team-div"></div>
   <form onsubmit="return false;">
@@ -19,6 +25,8 @@
   <hr />
   <div id="used-letter-div"></div>
   <div id="question-div"></div>
+  
+  </div>  
 </body>
 
 </html>

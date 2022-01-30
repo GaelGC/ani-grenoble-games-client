@@ -22,7 +22,7 @@ export function onAddTeamButtonClick () {
     const template = document.getElementById('team-template') as HTMLTemplateElement
     const clone = document.importNode(template.content, true)
     clone.getElementById('team-template-div')!.id = id
-    clone.getElementById('team-template-name')!.textContent = name
+    clone.getElementById('team-template-name')!.textContent = '- ' + name + ' __'
     clone.getElementById('team-template-remove')!.onclick = () => {
         teamsDiv!.removeChild(document.getElementById(id)!)
         ipcRenderer.send('del_player', name, id)

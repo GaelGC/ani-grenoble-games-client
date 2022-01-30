@@ -1,24 +1,29 @@
 <!DOCTYPE html>
-<div id="answer"></div>
+<link rel="stylesheet" href="../css/question.css">
 <div id="hints">
   <template id="hint-template">
-    <button id="hint-button"></button>
+    <button id="hint-button" class="cyberpunk2077"></button>
     <br />
   </template>
 </div>
 <hr />
-<div>
-  Score: <input type="number" id="question-score" onchange="updateWinners();" />
-  <button onclick="revealAnswer(this); this.disabled = true;">Confirmer la réponse</button>
+<div id="score">
+  <div class="number-input">
+    <button onclick="this.parentNode.querySelector('input[type=number]').stepDown()" ></button>
+    <input type="number" id="question-score" onchange="updateWinners();" />
+    <button onclick="this.parentNode.querySelector('input[type=number]').stepUp()" class="plus"></button>
+  </div>
+  <button class="cyberpunk2077" onclick="revealAnswer(this); this.disabled = true;">Confirmer la réponse</button>
 </div>
-<div>
-  Winners:
+
+<div id="winner">
+  Winners :
   <div id="winners-selection-div">
     <template id="winners-selection-template">
       <div id="winners-selection-template-div">
-        <button id="winners-selection-template-name"></button>
+        <button id="winners-selection-template-name"  class="cyberpunk2077"></button>
       </div>
     </template>
   </div>
-  <button onclick="submitWinners(); this.disabled = true;">Confirmer</button>
+  <button class="cyberpunk2077" onclick="submitWinners(); this.disabled = true;">Confirmer</button>
 </div>

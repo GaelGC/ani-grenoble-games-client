@@ -3,28 +3,50 @@
 
 <head>
   <title>Admin</title>
+  <link rel="stylesheet" href="../css/index.css">
 </head>
 
-<body onload="loadMain()">
-  <script type="text/javascript">var exports = {};</script>
+<body onload="loadMain()" class="c-hud"> 
+
+
+  <div class="c-hud__inner"></div>
+
+  <div  class="c-hud__content" >
+
+    <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/main.js"></script>
-  <button href="/html/debug.html" onclick="debug();" class="game-button" disabled="true">Debug panel</button>
-  <button href="/html/random.html" onclick="random();" class="game-button" disabled="true">Random game</button>
-  <button href="/html/game_of_the_goose_init.html" onclick="gameOfTheGoose();" class="game-button" disabled="true">Game of the goose</button>
+
+  <h1> AniGame__Admin </h1>
+
+  <div id="button">
+
+    <div><button href="/html/debug.html" onclick="debug();" class="cyberpunk2077"><img src="../img/debug.png"><br>Debug panel_</button></div>
+
+    <div><button href="/html/random.html" onclick="random();" class="cyberpunk2077"><img src="../img/random.png"><br>Random game_</button></div>
+
+    <div><button href="/html/game_of_the_goose_init.html" onclick="gameOfTheGoose();" class="cyberpunk2077"><img src="../img/game.png"><br>Game of the goose_</button></div>
+
+  </div>
+
   <form>
-    <label for="new-team-name">Nom de l'équipe :</label>
-    <input id="new-team-name" name="name" oninput="onTeamNameFieldChange(this.value);">
-    <input type="submit" id="add-team-button" value="Rajouter" disabled="true" onclick="onAddTeamButtonClick();">
+    <label for="new-team-name">NOM DES EQUIPES</label>
+    <div id="form">
+      <input class="cyberpunk" type="text" id="new-team-name" name="name" oninput="onTeamNameFieldChange(this.value);">
+      <input type="submit" id="add-team-button" value="Rajouter" disabled="true" onclick="onAddTeamButtonClick();">
+    </div>
   </form>
   <div id="teams">
     <template id="team-template">
       <div id="team-template-div">
         <div id="team-template-name"></div>
-        <button id="team-template-remove">✖</button>
+        <button id="team-template-remove">[ X ]</button>
         <br />
       </div>
     </template>
   </div>
+
+  </div>
+
 </body>
 
 </html>

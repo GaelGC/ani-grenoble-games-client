@@ -12,8 +12,7 @@ ipcRenderer.on('question-data', (_, q) => {
 
     const xhttp = new XMLHttpRequest()
     xhttp.onloadend = function () {
-        document.getElementById('question-div')!.innerHTML = this.responseText
-        document.getElementById('answer')!.textContent = question.answer;
+        document.getElementById('question-div')!.innerHTML = this.responseText;
         (document.getElementById('question-score') as HTMLInputElement).value = question.points.toString()
         const template: HTMLTemplateElement = document.getElementById('hint-template') as HTMLTemplateElement
         for (let hintIdx = 0; hintIdx < question.hints.length; hintIdx++) {
@@ -51,9 +50,11 @@ const buttonHandler = (name: string, insertedButton: HTMLButtonElement) => {
     if (winners.includes(name)) {
         winners = winners.filter(x => x !== name)
         insertedButton.style.backgroundColor = ''
+        insertedButton.style.color = ''
     } else {
         winners.push(name)
-        insertedButton.style.backgroundColor = '#00ff00'
+        insertedButton.style.backgroundColor = '#629969a6'
+        insertedButton.style.color = '#CAFFD0'
     }
     updateWinners()
 }

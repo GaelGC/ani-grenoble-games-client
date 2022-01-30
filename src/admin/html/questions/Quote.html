@@ -6,15 +6,23 @@
   <title>Admin</title>
 </head>
 
-<body>
+<body  class="c-hud">
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/question.js"></script>
   <script type="text/javascript" src="/js/questions/quote.js"></script>
-  <template id="template">
-    <audio id="audio" controls src=""></audio>
-  </template>
-  <div id="quote-div"></div>
-  <div id="question-div"></div>
+  <link rel="stylesheet" href="../css/quote.css">
+
+  <div class="c-hud__inner"></div>
+
+  <div  class="c-hud__content" >
+
+    <template id="template">
+      <audio id="audio" controls src=""></audio>
+    </template>
+    <div id="quote-div"></div>
+    <div id="question-div"></div>
+
+  </div> 
 </body>
 
 </html>

@@ -26,16 +26,24 @@
   </style>
 </head>
 
-<body>
+<body  class="c-hud">
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/question.js"></script>
   <script type="text/javascript" src="/js/questions/images.js"></script>
-  <div id="images-div" class="imgbox">
-    <template id="image-template">
-      <img id="image-elem" onclick="onImageClick(this);" role="button" class="center-fit" />
-    </template>
-  </div>
-  <div id="question-div"></div>
+  <link rel="stylesheet" href="../css/images.css">
+
+  <div class="c-hud__inner"></div>
+
+  <div  class="c-hud__content" >
+
+    <div id="images-div" class="imgbox">
+      <template id="image-template">
+        <img id="image-elem" onclick="onImageClick(this);" role="button" class="center-fit" />
+      </template>
+    </div>
+    <div id="question-div"></div>
+    
+  </div> 
 </body>
 
 </html>
