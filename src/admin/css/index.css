@@ -34,14 +34,6 @@ h1{
   display: flex;
 }
 
-#add-team-button{
-  border: none;
-  color: #120F17;
-  font-weight: 600;
-  font-size: 0.8em;
-  text-align: start;
-}
-
 #add-team-button:hover{
   color: #332a41;
 }
@@ -412,7 +404,7 @@ form{
 /* Form fields */
 
 #form{
-  display: inherit;
+  display: flex;
   width: calc(100% - 30px);
   border: 25px solid #ecececa6;
   border-left: 5px solid #ecececa6;
@@ -434,4 +426,21 @@ form{
   );
   margin-bottom: 10px;
   padding: 12px;
+}
+
+input[type="text"]{
+  border: none;
+  background-color: rgba(0, 0, 0, 0.103);
+  width: 100%;
+}
+
+#add-team-button{
+  border: none;
+  color: #120f17fb;
+  background: none;
+  font-weight: 1000;
+  font-size: 0.8em;
+  display:block;
+  height: 50px;
+  width: 50px;
 }

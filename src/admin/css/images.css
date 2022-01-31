@@ -1,3 +1,19 @@
+#image-elem{
+    clip-path: polygon(0 30%, 20% 20%, 30% 0, 70% 0, 81% 20%, 100% 30%, 100% 70%, 80% 80%, 70% 100%, 30% 100%, 20% 80%, 0 70%);
+    border: 2px solid #bd53b4dc;
+    padding: 1em;
+    width: 15vh;
+    height: auto;
+}
+
+#images-div{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    justify-content: center;
+    height: 20vh;
+    width: 100%;
+}
+
 /* Effet fond */
 
 @keyframes hud-inner-left {

@@ -10,7 +10,7 @@ body{
 
 audio{
     width: 75vh;
-    margin-top: 20vh;
+    margin-top: 15vh;
 }
 
 audio::-webkit-media-controls-panel{
@@ -51,14 +51,14 @@ audio::-webkit-media-controls-volume-slider
 
 #top{
     background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(18,15,23,1) 95%);
-    height: 7vh;
+    height: 5vh;
     width: 100%;
     content: '';
 }
 
 #bottom{
     background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(18,15,23,1) 95%);
-    height: 7vh;
+    height: 5vh;
     width: 100%;
     content: '';
 }
