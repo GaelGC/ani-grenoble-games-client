@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { BlindTestQuestion, HangedManQuestion, QuoteQuestion, ImagesQuestion } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, QuoteQuestion, ImagesQuestion, FindTheWordQuestion } from '@gaelgc/ani-grenoble-games-format'
 
 export async function debug (ctx: Context, req: string) {
     if (req === 'song') {
@@ -36,6 +36,17 @@ export async function debug (ctx: Context, req: string) {
         }
         console.log(question)
         await ctx.startHangedManQuestion(question)
+    } else if (req === 'find_the_word') {
+        const question: FindTheWordQuestion = {
+            name: 'Find the Word',
+            type: 'FindTheWordQuestion',
+            points: 1,
+            answer: 'Kyubey',
+            nbTries: 5,
+            hints: []
+        }
+        console.log(question)
+        await ctx.startFindTheWordQuestion(question)
     } else if (req === 'images') {
         const question: ImagesQuestion = {
             name: 'two images, one answer',

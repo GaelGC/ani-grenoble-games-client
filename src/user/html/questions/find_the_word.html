@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>User</title>
+  <link rel="stylesheet" href="../css/find_the_word.css">
+</head>
+
+<body>
+  <script type="text/javascript">var exports = {};</script>
+  <script type="text/javascript" src="/js/question.js"></script>
+  <script type="text/javascript" src="/js/game_state.js"></script>
+  <script type="text/javascript" src="/js/questions/find_the_word.js"></script>
+  <script type="text/javascript" src="/js/3d/torus.js"></script>
+
+  <div id="shadow">
+    <div id="game-state-div"></div>
+    <img src="../img/decoOrang1.png" id="deco">
+  </div>
+
+  <header>
+    <div id="fullTitle">
+      <canvas id="3d"></canvas>
+      <h1 id="titre">Find the Word</h1>
+    </div>
+  </header>
+
+  <div id="gameHeart">
+    <div id="find-the-word-div">
+      <table id="word-table"></table>
+      <span id="team-div-span">
+        Current team: <div id="team-div"></div>
+      </span>
+      <div id="word-div" style="font-family: monospace; letter-spacing: 5px;"></div>
+      <div id="question-div"></div>
+    </div>
+
+  </div>
+
+</body>
+
+</html>

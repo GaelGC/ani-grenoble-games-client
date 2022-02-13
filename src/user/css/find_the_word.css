@@ -1,0 +1,118 @@
+body {
+  background-image: url("../img/backgroundOrang.jpg");
+  text-align: center;
+  font: 2em "Open Sans", sans-serif;
+  margin: auto;
+  overflow-wrap: break-word;
+  height: 50vw;
+}
+
+/* State pan */
+
+table {
+  border-collapse: collapse;
+  background: #dea716;
+}
+
+td {
+  border: 1px solid white;
+  color: white;
+  width: 50px;
+  height: 50px;
+  font-family: monospace;
+}
+
+.empty-cell {
+  background: orange;
+}
+
+.good-cell {
+  background: green;
+}
+
+.bad-cell {
+  background: red;
+}
+
+.misplaced-cell {
+  background: peru;
+  border-spacing: 50%;
+}
+
+#shadow {
+  width: 15%;
+  height: 85%;
+  background-color: rgb(57, 57, 57, 0.9);
+  position: absolute;
+  left: 20px;
+}
+
+#game-state-div {
+  margin: 0px;
+  box-shadow: 5 5 2rem #dea716;
+  padding-top: 2em;
+}
+
+#deco {
+  position: absolute;
+  top: 93%;
+  width: 100%;
+  left: 0px;
+  height: auto;
+}
+
+/* Top */
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin-bottom: 1em;
+}
+
+#fullTitle {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#titre {
+  position: relative;
+  right: 100px;
+  top: 60px;
+  color: #dea716;
+  text-shadow: 0 0 4px #dea716, 0 0 5px #dea716, 0 0 10px #dea716;
+}
+
+#3d {
+  width: 200px;
+  height: 200px;
+}
+
+/* Game */
+
+#gameHeart {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  height: 30vw;
+}
+
+/* Answer & Hints */
+
+#question-div {
+  height: 100%;
+  justify-content: center;
+  margin-top: 0.5em;
+}
+
+#answer {
+  font-size: 0.5em;
+}
+
+#hints {
+  visibility: collapse;
+}
+
+#team-div-span {
+  color: white;
+}
