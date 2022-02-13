@@ -1,4 +1,4 @@
-import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet, GooseBoard, parseGooseBoard, Slot, Player } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet, GooseBoard, parseGooseBoard, Slot, Player, FindTheWordQuestion } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, IpcMainEvent, ProtocolResponse, session } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
@@ -325,7 +325,8 @@ export class Context {
             ['BlindTestQuestion', this.startBlindtestQuestion.bind(this) as questionType],
             ['QuoteQuestion', this.startQuoteQuestion.bind(this) as questionType],
             ['HangedManQuestion', this.startHangedManQuestion.bind(this) as questionType],
-            ['ImagesQuestion', this.starImagesQuestion.bind(this) as questionType]
+            ['ImagesQuestion', this.starImagesQuestion.bind(this) as questionType],
+            ['FindTheWordQuestion', this.startFindTheWordQuestion.bind(this) as questionType]
         ])
         if (map.has(q.type)) {
             return map.get(q.type)!(q, state)
@@ -389,6 +390,77 @@ export class Context {
         })
         return winners.then((winner) => {
             ipcMain.removeHandler('hanged-man-letter')
+            return winner
+        })
+    }
+
+    async startFindTheWordQuestion (q: FindTheWordQuestion, state ?: GameState): Promise<QuestionWinners> {
+        let currentTeamIdx = 0
+        let remainingTries = q.nbTries
+        const uppercaseAnswer = q.answer.toUpperCase()
+
+        const setTeam = (idx: number) => {
+            for (const window of [this.adminWindow.webContents, this.userWindow.webContents]) {
+                window.send('current-team', idx)
+            }
+        }
+
+        const wordHandler = async (_: IpcMainInvokeEvent, word: string) => {
+            remainingTries -= 1
+            word = word.toUpperCase()
+
+            const validity: number[] = []
+            const nbExpected: Map<string, number> = new Map()
+            // Count the number of each letter in the word.
+            for (const letter of uppercaseAnswer) {
+                if (!nbExpected.has(letter)) {
+                    nbExpected.set(letter, 0)
+                }
+                nbExpected.set(letter, nbExpected.get(letter)! + 1)
+            }
+
+            // Check good letters, and count the number of remaining ones.
+            for (let i = 0; i < word.length; i++) {
+                const isRight = word[i] === uppercaseAnswer[i]
+                validity.push(isRight ? 2 : 0)
+                if (isRight) {
+                    nbExpected.set(word[i], nbExpected.get(word[i])! - 1)
+                }
+            }
+
+            // Mark misplaced letters.
+            for (let i = 0; i < word.length; i++) {
+                const letter = word[i]
+                if (validity[i] === 0 && nbExpected.has(letter) && nbExpected.get(letter)! > 0) {
+                    nbExpected.set(letter, nbExpected.get(letter)! - 1)
+                    validity[i] = 1
+                }
+            }
+            const waitForAnimation = new Semaphore('reveal-animation-done')
+            this.userWindow.webContents.send('new-word', [word, validity, remainingTries])
+            currentTeamIdx = (currentTeamIdx + 1) % this.state.players.length
+            await waitForAnimation.wait()
+            waitForAnimation.destroy()
+            if (validity.includes(0) || validity.includes(1)) {
+                setTeam(currentTeamIdx)
+            }
+            return remainingTries === 0
+        }
+        ipcMain.handle('new-word', wordHandler)
+
+        const inputHandle = (_: IpcMainInvokeEvent, word: string) => {
+            this.userWindow.webContents.send('find-the-word-temp-select', word)
+        }
+        ipcMain.handle('find-the-word-temp-select', inputHandle)
+
+        const winners = this.startQuestion(q, 'find_the_word.html', state, () => {
+            setTeam(currentTeamIdx)
+            this.adminWindow.webContents.send('init')
+            return delay(1)
+        })
+        return winners.then((winner) => {
+            ipcMain.removeHandler('find-the-word-temp-select')
+            ipcMain.removeHandler('new-word')
             return winner
         })
     }

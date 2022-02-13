@@ -15,3 +15,7 @@ export function hangedMan () {
 export function imageQuizz () {
     ipcRenderer.send('debug-page-change', 'images')
 }
+
+export function findTheWordQuizz () {
+    ipcRenderer.send('debug-page-change', 'find_the_word')
+}
