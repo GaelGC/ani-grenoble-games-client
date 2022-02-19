@@ -41,7 +41,7 @@ export async function debug (ctx: Context, req: string) {
             name: 'Find the Word',
             type: 'FindTheWordQuestion',
             points: 1,
-            answer: 'Kyubey',
+            answer: 'Madoka',
             nbTries: 5,
             hints: []
         }

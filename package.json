@@ -1,10 +1,13 @@
 {
   "name": "ani-grenoble-games-client",
-  "version": "0.3.0",
+  "version": "0.4.0",
+  "main": "app_dist/main.js",
   "description": "Client for the Ani Grenoble games",
   "scripts": {
     "build": "tsc --build src/app && tsc --build src/user/js && tsc --build src/admin/js && copyfiles -f src/user/html/**/*.html app_dist/user/html/ && copyfiles -f src/admin/html/**/*.html app_dist/admin/html/ && copyfiles -f src/user/css/*.css app_dist/user/css/ && copyfiles -f src/admin/css/*.css app_dist/admin/css/ && copyfiles -f src/user/img/*.jpg app_dist/user/img/ && copyfiles -f src/user/img/*.png app_dist/user/img/ && copyfiles -f src/admin/img/*.jpg app_dist/admin/img/ && copyfiles -f src/admin/img/*.png app_dist/admin/img/ && copyfiles -f src/user/three/* app_dist/user/three/",
-    "run": "npm run build && electron --no-user-gesture-required app_dist/main.js"
+    "run": "npm run build && electron --no-user-gesture-required app_dist/main.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "keywords": [
     "Ani-Grenoble",
@@ -19,16 +22,18 @@
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "copyfiles": "^2.4.1",
+    "electron-builder": "^22.14.5",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.2.0",
+    "electron": "^13.6.9",
     "typescript": "^4.5.5"
   },
   "dependencies": {
     "@gaelgc/ani-grenoble-games-format": "^0.7.0",
-    "electron": "^13.6.9",
-    "three": "^0.132.2"
+    "three": "^0.132.2",
+    "tslib": "^2.3.1"
   }
 }
