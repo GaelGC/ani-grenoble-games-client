@@ -11,7 +11,9 @@ ipcRenderer.on('roll', async (_, dice: number) => {
         rollDiv.textContent = Math.ceil(Math.random() * 6).toString()
         await new Promise(resolve => setTimeout(resolve, 200))
     }
-    rollDiv.textContent = dice.toString()
+    rollDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
+    rollDiv.style.color = '#' + currentPlayer.color
+    rollDiv.textContent = `roll: ${dice.toString()}`
     await new Promise(resolve => setTimeout(resolve, 400))
     for (let i = 1; i <= dice; i++) {
         movePawnDiv(document.getElementById('current-player-pawn')!, currentPlayer.score + i)
@@ -40,7 +42,7 @@ function movePawnDiv (playerDiv: HTMLElement, score: number) {
 ipcRenderer.on('players', (_, players: Player[], teamIdx: number) => {
     currentPlayer = players[teamIdx]
     const playerDiv = document.getElementById('player-div')!
-    playerDiv.textContent = currentPlayer.name
+    playerDiv.textContent = `Current player: ${currentPlayer.name}`
     playerDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
     playerDiv.style.color = '#' + currentPlayer.color
 
