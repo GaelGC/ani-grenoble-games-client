@@ -194,7 +194,9 @@ export class Context {
             throw Error('Could not find compatible question')
         }
         const idx = Math.floor(Math.random() * compatible.length)
-        questions.questions.splice(questions.questions.indexOf(compatible[idx]), 1)
+        if (compatible.length !== 1) {
+            questions.questions.splice(questions.questions.indexOf(compatible[idx]), 1)
+        }
         return compatible[idx]
     }
 
