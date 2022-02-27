@@ -246,6 +246,9 @@ export class Context {
             if (result.players.length > 0) {
                 this.state.players[teamIdx].score += result.points
                 if (this.state.players[teamIdx].score >= board.slots.length) {
+                    const winUri = 'file:///html/random_game_winners.html'
+                    await this.userWindow.loadURL(winUri)
+                    this.userWindow.webContents.send('player_add', this.state.players[teamIdx])
                     return
                 }
             }
