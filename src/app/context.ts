@@ -224,8 +224,14 @@ export class Context {
             this.userWindow.webContents.send('roll', roll)
             await rollAnimationDoneQueue.get()
             this.adminWindow.webContents.send('roll-ack')
-            const question = this.getGooseQuestion(questions, board.slots[Math.min(board.slots.length - 1, roll + this.state.players[teamIdx].score)])
+
+            const slotIdx: number = Math.min(board.slots.length, roll + this.state.players[teamIdx].score)
+            const slot : Slot = slotIdx === board.slots.length
+                ? { type: 'TagSelector', tags: ['final'], coordinates: { x: 0, y: 0 } }
+                : board.slots[slotIdx]
+            const question = this.getGooseQuestion(questions, slot)
             question.points = roll
+
             await startQueue.get()
             const tempPlayer: Player = {
                 name: this.state.players[teamIdx].name,

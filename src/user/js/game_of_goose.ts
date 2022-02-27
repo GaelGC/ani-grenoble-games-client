@@ -22,7 +22,10 @@ ipcRenderer.on('roll', async (_, dice: number) => {
 
 const playersOnSlot = new Map<number, number>()
 function movePawnDiv (playerDiv: HTMLElement, score: number) {
-    const dstCell = document.getElementById(`cell-${score}`)!
+    let dstCell = document.getElementById(`cell-${score}`)
+    if (dstCell === null) {
+        dstCell = document.getElementById('cell--1')!
+    }
     const nbPlayers = playersOnSlot.get(score) ?? 0
     const pos = [[15, 15], [85, 15], [15, 85], [85, 85]]
     const cellCoords = dstCell.getBoundingClientRect()
