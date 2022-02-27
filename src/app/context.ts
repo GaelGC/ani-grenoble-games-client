@@ -143,6 +143,9 @@ export class Context {
             } else {
                 throw Error(`Invalid main page ${page} requested`)
             }
+            for (const player of this.state.players) {
+                player.score = 0
+            }
         }
     }
 
