@@ -1,10 +1,12 @@
 import { ipcRenderer } from 'electron'
-import { Player, GameState } from '@gaelgc/ani-grenoble-games-format'
+import { Player, GameState, HangedManQuestion } from '@gaelgc/ani-grenoble-games-format'
 
 let players: Player[] = []
 let currentTeam: Player
 
 ipcRenderer.on('question-data', (_, q) => {
+    const question: HangedManQuestion = q
+    document.getElementById('answer')!.textContent = question.answer
 })
 
 ipcRenderer.on('game-state-data', (_, s: GameState) => {
@@ -32,6 +34,8 @@ export async function onLetterChoice (letter: string) {
     const inputField = <HTMLInputElement>document.getElementById('letter-input')
     inputField.disabled = true
     inputField.value = ''
+
+    document.getElementById('used-letter-div')!.textContent = document.getElementById('used-letter-div')!.textContent + ' ' + letter
 
     const valid = await ipcRenderer.invoke('hanged-man-letter', letter)
     if (!valid) {

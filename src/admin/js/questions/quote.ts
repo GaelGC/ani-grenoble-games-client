@@ -8,5 +8,6 @@ ipcRenderer.on('question-data', (_, q) => {
         const clone = document.importNode(template.content, true)
         clone.getElementById('audio')!.setAttribute('src', question.audio)
         document.getElementById('quote-div')!.appendChild(clone)
+        document.getElementById('answer')!.textContent = question.answer
     }
 })

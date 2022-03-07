@@ -10,6 +10,8 @@ ipcRenderer.on('question-data', (_, question: ImagesQuestion) => {
         cloneImg.src = image
         imagesDiv.appendChild(cloneImg)
     }
+    const q : ImagesQuestion = question
+    document.getElementById('answer')!.textContent = q.answer
 })
 
 export function onImageClick (img: HTMLImageElement) {

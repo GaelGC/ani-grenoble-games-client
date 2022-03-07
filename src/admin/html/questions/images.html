@@ -4,26 +4,7 @@
 
 <head>
   <title>Admin</title>
-  <!-- Temporary code to handle fitting the images in the browser window.
-        https://stackoverflow.com/a/14696457
-  -->
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-    }
 
-    .imgbox {
-      display: grid;
-      height: 10%;
-    }
-
-    .center-fit {
-      max-width: 10%;
-      max-height: 10vh;
-      margin: auto;
-    }
-  </style>
 </head>
 
 <body  class="c-hud">
@@ -36,10 +17,15 @@
 
   <div  class="c-hud__content" >
 
-    <div id="images-div" class="imgbox">
+    <div id="full-images-div" class="imgbox">
+      <div id="top"></div>
+      <div id="answer"></div>
+      <div id="images-div" class="imgbox">
       <template id="image-template">
         <img id="image-elem" onclick="onImageClick(this);" role="button" class="center-fit" />
       </template>
+      </div> 
+      <div id="bottom"></div>
     </div>
     <div id="question-div"></div>
     
