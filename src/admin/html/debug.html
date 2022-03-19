@@ -3,15 +3,26 @@
 
 <head>
   <title>Admin</title>
+  <link rel="stylesheet" href="../css/index.css">
 </head>
 
-<body>
-  <script type="text/javascript">var exports = {};</script>
-  <script type="text/javascript" src="/js/debug.js"></script>
-  <button onclick="song()">song</button>
-  <button onclick="quote()">quote</button>
-  <button onclick="hangedMan()">Hanged man</button>
-  <button onclick="imageQuizz()">4 images, 1 anime</button>
+<body class="c-hud">
+
+  <div class="c-hud__inner"></div>
+
+  <div  class="c-hud__content" >
+    <script type="text/javascript">var exports = {};</script>
+    <script type="text/javascript" src="/js/debug.js"></script>
+    <div style="display: flex; justify-content: space-between;">
+      <button onclick="song()" class="cyberpunk2077">song</button>
+      <button onclick="quote()" class="cyberpunk2077">quote</button>
+      <button onclick="hangedMan()" class="cyberpunk2077">Hanged man</button>
+      <button onclick="imageQuizz()" class="cyberpunk2077">4 images, 1 anime</button>
+    </div>
+      
+    <!--<div><button href="/html/index.html" class="cyberpunk2077">Retour</button></div>-->
+
+  </div>
 </body>
 
 </html>

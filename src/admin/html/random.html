@@ -3,18 +3,26 @@
 
 <head>
   <title>Admin</title>
+  <link rel="stylesheet" href="../css/index.css">
 </head>
 
-<body>
+<body class="c-hud">
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/random.js"></script>
 
-  <form>
-    <label for="pack">Pack file:</label>
-    <input type="file" id="pack-file" name="pack">
-    <hr />
-    <button onclick="start(); return false;">Start</button>
-  </form>
+  <div class="c-hud__inner"></div>
+
+  <div  class="c-hud__content" >
+    <form>
+      <label for="pack">Pack file:</label>
+      <input type="file" id="pack-file" name="pack" class="cyberpunk2077">
+      <hr />
+      <button onclick="start(); return false;" class="cyberpunk2077">Start</button>
+    </form>
+
+    <!--<div><button href="/html/index.html" class="cyberpunk2077">Retour</button></div>-->
+
+  </div>
 
 </body>
 
