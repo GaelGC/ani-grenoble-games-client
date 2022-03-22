@@ -1,7 +1,7 @@
 #image-elem{
     clip-path: polygon(0 30%, 20% 20%, 30% 0, 70% 0, 81% 20%, 100% 30%, 100% 70%, 80% 80%, 70% 100%, 30% 100%, 20% 80%, 0 70%);
     border: 2px solid #db5fd1dc;
-    padding: 1em;
+    padding: 0.3em;
     width: 15vh;
     height: auto;
 }

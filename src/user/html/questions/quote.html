@@ -2,36 +2,40 @@
 <html>
 
   <head>
-    <title>User</title>
+    <title>Quote</title>
     <link rel="stylesheet" href="../css/quote.css">
   </head>
 
-<body>
+  <body class="c-hud">
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/question.js"></script>
   <script type="text/javascript" src="/js/game_state.js"></script>
   <script type="text/javascript" src="/js/questions/quote.js"></script>
   <script type="text/javascript" src="/js/3d/cone.js"></script>
 
-  <div id="shadow">
-    <div id="game-state-div"></div>
-    <img src="../img/decoGreen1.png" id="deco">
-  </div>
+  <div class="c-hud__inner"></div>
 
-  <header>
-    <div id="fullTitle">
-      <canvas id="3d"></canvas>
-      <h1 id="titre">Citation / Question</h1>
+    <div id="score">
+
+      <header>
+        <div id="fullTitle">
+          <canvas id="3d"></canvas>
+          <h1 id="titre">Quote</h1>
+        </div>
+      </header>
+  
+      <div id="game-state-div"></div>
+      <div id="decoration"></div>
     </div>
-  </header>
+  
+    <div id="gameHeart">
+  
+      <div id="question-div"></div>
+  
+      <div id="quote-div"></div>
+  
+    </div>
 
-  <div id="gameHeart">
-
-    <div id="quote-div"></div>
-
-    <div id="question-div"></div>
-
-  </div>
 </body>
 
 </html>

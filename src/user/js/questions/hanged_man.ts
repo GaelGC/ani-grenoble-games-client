@@ -40,7 +40,7 @@ ipcRenderer.on('letter', (_, letter: string) => {
 
 ipcRenderer.on('answer', async (_, answer: string) => {
     const hangedDiv = document.getElementById('word-div')!
-    hangedDiv.textContent = ''
+    //hangedDiv.textContent = ''
 })
 
 async function start () {

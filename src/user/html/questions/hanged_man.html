@@ -2,39 +2,42 @@
 <html>
 
   <head>
-    <title>User</title>
+    <title>Hanged Man</title>
     <link rel="stylesheet" href="../css/hanged_man.css">
   </head>
 
-<body>
+<body class="c-hud">
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/question.js"></script>
   <script type="text/javascript" src="/js/game_state.js"></script>
   <script type="text/javascript" src="/js/questions/hanged_man.js"></script>
   <script type="text/javascript" src="/js/3d/torus.js"></script>
 
-    <div id="shadow">
+    <div class="c-hud__inner"></div>
+
+    <div id="score">
+
+      <header>
+        <div id="fullTitle">
+          <canvas id="3d"></canvas>
+          <h1 id="titre">Hanged Man</h1>
+        </div>
+      </header>
+  
       <div id="game-state-div"></div>
-      <img src="../img/decoOrang1.png" id="deco">
+      <div id="decoration"></div>
     </div>
   
-    <header>
-      <div id="fullTitle">
-        <canvas id="3d"></canvas>
-        <h1 id="titre">Jeu du Pendu</h1>
-      </div>
-    </header>
-
     <div id="gameHeart">
   
-      <div id="hanged-div">
-        <div id="team-div"></div>
-        <div id="used-letter-div"></div>
-        <div id="word-div" style="font-family: monospace; letter-spacing: 5px;"></div>
-        <div id="question-div"></div>
-      </div>
+      <div id="question-div"></div>
+  
+      <div id="team-div"></div>
+      <div id="used-letter-div"></div>
+      <div id="word-div" style="font-family: monospace; letter-spacing: 5px;"></div>
   
     </div>
+
 
 </body>
 
