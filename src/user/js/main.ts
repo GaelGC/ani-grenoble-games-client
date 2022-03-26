@@ -30,6 +30,7 @@ ipcRenderer.on('player_delete', async (_, name, id) => {
 })
 
 ipcRenderer.on('game-select', async (_, name, id, color) => {
+    document.getElementById('mainTitle')!.style.display = 'none'
     document.getElementById('gameCat')!.style.visibility = 'visible'
     document.getElementById('teamCat')!.style.display = 'none'
 })

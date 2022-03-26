@@ -8,11 +8,6 @@
 
 <body class="c-hud">
   <script type="text/javascript">var exports = {};</script>
-  <script type="text/javascript" src="/js/main.js"></script>
-  <script type="text/javascript" src="/js/3d/squareLogo.js"></script>
-  <script type="text/javascript" src="/js/3d/coneLogo.js"></script>
-  <script type="text/javascript" src="/js/3d/torusLogo.js"></script>
-  <script type="text/javascript" src="/js/3d/sphereLogo.js"></script>
 
   <div class="c-hud__inner"></div>
 
@@ -21,8 +16,10 @@
 
       
     <div id="mainTitle">
-      <img src="../img/logoHP.png" id="bigImg">
-      <p class="title"> Nous arrivons bientôt... </p>
+      <div id="decoTop"></div>
+      <canvas id="mainTit" style="position: absolute; width: 100vw; height: 100vw;"></canvas>
+      <p id="title" style="margin-top: 1em;"> > Nous arrivons . . . _</p>
+      <div id="decoBottom"></div>
     </div>
 
     <div id="teamCat">
@@ -80,5 +77,12 @@
   </div>
 
 </body>
+
+<script type="text/javascript" src="/js/main.js"></script>
+<script type="text/javascript" src="/js/3d/squareLogo.js"></script>
+<script type="text/javascript" src="/js/3d/coneLogo.js"></script>
+<script type="text/javascript" src="/js/3d/torusLogo.js"></script>
+<script type="text/javascript" src="/js/3d/sphereLogo.js"></script>
+<script type="text/javascript" src="/js/3d/titleScreen.js"></script>
 
 </html>
