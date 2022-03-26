@@ -11,18 +11,17 @@ ipcRenderer.on('player_add', async (_, name, id, color) => {
         }
     }
 
-    document.getElementById('neonPink')!.innerHTML = 'Les équipes'
-
     const teamsDiv = document.getElementById('teams')
     const clone = document.importNode(teamTemplate.content, true)
     clone.getElementById('team-template-div')!.id = id
     clone.getElementById('team-template-name')!.textContent = name
-
-    clone.getElementById('team-template-name')!.style.textShadow = ' 0 0 7px #fff,0 0 10px #fff,0 0 21px #fff,0 0 42px #' + color + ',0 0 82px #' + color + ',0 0 92px #' + color + ',  0 0 102px #' + color + ',0 0 151px #' + color
+    clone.getElementById('team-template-name')!.style.color = color
+    clone.getElementById('team-template-name')!.style.textShadow = ' 0 0 1px #fff,0 0 2px #fff,0 0 3px #fff,0 0 4px #' + color + ',0 0 5px #' + color + ',0 0 6px #' + color + ',  0 0 7px #' + color + ',0 0 8px #' + color
 
     teamsDiv!.appendChild(clone)
 
-    document.getElementById('bigImg')!.style.maxWidth = '25vw'
+    document.getElementById('mainTitle')!.style.display = 'none'
+    document.getElementById('teamCat')!.style.visibility = 'visible'
 })
 
 ipcRenderer.on('player_delete', async (_, name, id) => {
@@ -31,10 +30,8 @@ ipcRenderer.on('player_delete', async (_, name, id) => {
 })
 
 ipcRenderer.on('game-select', async (_, name, id, color) => {
-    document.getElementById('bigImg')!.style.maxWidth = '15vw'
     document.getElementById('gameCat')!.style.visibility = 'visible'
-    document.getElementById('teams')!.style.display = 'none'
-    document.getElementById('neonPink')!.innerHTML = 'Les différents jeux'
+    document.getElementById('teamCat')!.style.display = 'none'
 })
 
 ipcRenderer.send('user_ready')

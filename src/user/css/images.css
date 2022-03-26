@@ -66,11 +66,10 @@ header{
     height: 100%;
     width: 80%;
     margin: 0.5em;
-    border: dashed #f062e3;
     }
   
     .center-fit {
-    max-width: 100%;
+    max-width: 90%;
     max-height: 100vh;
     margin: auto;
     }
@@ -94,6 +93,8 @@ header{
   }
 
   #hints{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     color: white;
   }
 

@@ -3,7 +3,6 @@ import * as THREE from 'three'
 async function main () {
     // Canvas
     let canvas = document.getElementById('torusLogo')
-    console.log(canvas)
 
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 

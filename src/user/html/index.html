@@ -2,11 +2,11 @@
 <html>
 
 <head>
-  <title>User</title>
+  <title>Menu Principal</title>
   <link rel="stylesheet" type="text/css" href="../css/index.css">
 </head>
 
-<body>
+<body class="c-hud">
   <script type="text/javascript">var exports = {};</script>
   <script type="text/javascript" src="/js/main.js"></script>
   <script type="text/javascript" src="/js/3d/squareLogo.js"></script>
@@ -14,39 +14,71 @@
   <script type="text/javascript" src="/js/3d/torusLogo.js"></script>
   <script type="text/javascript" src="/js/3d/sphereLogo.js"></script>
 
-  <div id="mainTitle">
+  <div class="c-hud__inner"></div>
 
-    <img src="../img/logoHP.png" id="bigImg">
-    <p id="neonPink"> Nous arrivons bientôt... </p>
-  </div>
+  
+  <div  class="c-hud__content" >
 
-  <div id="teams">
-    <template id="team-template">
-      <div id="team-template-div">
-        <div id="team-template-name"></div>
-        <br />
+      
+    <div id="mainTitle">
+      <img src="../img/logoHP.png" id="bigImg">
+      <p class="title"> Nous arrivons bientôt... </p>
+    </div>
+
+    <div id="teamCat">
+
+      <div id="teamTitle">
+        <img src="../img/logoHP.png" class="smallImg">
+        <p class="title"> Les équipes </p>
       </div>
-    </template>
+
+      <div id="teams">
+
+        <template id="team-template">
+          <div id="team-template-div">
+            <div id="team-template-name"></div>
+            <br />
+          </div>
+        </template>
+  
+      </div>
+
+
+    </div>
+
+
+    <div id="gameCat">
+
+      <div id="catTitle">
+        <img src="../img/logoHP.png" class="smallImg">
+        <p class="title"> Les différents jeux </p>
+      </div>
+
+      <div id="grid">
+
+        <div>
+          <canvas id="squareLogo"></canvas>
+          <p id="titleB">BlindTest</p>
+        </div>
+        <div>
+          <canvas id="coneLogo"></canvas>
+          <p id="titleG">Citation / Question</p>
+        </div>
+        <div>
+          <canvas id="torusLogo"></canvas>
+          <p id="titleO">Jeu du Pendu</p>
+        </div>
+        <div>
+          <canvas id="sphereLogo"></canvas>
+          <p id="titleP">X images- 1 anime</p>
+        </div>
+
+      </div>
+
+    </div>
 
   </div>
-  <div id="gameCat" class="glitch">
-    <div>
-      <canvas id="squareLogo"></canvas>
-      <p id="titleB">BlindTest</p>
-    </div>
-    <div>
-      <canvas id="coneLogo"></canvas>
-      <p id="titleG">Citation / Question</p>
-    </div>
-    <div>
-      <canvas id="torusLogo"></canvas>
-      <p id="titleO">Jeu du Pendu</p>
-    </div>
-    <div>
-      <canvas id="sphereLogo"></canvas>
-      <p id="titleP">X images- 1 anime</p>
-    </div>
-  </div>
+
 </body>
 
 </html>

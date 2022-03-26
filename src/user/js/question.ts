@@ -19,20 +19,20 @@ ipcRenderer.on('hint', async (_, hint: string) => {
             await delay(50)
         }
     }
-    var len = hint.length;
-    const fontSize = 1 - 0.1 * (len/10)
+    const len = hint.length
+    const fontSize = 1 - 0.1 * (len / 10)
 
     const clone = document.importNode(hintTemplate.content, true)
     clone.getElementById('hint')!.textContent = hint
-    clone.getElementById('hint')!.style.fontSize = fontSize  + 'em'
+    clone.getElementById('hint')!.style.fontSize = fontSize + 'em'
     document.getElementById('hints')?.appendChild(clone)
 })
 
 ipcRenderer.on('answer', async (_, answer: string) => {
     const answerDiv = document.getElementById('answer')!
-    var len = answer.length;
-    const fontSize = 1.5 - 0.1 * (len/10)
+    const len = answer.length
+    const fontSize = 1.5 - 0.1 * (len / 10)
 
     answerDiv.textContent = answer
-    answerDiv.style.fontSize = fontSize  + 'em'
+    answerDiv.style.fontSize = fontSize + 'em'
 })

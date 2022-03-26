@@ -10,7 +10,6 @@ ipcRenderer.on('update-winners', async (_, winners: QuestionWinners) => {
 })
 
 ipcRenderer.on('game-state-data', (_, s) => {
-    console.log('rezfzefzefz')
     const state: GameState = s
 
     const xhttp = new XMLHttpRequest()

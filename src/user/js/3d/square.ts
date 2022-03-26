@@ -3,7 +3,6 @@ import * as THREE from 'three'
 async function main () {
     // Canvas
     let canvas = document.getElementById('3d')
-    console.log(canvas)
 
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -30,8 +29,8 @@ async function main () {
  * Sizes
  */
     const sizes = {
-        width: 150,
-        height: 150
+        width: 200,
+        height: 200
     }
 
     /**

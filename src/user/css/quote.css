@@ -45,7 +45,7 @@ body{
   
   #titre{
     position: relative;
-    font-size: 0.7em;
+    font-size: 1em;
     font-weight: 900;
     top: -100px;
     color: #36f362;
@@ -64,7 +64,6 @@ body{
   
 #quote-div {
     width: 80%;
-    font-size: 0.5em;
     margin: auto;
     margin-right: 0.5em;
     margin-left: 0.5px;
@@ -86,6 +85,8 @@ body{
   }
 
   #hints{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     color: white;
   }
 

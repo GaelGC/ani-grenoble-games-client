@@ -45,7 +45,7 @@ header{
 
 #titre{
   position: relative;
-  font-size: 0.7em;
+  font-size: 1em;
   font-weight: 900;
   top: -100px;
   color: #f7c342;
@@ -55,7 +55,6 @@ header{
   
 #gameHeart{
 	flex-wrap:  wrap;
-  height: 50vw;
   justify-content: space-around;
   margin-left: 10em;
 }
@@ -88,20 +87,16 @@ header{
   /* Answer & Hints */
 
   #question-div{
-    width: 70vw;
+    width: 80vw;
     height: 30%;
     justify-content: center;
       margin-top: 2em;
+      padding-top: 1em;
   }
 
   #answer{
     font-size: 0.5em;
     color: white;
-  }
-
-  #hints{
-    visibility: collapse;
-    display: none;
   }
 
   /* Effet fond */

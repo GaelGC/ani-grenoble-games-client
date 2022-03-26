@@ -8,27 +8,20 @@ ipcRenderer.on('show-image', (_, image: string) => {
     cloneImg.src = image
     imagesDiv.appendChild(clone)
 
-    const size = imagesDiv.children.length
+    const size = imagesDiv.children.length - 1
+    console.log(size)
 
-    if(size <= 1){
+    if (size <= 1) {
         imagesDiv.style.gridTemplateColumns = '1fr'
-    }
-    else if(size == 2){
+    } else if (size > 1 && size <= 4) {
         imagesDiv.style.gridTemplateColumns = '1fr 1fr'
-    }
-    else if(size == 3){
+    } else if (size > 4 && size <= 6) {
         imagesDiv.style.gridTemplateColumns = '1fr 1fr 1fr'
-    }
-    else if(size > 3 && size <= 6){
+    } else if (size > 6 && size <= 8) {
         imagesDiv.style.gridTemplateColumns = '1fr 1fr 1fr 1fr'
-    }
-    else if(size > 6 && size <= 8){
-        imagesDiv.style.gridTemplateColumns = '1fr 1fr 1fr 1fr'
-    }
-    else if(size > 8){
+    } else if (size > 8 && size <= 10) {
         imagesDiv.style.gridTemplateColumns = '1fr 1fr 1fr 1fr 1fr'
-    }
-    else{
+    } else {
         imagesDiv.style.gridTemplateColumns = '1fr'
     }
 })

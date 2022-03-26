@@ -7,7 +7,11 @@ const players: string[] = []
 
 function updateWordDiv () {
     const wordDiv = document.getElementById('word-div')!
+    const len = shownWord.length
+    const fontSize = 1.5 - 0.1 * (len / 10)
+
     wordDiv.textContent = shownWord
+    wordDiv.style.fontSize = fontSize + 'em'
 }
 
 ipcRenderer.on('game-state-data', (_, s: GameState) => {
