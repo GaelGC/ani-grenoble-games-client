@@ -70,8 +70,8 @@ header{
   
     .center-fit {
     max-width: 90%;
-    max-height: 100vh;
-    margin: auto;
+    max-height: 25vh;
+    margin: inherit;
     }
 
     #images-div{

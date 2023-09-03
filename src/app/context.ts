@@ -263,7 +263,10 @@ export class Context {
         this.adminWindow.loadURL(initUri)
         const questions = await pack
         while (questions.questions.length !== 0) {
-            const questionIdx = Math.floor(Math.random() * questions.questions.length)
+            let questionIdx = 0
+            if (questions.choice === undefined || questions.choice === 'random') {
+                questionIdx = Math.floor(Math.random() * questions.questions.length)
+            }
             console.log(questionIdx)
             const question = questions.questions[questionIdx]
             console.log(question)
