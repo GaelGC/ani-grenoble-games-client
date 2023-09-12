@@ -42,7 +42,7 @@ export async function debug (ctx: Context, req: string) {
             type: 'ImagesQuestion',
             points: 2,
             answer: 'three',
-            images: ['question://D:/one.jpg', 'question://D:/two.jpg'],
+            images: ['question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg'],
             hints: []
         }
         console.log(question)

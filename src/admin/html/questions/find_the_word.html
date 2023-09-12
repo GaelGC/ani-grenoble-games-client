@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <title>Admin</title>
+</head>
+
+<body>
+  <script type="text/javascript">var exports = {};</script>
+  <script type="text/javascript" src="/js/question.js"></script>
+  <script type="text/javascript" src="/js/questions/find_the_word.js"></script>
+  <link rel="stylesheet" href="../css/hanged_man.css">
+  
+  <div id="word-div"></div>
+  <hr />
+  current team: <div id="current-team-div"></div>
+  <form onsubmit="return false;">
+    <input id="word-input" oninput="onLetterChange(this.value)" onkeydown="onPotentialWordChoice(event.code, this.value);" disabled="true">
+  </form>
+  <hr />
+  <div id="question-div"></div>
+</body>
+
+</html>
