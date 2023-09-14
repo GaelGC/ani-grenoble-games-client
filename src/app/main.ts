@@ -1,27 +1,11 @@
 import { app, BrowserWindow, session, ProtocolResponse } from 'electron'
 import { Context } from './context'
+import { join } from 'path'
 
 let ctx: Context
 
 app.on('ready', async () => {
     console.log('App is ready')
-
-    for (const partitionName of ['user', 'admin']) {
-        const partition = `persist:${partitionName}`
-        const selectedSession = session.fromPartition(partition)
-        selectedSession.protocol.interceptFileProtocol('file', (request, callback) => {
-            console.log(request.url)
-            let url = request.url.substr(7)
-            if (url.length !== 0 && url[0] === '/') {
-                url = request.url.substr(7)
-                // eslint-disable-next-line node/no-path-concat
-                url = `${__dirname}/${partitionName}/${url}`
-            }
-            console.log(url)
-            const response: ProtocolResponse = { path: url }
-            callback(response)
-        })
-    }
 
     const windows = new Map<string, BrowserWindow>()
     for (const key of ['admin', 'user']) {
@@ -36,7 +20,30 @@ app.on('ready', async () => {
             height: 400
         })
         windows.set(key, window)
+
+        const protocol = 'ui'
+        const protocolPrefix = `${protocol}://`
+        const patchURL = function (url: string): string {
+            url = url.substring(protocolPrefix.length)
+            if (url.length !== 0 && url[0] === '/') {
+                return join(__dirname, key, url)
+            } else {
+                const curUrl = window.webContents.getURL()
+                const curDir = curUrl.substring(0, curUrl.lastIndexOf('/') + 1)
+                url = curDir + url
+                return patchURL(url)
+            }
+        }
+        const partition = `persist:${key}`
+        const selectedSession = session.fromPartition(partition)
+        selectedSession.protocol.registerFileProtocol(protocol, (request, callback) => {
+            const url = patchURL(request.url)
+            console.debug(`Patching ${request.url} to ${url}`)
+            const response: ProtocolResponse = { path: url }
+            callback(response)
+        })
     }
+
     ctx = new Context(windows.get('user')!, windows.get('admin')!)
     await ctx.run()
 })

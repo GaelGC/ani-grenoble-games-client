@@ -120,7 +120,7 @@ export class Context {
 
     async setupTeams () {
         for (const window of [this.userWindow, this.adminWindow]) {
-            const url = 'file:///html/index.html'
+            const url = 'ui:///./html/index.html'
             await window.loadURL(url)
         }
         await this.mainPageChange.waitForElem()
@@ -204,7 +204,7 @@ export class Context {
         this.userWindow.webContents.send('game-select')
         const pack = this.waitForPackSelection()
         const boardPromise = this.waitForGooseBoardSelection()
-        const initUri = 'file:///html/game_of_the_goose_init.html'
+        const initUri = 'ui:///./html/game_of_the_goose_init.html'
         this.adminWindow.loadURL(initUri)
         const questions = await pack
         const board = await boardPromise
@@ -214,7 +214,7 @@ export class Context {
 
         let teamIdx = 0
         while (true) {
-            const gameUri = 'file:///html/game_of_the_goose.html'
+            const gameUri = 'ui:///./html/game_of_the_goose.html'
             await this.adminWindow.loadURL(gameUri)
             await this.userWindow.loadURL(gameUri)
             this.userWindow.webContents.send('board', board)
@@ -246,7 +246,7 @@ export class Context {
             if (result.players.length > 0) {
                 this.state.players[teamIdx].score += result.points
                 if (this.state.players[teamIdx].score >= board.slots.length) {
-                    const winUri = 'file:///html/random_game_winners.html'
+                    const winUri = 'ui:///./html/random_game_winners.html'
                     await this.userWindow.loadURL(winUri)
                     this.userWindow.webContents.send('player_add', this.state.players[teamIdx])
                     return
@@ -259,7 +259,7 @@ export class Context {
     async randomGame () {
         this.userWindow.webContents.send('game-select')
         const pack = this.waitForPackSelection()
-        const initUri = 'file:///html/random.html'
+        const initUri = 'ui:///./html/random.html'
         this.adminWindow.loadURL(initUri)
         const questions = await pack
         while (questions.questions.length !== 0) {
@@ -277,7 +277,7 @@ export class Context {
             }
         }
 
-        const winUri = 'file:///html/random_game_winners.html'
+        const winUri = 'ui:///./html/random_game_winners.html'
         await this.userWindow.loadURL(winUri)
         Array.from(this.state.players).sort((x, y) => y.score - x.score).forEach(player => {
             this.userWindow.webContents.send('player_add', player)
@@ -286,7 +286,7 @@ export class Context {
 
     async debug () {
         this.userWindow.webContents.send('game-select')
-        const uri = 'file:///html/debug.html'
+        const uri = 'ui:///./html/debug.html'
         const debugPageQueue = new Queue<string>('debug-page-change')
         while (true) {
             this.adminWindow.loadURL(uri)
@@ -313,7 +313,7 @@ export class Context {
         ipcMain.on('admin-update-winners', updateWinnersCallback)
 
         // eslint-disable-next-line node/no-path-concat
-        const uri = `file:///html/${htmlPath}`
+        const uri = `ui:///./html/${htmlPath}`
         await this.userWindow.loadURL(uri)
         await this.adminWindow.loadURL(uri)
         this.userWindow.webContents.send('question-data', q)
