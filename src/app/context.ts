@@ -161,6 +161,16 @@ export class Context {
         return parsed.val
     }
 
+    async waitForConfiguration (init: GameConfiguration): Promise<GameConfiguration> {
+        const configQueue = new Queue<GameConfiguration>('validate-config')
+        await this.adminWindow.loadURL('ui:///./html/configure.html')
+        this.adminWindow.webContents.send('configuration', init)
+        const config = await configQueue.get()
+        configQueue.destroy()
+        console.log(config.playlist, config.randomSample)
+        return config
+    }
+
     async waitForGooseBoardSelection (): Promise<GooseBoard> {
         const pickedFile = new Queue<string>('goose-board-file')
         const fileName = await pickedFile.get()
@@ -260,9 +270,10 @@ export class Context {
     async randomGame () {
         this.userWindow.webContents.send('game-select')
         const pack = this.waitForPackSelection()
-        const initUri = 'ui:///./html/random.html'
-        this.adminWindow.loadURL(initUri)
+        this.adminWindow.loadURL('ui:///./html/random.html')
         const questions = await pack
+        questions.configuration = await this.waitForConfiguration(questions.configuration)
+
         while (questions.questions.length !== 0) {
             let questionIdx = 0
             if (questions.configuration.playlist === 'random') {

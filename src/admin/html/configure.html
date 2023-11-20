@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Admin</title>
+  <link rel="stylesheet" href="../css/index.css">
+</head>
+
+<body class="c-hud">
+  <script type="text/javascript">var exports = {};</script>
+  <script type="text/javascript" src="/js/configure.js"></script>
+
+  <div class="c-hud__inner"></div>
+
+  <div  class="c-hud__content" >
+    <form onsubmit="event.preventDefault();">
+      <div>
+        Question sequence:
+        <input class="cyberpunk2077" type="radio" id="question_selection_random" name="question_sequence_kind" value="random" onclick="onQuestionSelectionKind(this.value)"/>
+        <label for="question_selection_random">Random</label>
+        <input class="cyberpunk2077" type="radio" id="question_selection_sequential" name="question_sequence_kind" value="sequential" onclick="onQuestionSelectionKind(this.value)"/>
+        <label for="question_selection_sequential">Sequential</label>
+      </div>
+      <div>
+        Random song samples:
+        <input type="checkbox" id="random_song_sample" name="random_song_sample" onclick="onRandomSongSampleClick(this.checked)"/>
+        <label for="random_song_sample">Random</label>
+      </div>
+
+      <button onclick="sendConfig();" class="cyberpunk2077">Start</button>
+    </form>
+
+  </div>
+
+</body>
+
+</html>

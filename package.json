@@ -1,6 +1,6 @@
 {
   "name": "ani-grenoble-games-client",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "main": "app_dist/main.js",
   "description": "Client for the Ani Grenoble games",
   "scripts": {
