@@ -1,7 +1,11 @@
 import { Context } from './context'
-import { BlindTestQuestion, HangedManQuestion, QuoteQuestion, ImagesQuestion, FindTheWordQuestion } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, QuoteQuestion, ImagesQuestion, FindTheWordQuestion, GameConfiguration } from '@gaelgc/ani-grenoble-games-format'
 
 export async function debug (ctx: Context, req: string) {
+    const config: GameConfiguration = {
+        playlist: 'random',
+        randomSample: true
+    }
     if (req === 'song') {
         const question: BlindTestQuestion = {
             path: 'question://D:/440.mp3',
@@ -13,7 +17,7 @@ export async function debug (ctx: Context, req: string) {
             answerImage: 'question://D:/440.jpg'
         }
         console.log(question)
-        await ctx.startBlindtestQuestion(question)
+        await ctx.startBlindtestQuestion(question, config)
     } else if (req === 'quote') {
         const question: QuoteQuestion = {
             audio: 'question://D:/440.mp3',
@@ -25,7 +29,7 @@ export async function debug (ctx: Context, req: string) {
             hints: ['440', 'Hertz']
         }
         console.log(question)
-        await ctx.startQuoteQuestion(question)
+        await ctx.startQuoteQuestion(question, config)
     } else if (req === 'hanged_man') {
         const question: HangedManQuestion = {
             name: 'Hanged man',
@@ -35,7 +39,7 @@ export async function debug (ctx: Context, req: string) {
             hints: []
         }
         console.log(question)
-        await ctx.startHangedManQuestion(question)
+        await ctx.startHangedManQuestion(question, config)
     } else if (req === 'find_the_word') {
         const question: FindTheWordQuestion = {
             name: 'Find the Word',
@@ -46,7 +50,7 @@ export async function debug (ctx: Context, req: string) {
             hints: []
         }
         console.log(question)
-        await ctx.startFindTheWordQuestion(question)
+        await ctx.startFindTheWordQuestion(question, config)
     } else if (req === 'images') {
         const question: ImagesQuestion = {
             name: 'two images, one answer',
@@ -57,7 +61,7 @@ export async function debug (ctx: Context, req: string) {
             hints: []
         }
         console.log(question)
-        await ctx.starImagesQuestion(question)
+        await ctx.starImagesQuestion(question, config)
     } else {
         throw Error(`Unknwon debug request ${req}`)
     }

@@ -1,5 +1,10 @@
 import { ipcRenderer } from 'electron'
-import { BlindTestQuestion } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, GameConfiguration } from '@gaelgc/ani-grenoble-games-format'
+
+let config: GameConfiguration
+ipcRenderer.on('question-configuration', (_, c) => {
+    config = c
+})
 
 ipcRenderer.on('question-data', (_, q) => {
     const question: BlindTestQuestion = q
@@ -14,9 +19,11 @@ ipcRenderer.on('question-data', (_, q) => {
 
     const audio = <HTMLAudioElement>document.getElementById('audio')
     audio.src = question.path
-    audio.addEventListener('loadeddata', () => {
-        let maxStartPoint = audio.duration - 20
-        maxStartPoint = Math.max(0, maxStartPoint)
-        audio.currentTime = Math.random() * maxStartPoint
-    })
+    if (config?.randomSample) {
+        audio.addEventListener('loadeddata', () => {
+            let maxStartPoint = audio.duration - 20
+            maxStartPoint = Math.max(0, maxStartPoint)
+            audio.currentTime = Math.random() * maxStartPoint
+        })
+    }
 })

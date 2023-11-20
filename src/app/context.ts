@@ -1,4 +1,4 @@
-import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet, GooseBoard, parseGooseBoard, Slot, Player, FindTheWordQuestion } from '@gaelgc/ani-grenoble-games-format'
+import { BlindTestQuestion, HangedManQuestion, Question, QuoteQuestion, GameState, QuestionWinners, ImagesQuestion, parseQuestions, QuestionSet, GooseBoard, parseGooseBoard, Slot, Player, FindTheWordQuestion, GameConfiguration } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, IpcMainEvent, ProtocolResponse, session } from 'electron'
 import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
@@ -207,6 +207,7 @@ export class Context {
         const initUri = 'ui:///./html/game_of_the_goose_init.html'
         this.adminWindow.loadURL(initUri)
         const questions = await pack
+        const config = questions.configuration
         const board = await boardPromise
         const rollQueue = new Queue<void>('roll-dice')
         const startQueue = new Queue<void>('start-question')
@@ -242,7 +243,7 @@ export class Context {
                 players: [tempPlayer]
             }
             tempState.players[0].score = 0
-            const result = await this.startGenericQuestion(question, tempState)
+            const result = await this.startGenericQuestion(question, config, tempState)
             if (result.players.length > 0) {
                 this.state.players[teamIdx].score += result.points
                 if (this.state.players[teamIdx].score >= board.slots.length) {
@@ -264,14 +265,14 @@ export class Context {
         const questions = await pack
         while (questions.questions.length !== 0) {
             let questionIdx = 0
-            if (questions.choice === undefined || questions.choice === 'random') {
+            if (questions.configuration.playlist === 'random') {
                 questionIdx = Math.floor(Math.random() * questions.questions.length)
             }
             console.log(questionIdx)
             const question = questions.questions[questionIdx]
             console.log(question)
             questions.questions.splice(questionIdx, 1)
-            const winners = await this.startGenericQuestion(question)
+            const winners = await this.startGenericQuestion(question, questions.configuration)
             for (const winner of winners.players) {
                 this.state.players.find(x => x.name === winner)!.score += winners.points
             }
@@ -301,7 +302,7 @@ export class Context {
         ipcMain.removeListener('del_player', this.sendDeletePlayer)
     }
 
-    async startQuestion (q: Question, htmlPath: string, state ?: GameState, onStart?: () => Promise<unknown>): Promise<QuestionWinners> {
+    async startQuestion (q: Question, htmlPath: string, config: GameConfiguration, state ?: GameState, onStart?: () => Promise<unknown>): Promise<QuestionWinners> {
         const answerCallback = (_: IpcMainEvent) => {
             this.userWindow.webContents.send('answer', q.answer)
         }
@@ -316,6 +317,7 @@ export class Context {
         const uri = `ui:///./html/${htmlPath}`
         await this.userWindow.loadURL(uri)
         await this.adminWindow.loadURL(uri)
+        this.adminWindow.webContents.send('question-configuration', config)
         this.userWindow.webContents.send('question-data', q)
         this.adminWindow.webContents.send('question-data', q)
         await this.adminQuestionWaiter.wait()
@@ -332,8 +334,8 @@ export class Context {
         })
     }
 
-    async startGenericQuestion (q: Question, state ?: GameState): Promise<QuestionWinners> {
-        type questionType = ((q: Question, state ?: GameState) => Promise<QuestionWinners>)
+    async startGenericQuestion (q: Question, config: GameConfiguration, state ?: GameState): Promise<QuestionWinners> {
+        type questionType = ((q: Question, config: GameConfiguration, sstate ?: GameState) => Promise<QuestionWinners>)
         // We cast the functions to accept all Questions. The reason why this
         // is safer than it looks like is that the type field could not be
         // different from the actual type of the question. Maybe mapped types
@@ -346,32 +348,32 @@ export class Context {
             ['FindTheWordQuestion', this.startFindTheWordQuestion.bind(this) as questionType]
         ])
         if (map.has(q.type)) {
-            return map.get(q.type)!(q, state)
+            return map.get(q.type)!(q, config, state)
         } else {
             throw Error(`Uknown question type ${q.type}`)
         }
     }
 
-    async startBlindtestQuestion (q: BlindTestQuestion, state ?: GameState): Promise<QuestionWinners> {
-        return this.startQuestion(q, 'blindtest.html', state)
+    async startBlindtestQuestion (q: BlindTestQuestion, config: GameConfiguration, state ?: GameState): Promise<QuestionWinners> {
+        return this.startQuestion(q, 'blindtest.html', config, state)
     }
 
-    async startQuoteQuestion (q: QuoteQuestion, state ?: GameState): Promise<QuestionWinners> {
-        return this.startQuestion(q, 'quote.html', state)
+    async startQuoteQuestion (q: QuoteQuestion, config: GameConfiguration, state ?: GameState): Promise<QuestionWinners> {
+        return this.startQuestion(q, 'quote.html', config, state)
     }
 
-    async starImagesQuestion (q: ImagesQuestion, state ?: GameState): Promise<QuestionWinners> {
+    async starImagesQuestion (q: ImagesQuestion, config: GameConfiguration, state ?: GameState): Promise<QuestionWinners> {
         const imgHandler = (_: IpcMainInvokeEvent, img: string) => {
             this.userWindow.webContents.send('show-image', img)
         }
         ipcMain.on('show-image', imgHandler)
-        return this.startQuestion(q, 'images.html', state).then(winners => {
+        return this.startQuestion(q, 'images.html', config, state).then(winners => {
             ipcMain.removeListener('show-image', imgHandler)
             return winners
         })
     }
 
-    async startHangedManQuestion (q: HangedManQuestion, state ?: GameState): Promise<QuestionWinners> {
+    async startHangedManQuestion (q: HangedManQuestion, config: GameConfiguration, state ?: GameState): Promise<QuestionWinners> {
         let currentTeamIdx = 0
         const usedLetters: string[] = []
         let answerLetters = q.answer.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')
@@ -400,7 +402,7 @@ export class Context {
         }
         ipcMain.handle('hanged-man-letter', letterHandler)
 
-        const winners = this.startQuestion(q, 'hanged_man.html', state, () => {
+        const winners = this.startQuestion(q, 'hanged_man.html', config, state, () => {
             setTeam(currentTeamIdx)
             this.adminWindow.webContents.send('init')
             return delay(1)
@@ -411,7 +413,7 @@ export class Context {
         })
     }
 
-    async startFindTheWordQuestion (q: FindTheWordQuestion, state ?: GameState): Promise<QuestionWinners> {
+    async startFindTheWordQuestion (q: FindTheWordQuestion, config: GameConfiguration, state ?: GameState): Promise<QuestionWinners> {
         let currentTeamIdx = 0
         let remainingTries = q.nbTries
         const uppercaseAnswer = q.answer.toUpperCase()
@@ -470,7 +472,7 @@ export class Context {
         }
         ipcMain.handle('find-the-word-temp-select', inputHandle)
 
-        const winners = this.startQuestion(q, 'find_the_word.html', state, () => {
+        const winners = this.startQuestion(q, 'find_the_word.html', config, state, () => {
             setTeam(currentTeamIdx)
             this.adminWindow.webContents.send('init')
             return delay(1)
