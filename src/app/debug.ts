@@ -14,7 +14,8 @@ export async function debug (ctx: Context, req: string) {
             points: 1,
             answer: '440Hz',
             hints: ['440', 'Hertz'],
-            answerImage: 'question://D:/440.jpg'
+            answerImage: 'question://D:/440.jpg',
+            tags: []
         }
         console.log(question)
         await ctx.startBlindtestQuestion(question, config)
@@ -26,7 +27,8 @@ export async function debug (ctx: Context, req: string) {
             type: 'QuoteQuestion',
             points: 2,
             answer: '440Hz',
-            hints: ['440', 'Hertz']
+            hints: ['440', 'Hertz'],
+            tags: []
         }
         console.log(question)
         await ctx.startQuoteQuestion(question, config)
@@ -36,7 +38,8 @@ export async function debug (ctx: Context, req: string) {
             type: 'HangedManQuestion',
             points: 2,
             answer: 'This is a test of the HangedMan game',
-            hints: []
+            hints: [],
+            tags: []
         }
         console.log(question)
         await ctx.startHangedManQuestion(question, config)
@@ -47,7 +50,8 @@ export async function debug (ctx: Context, req: string) {
             points: 1,
             answer: 'Madoka',
             nbTries: 5,
-            hints: []
+            hints: [],
+            tags: []
         }
         console.log(question)
         await ctx.startFindTheWordQuestion(question, config)
@@ -58,7 +62,8 @@ export async function debug (ctx: Context, req: string) {
             points: 2,
             answer: 'three',
             images: ['question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg', 'question://D:/one.jpg'],
-            hints: []
+            hints: [],
+            tags: []
         }
         console.log(question)
         await ctx.starImagesQuestion(question, config)

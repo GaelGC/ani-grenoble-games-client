@@ -4,50 +4,7 @@ import { debug } from './debug'
 import { IpcMainInvokeEvent } from 'electron/main'
 import { readFileSync } from 'fs'
 import { dirname } from 'path'
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
-class Queue<T> {
-    handler: (_: IpcMainEvent, elem: T) => void;
-    name: string;
-    constructor (name: string) {
-        this.name = name
-        this.handler = (_, elem) => {
-            this.elems.push(elem)
-        }
-        ipcMain.on(name, this.handler)
-    }
-
-    destroy () {
-        ipcMain.removeListener(this.name, this.handler)
-    }
-
-    peek (): T {
-        const elem = this.elems[0]
-        return elem
-    }
-
-    async get (): Promise<T> {
-        await this.waitForElem()
-        const elem = this.peek()
-        this.elems.splice(0, 1)
-        return elem
-    }
-
-    async waitForElem (): Promise<void> {
-        while (this.elems.length === 0) {
-            await delay(1)
-        }
-    }
-
-    elems: Array<T> = [];
-};
-
-class Semaphore extends Queue<void> {
-    async wait () {
-        return this.get()
-    }
-}
+import { Queue, delay, Condition } from './utils'
 
 export class Context {
     constructor (userWindow: BrowserWindow, adminWindow: BrowserWindow) {
@@ -86,7 +43,7 @@ export class Context {
             }
 
             this.state.players.push({
-                name: name,
+                name,
                 score: 0,
                 color: rgb
             })
@@ -118,11 +75,17 @@ export class Context {
         }
     }
 
-    async setupTeams () {
-        for (const window of [this.userWindow, this.adminWindow]) {
-            const url = 'ui:///./html/index.html'
-            await window.loadURL(url)
+    async loadPage (uri: string, admin: boolean, user: boolean) {
+        if (admin) {
+            await this.adminWindow.loadURL(uri)
         }
+        if (user) {
+            await this.userWindow.loadURL(uri)
+        }
+    }
+
+    async setupTeams () {
+        await this.loadPage('ui:///./html/index.html', true, true)
         await this.mainPageChange.waitForElem()
     }
 
@@ -163,7 +126,7 @@ export class Context {
 
     async waitForConfiguration (init: GameConfiguration): Promise<GameConfiguration> {
         const configQueue = new Queue<GameConfiguration>('validate-config')
-        await this.adminWindow.loadURL('ui:///./html/configure.html')
+        await this.loadPage('ui:///./html/configure.html', true, false)
         this.adminWindow.webContents.send('configuration', init)
         const config = await configQueue.get()
         configQueue.destroy()
@@ -215,7 +178,7 @@ export class Context {
         const pack = this.waitForPackSelection()
         const boardPromise = this.waitForGooseBoardSelection()
         const initUri = 'ui:///./html/game_of_the_goose_init.html'
-        this.adminWindow.loadURL(initUri)
+        await this.loadPage(initUri, true, false)
         const questions = await pack
         const config = questions.configuration
         const board = await boardPromise
@@ -226,8 +189,7 @@ export class Context {
         let teamIdx = 0
         while (true) {
             const gameUri = 'ui:///./html/game_of_the_goose.html'
-            await this.adminWindow.loadURL(gameUri)
-            await this.userWindow.loadURL(gameUri)
+            await this.loadPage(gameUri, true, true)
             this.userWindow.webContents.send('board', board)
             this.userWindow.webContents.send('players', this.state.players, teamIdx)
             await rollQueue.get()
@@ -258,7 +220,7 @@ export class Context {
                 this.state.players[teamIdx].score += result.points
                 if (this.state.players[teamIdx].score >= board.slots.length) {
                     const winUri = 'ui:///./html/random_game_winners.html'
-                    await this.userWindow.loadURL(winUri)
+                    await this.loadPage(winUri, false, true)
                     this.userWindow.webContents.send('player_add', this.state.players[teamIdx])
                     return
                 }
@@ -270,7 +232,7 @@ export class Context {
     async randomGame () {
         this.userWindow.webContents.send('game-select')
         const pack = this.waitForPackSelection()
-        this.adminWindow.loadURL('ui:///./html/random.html')
+        await this.loadPage('ui:///./html/random.html', true, false)
         const questions = await pack
         questions.configuration = await this.waitForConfiguration(questions.configuration)
 
@@ -290,7 +252,7 @@ export class Context {
         }
 
         const winUri = 'ui:///./html/random_game_winners.html'
-        await this.userWindow.loadURL(winUri)
+        await this.loadPage(winUri, false, true)
         Array.from(this.state.players).sort((x, y) => y.score - x.score).forEach(player => {
             this.userWindow.webContents.send('player_add', player)
         })
@@ -301,7 +263,7 @@ export class Context {
         const uri = 'ui:///./html/debug.html'
         const debugPageQueue = new Queue<string>('debug-page-change')
         while (true) {
-            this.adminWindow.loadURL(uri)
+            await this.loadPage(uri, true, false)
             const page = await debugPageQueue.get()
             await debug(this, page)
         }
@@ -324,10 +286,8 @@ export class Context {
         }
         ipcMain.on('admin-update-winners', updateWinnersCallback)
 
-        // eslint-disable-next-line node/no-path-concat
         const uri = `ui:///./html/${htmlPath}`
-        await this.userWindow.loadURL(uri)
-        await this.adminWindow.loadURL(uri)
+        await this.loadPage(uri, true, true)
         this.adminWindow.webContents.send('question-configuration', config)
         this.userWindow.webContents.send('question-data', q)
         this.adminWindow.webContents.send('question-data', q)
@@ -466,7 +426,7 @@ export class Context {
                     validity[i] = 1
                 }
             }
-            const waitForAnimation = new Semaphore('reveal-animation-done')
+            const waitForAnimation = new Condition('reveal-animation-done')
             this.userWindow.webContents.send('new-word', [word, validity, remainingTries])
             currentTeamIdx = (currentTeamIdx + 1) % this.state.players.length
             await waitForAnimation.wait()
@@ -496,15 +456,15 @@ export class Context {
     }
 
     // Et les variables pour les evenements ici
-    userWindow: BrowserWindow;
-    adminWindow: BrowserWindow;
-    state: GameState;
-    adminQuestionWaiter = new Semaphore('admin_question_ready');
-    giveHintListener: (event: any, hint: string) => void;
-    sendAddPlayer: (event: any, name: string, id: string) => void;
-    sendDeletePlayer: (event: any, name: string, id: string) => void;
-    winnersQueue = new Queue<QuestionWinners>('admin-send-winners');
-    mainPageChange = new Queue<string>('main-menu');
+    userWindow: BrowserWindow
+    adminWindow: BrowserWindow
+    state: GameState
+    adminQuestionWaiter = new Condition('admin_question_ready')
+    giveHintListener: (event: any, hint: string) => void
+    sendAddPlayer: (event: any, name: string, id: string) => void
+    sendDeletePlayer: (event: any, name: string, id: string) => void
+    winnersQueue = new Queue<QuestionWinners>('admin-send-winners')
+    mainPageChange = new Queue<string>('main-menu')
     packPath: string = ''
 }
 
