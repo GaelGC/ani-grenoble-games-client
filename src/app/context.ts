@@ -5,6 +5,7 @@ import { IpcMainInvokeEvent } from 'electron/main'
 import { readFileSync } from 'fs'
 import { dirname } from 'path'
 import { Queue, delay, Condition } from './utils'
+import { waitForTeamsSelection } from './team-setup'
 
 export class Context {
     constructor (userWindow: BrowserWindow, adminWindow: BrowserWindow) {
@@ -18,45 +19,6 @@ export class Context {
             this.userWindow.webContents.send('hint', hint)
         }
         ipcMain.on('give-hint', this.giveHintListener)
-
-        this.sendAddPlayer = (_, name, id) => {
-            let rgb = ''
-
-            if (id === 'team-div-0') {
-                rgb = 'EC1F1F'
-            } else if (id === 'team-div-1') {
-                rgb = '6064DE'
-            } else if (id === 'team-div-2') {
-                rgb = '2FC215'
-            } else if (id === 'team-div-3') {
-                rgb = 'D0E613'
-            } else if (id === 'team-div-4') {
-                rgb = '01FDF5'
-            } else if (id === 'team-div-5') {
-                rgb = '860EF1'
-            } else if (id === 'team-div-6') {
-                rgb = 'FDA101'
-            } else if (id === 'team-div-7') {
-                rgb = 'F32BCF'
-            } else {
-                rgb = colorOf(name + name)
-            }
-
-            this.state.players.push({
-                name,
-                score: 0,
-                color: rgb
-            })
-
-            this.userWindow.webContents.send('player_add', name, id, rgb)
-        }
-        ipcMain.on('add_player', this.sendAddPlayer)
-
-        this.sendDeletePlayer = (_, name, id) => {
-            this.state.players = this.state.players.filter(x => x.name !== name)
-            this.userWindow.webContents.send('player_delete', name, id)
-        }
-        ipcMain.on('del_player', this.sendDeletePlayer)
 
         for (const partitionName of ['user', 'admin']) {
             const partition = `persist:${partitionName}`
@@ -86,7 +48,6 @@ export class Context {
 
     async setupTeams () {
         await this.loadPage('ui:///./html/index.html', true, true)
-        await this.mainPageChange.waitForElem()
     }
 
     async run () {
@@ -95,16 +56,18 @@ export class Context {
     }
 
     async runMain () {
-        const page = await this.mainPageChange.get()
+        const { players, mode } = await waitForTeamsSelection(this)
+        this.state.players = players
+
         while (true) {
-            if (page === 'debug') {
+            if (mode === 'debug') {
                 await this.debug()
-            } else if (page === 'random') {
+            } else if (mode === 'random') {
                 await this.randomGame()
-            } else if (page === 'game-of-the-goose') {
+            } else if (mode === 'game-of-the-goose') {
                 await this.gooseGame()
             } else {
-                throw Error(`Invalid main page ${page} requested`)
+                throw Error(`Invalid main page ${mode} requested`)
             }
             for (const player of this.state.players) {
                 player.score = 0
@@ -271,8 +234,6 @@ export class Context {
 
     destroy () {
         ipcMain.removeListener('give-hint', this.giveHintListener)
-        ipcMain.removeListener('add_player', this.sendAddPlayer)
-        ipcMain.removeListener('del_player', this.sendDeletePlayer)
     }
 
     async startQuestion (q: Question, htmlPath: string, config: GameConfiguration, state ?: GameState, onStart?: () => Promise<unknown>): Promise<QuestionWinners> {
@@ -461,79 +422,6 @@ export class Context {
     state: GameState
     adminQuestionWaiter = new Condition('admin_question_ready')
     giveHintListener: (event: any, hint: string) => void
-    sendAddPlayer: (event: any, name: string, id: string) => void
-    sendDeletePlayer: (event: any, name: string, id: string) => void
     winnersQueue = new Queue<QuestionWinners>('admin-send-winners')
-    mainPageChange = new Queue<string>('main-menu')
     packPath: string = ''
-}
-
-// Cr�ation d'une couleur pour un string donn�
-function colorOf (name: string) {
-    const charArray = name.split('')
-    let sizeOf = charArray.length
-    while (sizeOf % 3 !== 0) {
-        sizeOf -= 1
-    }
-
-    let firstInt: number = 0
-    let secondInt: number = 0
-    let thirdInt: number = 0
-
-    for (let i = 0; i < sizeOf; i++) {
-        if (i < (sizeOf / 3)) {
-            firstInt += charArray[i].toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0)
-        } else if (i < (sizeOf / 3) * 2) {
-            secondInt += charArray[i].toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0)
-        } else {
-            thirdInt += charArray[i].toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0)
-        }
-    }
-
-    firstInt = firstInt % 16
-    secondInt = secondInt % 16
-    thirdInt = thirdInt % 16
-
-    const firstHexa = hexaOfInt(firstInt)
-    const secondHexa = hexaOfInt(secondInt)
-    const thirdHexa = hexaOfInt(thirdInt)
-
-    let avg = (firstInt + secondInt + thirdInt) / 3
-    avg = avg % 16
-    const avgHexa = hexaOfInt(avg)
-
-    const rgb = firstHexa + avgHexa + secondHexa + avgHexa + thirdHexa + avgHexa
-
-    return rgb.toString()
-}
-
-function hexaOfInt (int: number) {
-    const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    if (!numbers.includes(int)) {
-        switch (int) {
-        case 10: {
-            return 'A'
-        }
-        case 11: {
-            return 'B'
-        }
-        case 12: {
-            return 'C'
-        }
-        case 13: {
-            return 'D'
-        }
-        case 14: {
-            return 'E'
-        }
-        case 15: {
-            return 'F'
-        }
-        default: {
-            return '0'
-        }
-        }
-    } else {
-        return int.toString()
-    }
 }

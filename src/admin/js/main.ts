@@ -41,10 +41,6 @@ export function onAddTeamButtonClick () {
     return false
 }
 
-export function loadMain () {
-    ipcRenderer.send('admin_ready')
-}
-
 export function debug () {
     ipcRenderer.send('main-menu', 'debug')
 }
