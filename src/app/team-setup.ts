@@ -9,28 +9,14 @@ function colorOf (name: string) {
     return createHash('md5').update(name).digest('hex').substring(0, 6)
 }
 
-function createPlayer (name: string, id: string): Player {
+function createPlayer (name: string, id: number): Player {
+    const hardcodedColors = ['6064DE', '2FC215', 'D0E613', '01FDF5', '860EF1', 'FDA101', 'F32BCF']
     let rgb = ''
 
-    if (id === 'team-div-0') {
-        rgb = 'EC1F1F'
-    } else if (id === 'team-div-1') {
-        rgb = '6064DE'
-    } else if (id === 'team-div-2') {
-        rgb = '2FC215'
-    } else if (id === 'team-div-3') {
-        rgb = 'D0E613'
-    } else if (id === 'team-div-4') {
-        rgb = '01FDF5'
-    } else if (id === 'team-div-5') {
-        rgb = '860EF1'
-    } else if (id === 'team-div-6') {
-        rgb = 'FDA101'
-    } else if (id === 'team-div-7') {
-        rgb = 'F32BCF'
+    if (id < hardcodedColors.length) {
+        rgb = hardcodedColors[id]
     } else {
         rgb = colorOf(name)
-        console.log(rgb)
     }
 
     return {
@@ -41,19 +27,19 @@ function createPlayer (name: string, id: string): Player {
 }
 
 export async function waitForTeamsSelection (ctx: Context): Promise<{mode: string, players: Player[]}> {
-    let players: Player[] = []
+    const players = new Map<number, Player>()
     const modeSelection = new Queue<string>('main-menu')
 
-    const addPlayerListener = (_: any, name: string, id: string) => {
-        console.log(name, id)
+    const addPlayerListener = (_: any, name: string, id: number) => {
         const player = createPlayer(name, id)
-        players.push(player)
+        players.set(id, player)
         ctx.userWindow.webContents.send('player_add', name, id, player.color)
     }
 
-    const deletePlayerListener = (_: any, name: string, id: string) => {
-        players = players.filter(x => x.name !== name)
-        ctx.userWindow.webContents.send('player_delete', name, id)
+    const deletePlayerListener = (_: any, id: number) => {
+        players.delete(id)
+        console.log(id)
+        ctx.userWindow.webContents.send('player_delete', id)
     }
 
     ipcMain.on('add_player', addPlayerListener)
@@ -64,5 +50,5 @@ export async function waitForTeamsSelection (ctx: Context): Promise<{mode: strin
 
     ipcMain.removeListener('add_player', addPlayerListener)
     ipcMain.removeListener('del_player', deletePlayerListener)
-    return { players, mode }
+    return { players: [...players.values()], mode }
 }

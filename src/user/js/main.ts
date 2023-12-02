@@ -1,8 +1,9 @@
 import { ipcRenderer } from 'electron'
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const teamDivIdPrefix = 'team-number-'
 
-ipcRenderer.on('player_add', async (_, name, id, color) => {
+ipcRenderer.on('player_add', async (_, name: string, id: number, color: string) => {
     let teamTemplate: HTMLTemplateElement | null = null
     while (teamTemplate === null) {
         teamTemplate = document.getElementById('team-template') as HTMLTemplateElement
@@ -13,19 +14,18 @@ ipcRenderer.on('player_add', async (_, name, id, color) => {
 
     const teamsDiv = document.getElementById('teams')
     const clone = document.importNode(teamTemplate.content, true)
-    clone.getElementById('team-template-div')!.id = id
+    clone.getElementById('team-template-div')!.id = `${teamDivIdPrefix}${id}`
     clone.getElementById('team-template-name')!.textContent = name
     clone.getElementById('team-template-name')!.style.color = color
     clone.getElementById('team-template-name')!.style.textShadow = ' 0 0 1px #fff,0 0 2px #fff,0 0 3px #fff,0 0 4px #' + color + ',0 0 5px #' + color + ',0 0 6px #' + color + ',  0 0 7px #' + color + ',0 0 8px #' + color
-
     teamsDiv!.appendChild(clone)
 
     document.getElementById('mainTitle')!.style.display = 'none'
     document.getElementById('teamCat')!.style.visibility = 'visible'
 })
 
-ipcRenderer.on('player_delete', async (_, name, id) => {
-    const divToDelete = document.getElementById(id)
+ipcRenderer.on('player_delete', async (_, id: number) => {
+    const divToDelete = document.getElementById(`${teamDivIdPrefix}${id}`)
     divToDelete?.remove()
 })
 
