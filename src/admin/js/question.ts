@@ -1,4 +1,4 @@
-import { GameState, QuestionWinners, BlindTestQuestion } from '@gaelgc/ani-grenoble-games-format'
+import { GameState, QuestionWinners, Question } from '@gaelgc/ani-grenoble-games-format'
 import { ipcRenderer } from 'electron'
 
 export function onHintClick (id: string) {
@@ -8,7 +8,7 @@ export function onHintClick (id: string) {
 }
 
 ipcRenderer.on('question-data', (_, q) => {
-    const question: BlindTestQuestion = q
+    const question: Question = q
 
     const xhttp = new XMLHttpRequest()
     xhttp.onloadend = function () {

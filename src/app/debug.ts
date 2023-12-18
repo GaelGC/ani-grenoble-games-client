@@ -1,5 +1,6 @@
 import { Context } from './context'
 import { BlindTestQuestion, HangedManQuestion, QuoteQuestion, ImagesQuestion, FindTheWordQuestion, GameConfiguration } from '@gaelgc/ani-grenoble-games-format'
+import { startGenericQuestion } from './question'
 
 export async function debug (ctx: Context, req: string) {
     const config: GameConfiguration = {
@@ -18,7 +19,7 @@ export async function debug (ctx: Context, req: string) {
             tags: []
         }
         console.log(question)
-        await ctx.startBlindtestQuestion(question, config)
+        await startGenericQuestion(ctx, question, config, ctx.state)
     } else if (req === 'quote') {
         const question: QuoteQuestion = {
             audio: 'question://D:/440.mp3',
@@ -31,7 +32,7 @@ export async function debug (ctx: Context, req: string) {
             tags: []
         }
         console.log(question)
-        await ctx.startQuoteQuestion(question, config)
+        await startGenericQuestion(ctx, question, config, ctx.state)
     } else if (req === 'hanged_man') {
         const question: HangedManQuestion = {
             name: 'Hanged man',
@@ -42,7 +43,7 @@ export async function debug (ctx: Context, req: string) {
             tags: []
         }
         console.log(question)
-        await ctx.startHangedManQuestion(question, config)
+        await startGenericQuestion(ctx, question, config, ctx.state)
     } else if (req === 'find_the_word') {
         const question: FindTheWordQuestion = {
             name: 'Find the Word',
@@ -54,7 +55,7 @@ export async function debug (ctx: Context, req: string) {
             tags: []
         }
         console.log(question)
-        await ctx.startFindTheWordQuestion(question, config)
+        await startGenericQuestion(ctx, question, config, ctx.state)
     } else if (req === 'images') {
         const question: ImagesQuestion = {
             name: 'two images, one answer',
@@ -66,7 +67,7 @@ export async function debug (ctx: Context, req: string) {
             tags: []
         }
         console.log(question)
-        await ctx.starImagesQuestion(question, config)
+        await startGenericQuestion(ctx, question, config, ctx.state)
     } else {
         throw Error(`Unknwon debug request ${req}`)
     }
