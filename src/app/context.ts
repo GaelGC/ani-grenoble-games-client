@@ -1,4 +1,4 @@
-import { Question, GameState, parseQuestions, QuestionSet, GooseBoard, parseGooseBoard, Slot, Player, GameConfiguration } from '@gaelgc/ani-grenoble-games-format'
+import { GameState, parseQuestions, QuestionSet, GameConfiguration } from '@gaelgc/ani-grenoble-games-format'
 import { BrowserWindow, ipcMain, ProtocolResponse, session } from 'electron'
 import { debug } from './debug'
 import { readFileSync } from 'fs'
@@ -6,6 +6,7 @@ import { dirname } from 'path'
 import { Queue } from './utils'
 import { waitForTeamsSelection } from './team-setup'
 import { startGenericQuestion } from './question'
+import { GooseContext } from './goose'
 
 export enum CommandTarget {
     ADMIN = 1,
@@ -74,7 +75,8 @@ export class Context {
             } else if (mode === 'random') {
                 await this.randomGame()
             } else if (mode === 'game-of-the-goose') {
-                await this.gooseGame()
+                const gooseCtx = new GooseContext(this, this.state)
+                await gooseCtx.run()
             } else {
                 throw Error(`Invalid main page ${mode} requested`)
             }
@@ -92,8 +94,12 @@ export class Context {
         if (parsed.err) {
             throw parsed.val
         }
-        this.packPath = dirname(fileName) + '/'
+        this.setPackPath(dirname(fileName) + '/')
         return parsed.val
+    }
+
+    setPackPath (packPath: string) {
+        this.packPath = packPath
     }
 
     async waitForConfiguration (init: GameConfiguration): Promise<GameConfiguration> {
@@ -104,101 +110,6 @@ export class Context {
         configQueue.destroy()
         console.log(config.playlist, config.randomSample)
         return config
-    }
-
-    async waitForGooseBoardSelection (): Promise<GooseBoard> {
-        const pickedFile = new Queue<string>('goose-board-file')
-        const fileName = await pickedFile.get()
-        const json = readFileSync(fileName).toString()
-        const parsed = parseGooseBoard(json)
-        if (parsed.err) {
-            throw parsed.val
-        }
-        this.packPath = dirname(fileName) + '/'
-        return parsed.val
-    }
-
-    getGooseQuestion (questions: QuestionSet, selector: Slot): Question {
-        const compatible = questions.questions.filter(x => {
-            if (selector.type === 'TagSelector') {
-                if (x.tags === undefined) {
-                    return false
-                }
-                for (const tag of selector.tags) {
-                    if (!x.tags.includes(tag)) {
-                        return false
-                    }
-                }
-                return true
-            } else if (selector.type === 'TypeSelector') {
-                return selector.types.includes(x.type)
-            }
-            return false
-        })
-        if (compatible.length === 0) {
-            throw Error('Could not find compatible question')
-        }
-        const idx = Math.floor(Math.random() * compatible.length)
-        if (compatible.length !== 1) {
-            questions.questions.splice(questions.questions.indexOf(compatible[idx]), 1)
-        }
-        return compatible[idx]
-    }
-
-    async gooseGame () {
-        this.userWindow.webContents.send('game-select')
-        const pack = this.waitForPackSelection()
-        const boardPromise = this.waitForGooseBoardSelection()
-        const initUri = 'ui:///./html/game_of_the_goose_init.html'
-        await this.loadPage(initUri, CommandTarget.ADMIN)
-        const questions = await pack
-        const config = questions.configuration
-        const board = await boardPromise
-        const rollQueue = new Queue<void>('roll-dice')
-        const startQueue = new Queue<void>('start-question')
-        const rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
-
-        let teamIdx = 0
-        while (true) {
-            const gameUri = 'ui:///./html/game_of_the_goose.html'
-            await this.loadPage(gameUri, CommandTarget.BOTH)
-            this.userWindow.webContents.send('board', board)
-            this.userWindow.webContents.send('players', this.state.players, teamIdx)
-            await rollQueue.get()
-            const roll = Math.ceil(Math.random() * 6)
-            this.userWindow.webContents.send('roll', roll)
-            await rollAnimationDoneQueue.get()
-            this.adminWindow.webContents.send('roll-ack')
-
-            const slotIdx: number = Math.min(board.slots.length, roll + this.state.players[teamIdx].score)
-            const slot : Slot = slotIdx === board.slots.length
-                ? { type: 'TagSelector', tags: ['final'], coordinates: { x: 0, y: 0 } }
-                : board.slots[slotIdx]
-            const question = this.getGooseQuestion(questions, slot)
-            question.points = roll
-
-            await startQueue.get()
-            const tempPlayer: Player = {
-                name: this.state.players[teamIdx].name,
-                score: 0,
-                color: this.state.players[teamIdx].color
-            }
-            const tempState: GameState = {
-                players: [tempPlayer]
-            }
-            tempState.players[0].score = 0
-            const result = await startGenericQuestion(this, question, config, tempState)
-            if (result.players.length > 0) {
-                this.state.players[teamIdx].score += result.points
-                if (this.state.players[teamIdx].score >= board.slots.length) {
-                    const winUri = 'ui:///./html/random_game_winners.html'
-                    await this.loadPage(winUri, CommandTarget.USER)
-                    this.userWindow.webContents.send('player_add', this.state.players[teamIdx])
-                    return
-                }
-            }
-            teamIdx = (teamIdx + 1) % this.state.players.length
-        }
     }
 
     async randomGame () {

@@ -89,16 +89,16 @@ function getCell (x: number, y: number, id: number, div: HTMLElement) {
 
 ipcRenderer.on('board', (_, board: GooseBoard) => {
     const boardDiv = document.getElementById('grid-div')!
-    const xCoords = board.slots.map(slot => slot.coordinates.x)
-    const yCoords = board.slots.map(slot => slot.coordinates.y)
-    xCoords.push(board.winCoordinates.x)
-    yCoords.push(board.winCoordinates.y)
+    const xCoords = board.slots.map(slot => slot.pos.x)
+    const yCoords = board.slots.map(slot => slot.pos.y)
+    xCoords.push(board.winPos.x)
+    yCoords.push(board.winPos.y)
     const xMax = Math.max.apply(null, xCoords)
     const yMax = Math.max.apply(null, yCoords)
     document.getElementById('grid-div')!.style.gridTemplateColumns = (xMax + 1).toString()
     document.getElementById('grid-div')!.style.gridTemplateRows = (yMax + 1).toString()
     for (const cell of board.slots) {
-        getCell(cell.coordinates.x, cell.coordinates.y, board.slots.indexOf(cell), boardDiv)
+        getCell(cell.pos.x, cell.pos.y, board.slots.indexOf(cell), boardDiv)
     }
-    getCell(board.winCoordinates.x, board.winCoordinates.y, -1, boardDiv)
+    getCell(board.winPos.x, board.winPos.y, -1, boardDiv)
 })
