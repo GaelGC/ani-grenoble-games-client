@@ -1,6 +1,6 @@
 import { Question, GameConfiguration, GameState, QuestionWinners, BlindTestQuestion, ImagesQuestion, QuoteQuestion, HangedManQuestion, FindTheWordQuestion } from '@gaelgc/ani-grenoble-games-format'
 import { IpcMainEvent, IpcMainInvokeEvent, ipcMain } from 'electron'
-import { Context } from './context'
+import { CommandTarget, Context } from './context'
 import { Condition, Queue } from './utils'
 
 async function startQuestion (ctx: Context, q: Question, htmlPath: string, config: GameConfiguration, state: GameState, onStart?: () => Promise<unknown>): Promise<QuestionWinners> {
@@ -20,7 +20,7 @@ async function startQuestion (ctx: Context, q: Question, htmlPath: string, confi
 
     /* Question data broadcast */
     const uri = `ui:///./html/${htmlPath}`
-    await ctx.loadPage(uri, true, true)
+    await ctx.loadPage(uri, CommandTarget.BOTH)
     ctx.adminWindow.webContents.send('question-configuration', config)
     ctx.userWindow.webContents.send('question-data', q)
     ctx.adminWindow.webContents.send('question-data', q)

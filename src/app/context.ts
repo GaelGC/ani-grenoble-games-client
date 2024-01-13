@@ -7,6 +7,12 @@ import { Queue } from './utils'
 import { waitForTeamsSelection } from './team-setup'
 import { startGenericQuestion } from './question'
 
+export enum CommandTarget {
+    ADMIN = 1,
+    USER = 2,
+    BOTH = ADMIN | USER
+}
+
 export class Context {
     constructor (userWindow: BrowserWindow, adminWindow: BrowserWindow) {
         this.userWindow = userWindow
@@ -37,17 +43,20 @@ export class Context {
         }
     }
 
-    async loadPage (uri: string, admin: boolean, user: boolean) {
-        if (admin) {
-            await this.adminWindow.loadURL(uri)
-        }
-        if (user) {
-            await this.userWindow.loadURL(uri)
+    async loadPage (uri: string, target: CommandTarget) {
+        const targets: [CommandTarget, BrowserWindow][] = [
+            [CommandTarget.ADMIN, this.adminWindow],
+            [CommandTarget.USER, this.userWindow]
+        ]
+        for (const [targetType, window] of targets) {
+            if (target & targetType) {
+                await window.loadURL(uri)
+            }
         }
     }
 
     async setupTeams () {
-        await this.loadPage('ui:///./html/index.html', true, true)
+        await this.loadPage('ui:///./html/index.html', CommandTarget.BOTH)
     }
 
     async run () {
@@ -89,7 +98,7 @@ export class Context {
 
     async waitForConfiguration (init: GameConfiguration): Promise<GameConfiguration> {
         const configQueue = new Queue<GameConfiguration>('validate-config')
-        await this.loadPage('ui:///./html/configure.html', true, false)
+        await this.loadPage('ui:///./html/configure.html', CommandTarget.ADMIN)
         this.adminWindow.webContents.send('configuration', init)
         const config = await configQueue.get()
         configQueue.destroy()
@@ -141,7 +150,7 @@ export class Context {
         const pack = this.waitForPackSelection()
         const boardPromise = this.waitForGooseBoardSelection()
         const initUri = 'ui:///./html/game_of_the_goose_init.html'
-        await this.loadPage(initUri, true, false)
+        await this.loadPage(initUri, CommandTarget.ADMIN)
         const questions = await pack
         const config = questions.configuration
         const board = await boardPromise
@@ -152,7 +161,7 @@ export class Context {
         let teamIdx = 0
         while (true) {
             const gameUri = 'ui:///./html/game_of_the_goose.html'
-            await this.loadPage(gameUri, true, true)
+            await this.loadPage(gameUri, CommandTarget.BOTH)
             this.userWindow.webContents.send('board', board)
             this.userWindow.webContents.send('players', this.state.players, teamIdx)
             await rollQueue.get()
@@ -183,7 +192,7 @@ export class Context {
                 this.state.players[teamIdx].score += result.points
                 if (this.state.players[teamIdx].score >= board.slots.length) {
                     const winUri = 'ui:///./html/random_game_winners.html'
-                    await this.loadPage(winUri, false, true)
+                    await this.loadPage(winUri, CommandTarget.USER)
                     this.userWindow.webContents.send('player_add', this.state.players[teamIdx])
                     return
                 }
@@ -195,7 +204,7 @@ export class Context {
     async randomGame () {
         this.userWindow.webContents.send('game-select')
         const pack = this.waitForPackSelection()
-        await this.loadPage('ui:///./html/random.html', true, false)
+        await this.loadPage('ui:///./html/random.html', CommandTarget.ADMIN)
         const questions = await pack
         questions.configuration = await this.waitForConfiguration(questions.configuration)
 
@@ -215,7 +224,7 @@ export class Context {
         }
 
         const winUri = 'ui:///./html/random_game_winners.html'
-        await this.loadPage(winUri, false, true)
+        await this.loadPage(winUri, CommandTarget.USER)
         Array.from(this.state.players).sort((x, y) => y.score - x.score).forEach(player => {
             this.userWindow.webContents.send('player_add', player)
         })
@@ -226,7 +235,7 @@ export class Context {
         const uri = 'ui:///./html/debug.html'
         const debugPageQueue = new Queue<string>('debug-page-change')
         while (true) {
-            await this.loadPage(uri, true, false)
+            await this.loadPage(uri, CommandTarget.ADMIN)
             const page = await debugPageQueue.get()
             await debug(this, page)
         }
