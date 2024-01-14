@@ -125,9 +125,12 @@ class GooseContext {
     }
 
     async winPhase (teamIdx: number) {
-        const winUri = 'ui:///./html/random_game_winners.html'
+        const winAckQueue = new Queue<void>('winners-ack')
+        const winUri = 'ui:///./html/winners.html'
         await this.ctx.loadPage(winUri, CommandTarget.BOTH)
         this.ctx.userWindow.webContents.send('player_add', this.state.players[teamIdx])
+        await winAckQueue.get()
+        winAckQueue.destroy()
     }
 
     async run () {

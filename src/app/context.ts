@@ -137,11 +137,14 @@ export class Context {
             }
         }
 
-        const winUri = 'ui:///./html/random_game_winners.html'
-        await this.loadPage(winUri, CommandTarget.USER)
+        const winAckQueue = new Queue<void>('winners-ack')
+        const winUri = 'ui:///./html/winners.html'
+        await this.loadPage(winUri, CommandTarget.BOTH)
         Array.from(this.state.players).sort((x, y) => y.score - x.score).forEach(player => {
             this.userWindow.webContents.send('player_add', player)
         })
+        await winAckQueue.get()
+        winAckQueue.destroy()
     }
 
     async debug () {
