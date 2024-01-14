@@ -6,7 +6,7 @@ import { dirname } from 'path'
 import { Queue } from './utils'
 import { waitForTeamsSelection } from './team-setup'
 import { startGenericQuestion } from './question'
-import { GooseContext } from './goose'
+import { runGoose } from './goose'
 
 export enum CommandTarget {
     ADMIN = 1,
@@ -75,8 +75,7 @@ export class Context {
             } else if (mode === 'random') {
                 await this.randomGame()
             } else if (mode === 'game-of-the-goose') {
-                const gooseCtx = new GooseContext(this, this.state)
-                await gooseCtx.run()
+                await runGoose(this, this.state)
             } else {
                 throw Error(`Invalid main page ${mode} requested`)
             }
