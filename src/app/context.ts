@@ -87,13 +87,17 @@ export class Context {
 
     async waitForPackSelection (): Promise<QuestionSet> {
         const pickedFile = new Queue<string>('pack-file')
+
         const fileName = await pickedFile.get()
         const json = readFileSync(fileName).toString()
         const parsed = parseQuestions(json)
         if (parsed.err) {
+            pickedFile.destroy()
             throw parsed.val
         }
+
         this.setPackPath(dirname(fileName) + '/')
+        pickedFile.destroy()
         return parsed.val
     }
 
