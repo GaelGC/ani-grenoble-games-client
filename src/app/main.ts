@@ -14,7 +14,8 @@ app.on('ready', async () => {
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
-                partition: `persist:${key}`
+                partition: `persist:${key}`,
+                preload: join(__dirname, key, 'js', 'preload.js')
             },
             width: 600,
             height: 400
