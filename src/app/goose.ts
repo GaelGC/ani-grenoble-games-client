@@ -1,5 +1,5 @@
 import { GameConfiguration, GameState, GooseBoard, Player, Question, QuestionSet, Slot, TagSelectorSlot, TypeSelectorSlot, parseGooseBoard } from '@gaelgc/ani-grenoble-games-format'
-import { readFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
 import { CommandTarget, Context } from './context'
 import { startGenericQuestion } from './question'
 import { Queue } from './utils'
@@ -36,6 +36,11 @@ class GooseContext {
         const parsed = parseGooseBoard(json)
         if (parsed.err) {
             throw parsed.val
+        }
+
+        const oldVersion = JSON.parse(json).version
+        if (oldVersion !== parsed.val.version) {
+            writeFileSync(`${fileName}_updated`, JSON.stringify(parsed.val, undefined, 4))
         }
 
         pickedFile.destroy()
