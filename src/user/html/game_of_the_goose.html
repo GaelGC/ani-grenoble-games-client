@@ -9,21 +9,14 @@
 
 <body>
   <script type="text/javascript">var exports = {};</script>
-  <script type="text/javascript" src="/js/game_of_goose.js"></script>
 
   <span id="player-div"></span>
   <div id="roll-div"></div>
   <div id="players-pawn-div"></div>
   <div id="board-div">
-    <div class="grid center-fit in-middle" id="grid-div">
-      <template id="board-cell-template">
-        <div id="template-cell">
-          <div id="template-padding-cell"></div>
-          <div id="template-text-cell" class="slot-text"></div>
-        </div>
-      </template>
-    </div>
+    <canvas width="500px" height="500px" id="board-canvas"></canvas>
   </div>
+  <script type="text/javascript" src="/js/game_of_goose.js"></script>
 </body>
 
 </html>

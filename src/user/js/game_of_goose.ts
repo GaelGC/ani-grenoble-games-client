@@ -1,7 +1,15 @@
-import { GooseBoard, Player } from '@gaelgc/ani-grenoble-games-format'
+import { Coordinates, GooseBoard, Player } from '@gaelgc/ani-grenoble-games-format'
 import { ipcRenderer } from 'electron'
+import { loadSprites } from 'utils/sprite_loader'
 
 let currentPlayer: Player
+let players: Player[] = []
+let board: GooseBoard
+
+let cellSprites: ImageBitmap[] = []
+let playerSprites: ImageBitmap[] = []
+
+/* Animation routines */
 
 ipcRenderer.on('roll', async (_, dice: number) => {
     const rollDiv = document.getElementById('roll-div')!
@@ -11,94 +19,104 @@ ipcRenderer.on('roll', async (_, dice: number) => {
         rollDiv.textContent = Math.ceil(Math.random() * 6).toString()
         await new Promise(resolve => setTimeout(resolve, 200))
     }
+
     rollDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
     rollDiv.style.color = '#' + currentPlayer.color
     rollDiv.textContent = `roll: ${dice.toString()}`
     await new Promise(resolve => setTimeout(resolve, 400))
+
     for (let i = 1; i <= dice; i++) {
-        movePawnDiv(document.getElementById('current-player-pawn')!, currentPlayer.score + i)
         await new Promise(resolve => setTimeout(resolve, 200))
+        currentPlayer.score++
+        drawBoard()
     }
+
     ipcRenderer.send('roll-animation-done')
 })
 
-const playersOnSlot = new Map<number, number>()
-function movePawnDiv (playerDiv: HTMLElement, score: number) {
-    let dstCell = document.getElementById(`cell-${score}`)
-    if (dstCell === null) {
-        dstCell = document.getElementById('cell--1')!
-    }
-    const nbPlayers = playersOnSlot.get(score) ?? 0
-    const pos = [[15, 15], [85, 15], [15, 85], [85, 85]]
-    const cellCoords = dstCell.getBoundingClientRect()
-    document.getElementById('players-pawn-div')!.appendChild(playerDiv)
-    const x = Math.round(cellCoords.left + (cellCoords.width * pos[nbPlayers][0] / 100) - playerDiv.clientWidth / 2)
-    const y = Math.round(cellCoords.top + (cellCoords.height * pos[nbPlayers][1] / 100) - playerDiv.clientHeight / 2)
-    playerDiv.style.top = `${y}px`
-    playerDiv.style.left = `${x}px`
-    playersOnSlot.set(score, nbPlayers + 1)
+/* Draw routines */
+
+function drawPlayer (ctx: CanvasRenderingContext2D, pos: Coordinates, sprite: ImageBitmap, idxOnCell: number) {
+    const positionsOnCell = [[15, 15], [50, 15], [15, 50], [50, 50]]
+    const cellSize = 100
+    idxOnCell = Math.min(idxOnCell, positionsOnCell.length - 1)
+    const posOnCell = positionsOnCell[idxOnCell]
+    const drawX = pos.x * cellSize + posOnCell[0]
+    const drawY = pos.y * cellSize + posOnCell[1]
+    ctx.drawImage(sprite, drawX, drawY, 35, 35)
 }
 
-ipcRenderer.on('players', (_, players: Player[], teamIdx: number) => {
+function drawCell (x: number, y: number, id: number, sprite: ImageBitmap, ctx: CanvasRenderingContext2D) {
+    const cellWidth = 100
+    const cellXStart = (cellWidth) * x
+    const cellYStart = (cellWidth) * y
+    ctx.drawImage(sprite, cellXStart, cellYStart, cellWidth, cellWidth)
+    ctx.fillText(`${id}`, cellXStart + cellWidth / 2, cellYStart + cellWidth / 2)
+}
+
+function drawBoard () {
+    if (!board) {
+        return
+    }
+
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('board-canvas')!
+    const ctx = canvas.getContext('2d')!
+    ctx.reset()
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.font = '30px sans-serif'
+
+    for (const cell of board.slots) {
+        drawCell(cell.pos.x, cell.pos.y, board.slots.indexOf(cell), cellSprites[cell.tile], ctx)
+    }
+    drawCell(board.winPos.x, board.winPos.y, -1, cellSprites[0], ctx)
+
+    const playersOnSlot = new Map<number, number>()
+    const playerRenderingOrder = players.map(x => x)
+    playerRenderingOrder.splice(players.indexOf(currentPlayer), 1)
+    playerRenderingOrder.push(currentPlayer)
+    for (let playerIdx = 0; playerIdx < playerRenderingOrder.length; playerIdx++) {
+        const player = playerRenderingOrder[playerIdx]
+        const idxOnCell = (playersOnSlot.get(player.score) ?? 0)
+        playersOnSlot.set(player.score, idxOnCell + 1)
+        const pos = player.score < board.slots.length ? board.slots[player.score].pos : board.winPos
+        let spriteIdx = ((2 * players.indexOf(player)) % playerSprites.length)
+        if (player === currentPlayer) {
+            spriteIdx++
+        }
+        drawPlayer(ctx, pos, playerSprites[spriteIdx], idxOnCell)
+    }
+}
+
+/* Setup routines */
+
+ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
+    const sprites = await loadSprites(curBoard.cellTileSet, 1)
+    const loadedPlayerSprites = await loadSprites(curBoard.playersTileSet, 1)
+
+    if (sprites.err) {
+        alert(sprites.val)
+    } else {
+        cellSprites = sprites.val
+    }
+    if (loadedPlayerSprites.err) {
+        alert(loadedPlayerSprites.val)
+    } else {
+        playerSprites = loadedPlayerSprites.val
+    }
+
+    board = curBoard
+    drawBoard()
+})
+
+ipcRenderer.on('players', (_, _players: Player[], teamIdx: number) => {
+    players = _players
     currentPlayer = players[teamIdx]
+
     const playerDiv = document.getElementById('player-div')!
     playerDiv.textContent = `Current player: ${currentPlayer.name}`
     playerDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
     playerDiv.style.color = '#' + currentPlayer.color
 
-    for (const player of players) {
-        const playerDiv = document.createElement('div')
-        playerDiv.textContent = '♟'
-        playerDiv.style.position = 'absolute'
-        playerDiv.style.textShadow = '0 0 4px #' + player.color + ',0 0 5px #' + player.color + ',0 0 10px #' + player.color
-        if (player === players[teamIdx]) {
-            playerDiv.style.textShadow = ''
-            for (let size = 1; size < 30; size++) {
-                playerDiv.style.textShadow += `${size === 1 ? '' : ','}0 0 ${size}px #${player.color}`
-            }
-            playerDiv.id = 'current-player-pawn'
-        }
-
-        movePawnDiv(playerDiv, player.score)
-    }
-})
-
-function getCell (x: number, y: number, id: number, div: HTMLElement) {
-    const teamTemplate: HTMLTemplateElement = document.getElementById('board-cell-template') as HTMLTemplateElement
-    const clone = document.importNode(teamTemplate.content, true)
-    const textCell = clone.getElementById('template-text-cell')!
-    const paddingCell = clone.getElementById('template-padding-cell')!
-    const cell = clone.getElementById('template-cell')!
-
-    cell.id = `cell-${id}`
-    textCell.id = `text-cell-${id}`
-
-    cell.style.gridColumn = (x + 1).toString()
-    cell.style.gridRow = (y + 1).toString()
-    const rgb = ['D0E613', '01FDF5', '860EF1'][(id + 1) % 3]
-    cell.style.boxShadow = `0 0 4px #${rgb},0 0 5px #${rgb},0 0 10px #${rgb}`
-    textCell.style.textShadow = `0 0 4px #${rgb},0 0 5px #${rgb},0 0 10px #${rgb}`
-
-    textCell.textContent = id >= 0 ? (id + 1).toString() : '👑'
-
-    // Center the text by adding an empty, fixed-size div
-    div.appendChild(clone)
-    const margin = Math.ceil((cell.clientHeight - textCell.clientHeight) / 2)
-    paddingCell.style.height = `${margin}px`
-}
-
-ipcRenderer.on('board', (_, board: GooseBoard) => {
-    const boardDiv = document.getElementById('grid-div')!
-    const xCoords = board.slots.map(slot => slot.pos.x)
-    const yCoords = board.slots.map(slot => slot.pos.y)
-    xCoords.push(board.winPos.x)
-    yCoords.push(board.winPos.y)
-    const xMax = Math.max.apply(null, xCoords)
-    const yMax = Math.max.apply(null, yCoords)
-    document.getElementById('grid-div')!.style.gridTemplateColumns = (xMax + 1).toString()
-    document.getElementById('grid-div')!.style.gridTemplateRows = (yMax + 1).toString()
-    for (const cell of board.slots) {
-        getCell(cell.pos.x, cell.pos.y, board.slots.indexOf(cell), boardDiv)
-    }
-    getCell(board.winPos.x, board.winPos.y, -1, boardDiv)
+    drawBoard()
 })

@@ -143,7 +143,7 @@ class GooseContext {
             await this.startQueue.get()
 
             const slot : Slot = slotIdx === this.board.slots.length
-                ? { type: 'GameSlot', selector: 'TagSelector', tags: ['final'], pos: { x: 0, y: 0 } }
+                ? { type: 'GameSlot', selector: 'TagSelector', tags: ['final'], pos: { x: 0, y: 0 }, tile: 0 }
                 : this.board.slots[slotIdx]
             await this.slotPhase(slot, teamIdx, roll)
 

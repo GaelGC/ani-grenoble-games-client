@@ -1,5 +1,5 @@
 body{
-  background-image: url('../img/backgroundBlue.png');
+  background-color: darkslateblue;
   text-align: center;
   font : 2em "Open Sans", sans-serif;
   margin: auto;
@@ -20,4 +20,9 @@ body{
 
 .slot-text {
   color: white;
+}
+
+canvas {
+  width: 500px;
+  height: 500px;
 }
