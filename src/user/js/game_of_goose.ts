@@ -118,5 +118,15 @@ ipcRenderer.on('players', (_, _players: Player[], teamIdx: number) => {
     playerDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
     playerDiv.style.color = '#' + currentPlayer.color
 
+    const teamTemplate: HTMLTemplateElement = document.getElementById('team-template') as HTMLTemplateElement
+    for (const player of players) {
+        const temp = document.createElement('template')
+        temp.innerHTML = teamTemplate.innerHTML.replace(/\$color/g, player.color)
+        const clone = document.importNode(temp.content, true)
+        const teamNameDiv = clone.getElementById('team-name')!
+        teamNameDiv.textContent = player.name
+        document.getElementById('teams')!.appendChild(clone)
+    }
+
     drawBoard()
 })

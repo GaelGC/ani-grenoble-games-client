@@ -10,7 +10,7 @@ function colorOf (name: string) {
 }
 
 function createPlayer (name: string, id: number): Player {
-    const hardcodedColors = ['6064DE', '2FC215', 'D0E613', '01FDF5', '860EF1', 'FDA101', 'F32BCF']
+    const hardcodedColors = ['EC1F1F', '6064DE', '2FC215', 'D0E613', '01FDF5', '860EF1', 'FDA101', 'F32BCF']
     let rgb = ''
 
     if (id < hardcodedColors.length) {

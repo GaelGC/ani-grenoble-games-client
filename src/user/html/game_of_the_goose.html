@@ -7,14 +7,29 @@
   <meta charset="utf-8" />
 </head>
 
-<body>
+<body class="c-hud">
   <script type="text/javascript">var exports = {};</script>
+  <div class="c-hud__inner"></div>
 
-  <span id="player-div"></span>
-  <div id="roll-div"></div>
-  <div id="players-pawn-div"></div>
-  <div id="board-div">
-    <canvas width="500px" height="500px" id="board-canvas"></canvas>
+  <div id="column">
+    <header>
+      <h1 id="title">Jeu de l'Oie</h1>
+      <div id="teams">
+        <template id="team-template">
+          <div id="team-name" style="text-shadow: #$color 0px 0px 4px, #$color 0px 0px 5px, #$color 0px 0px 10px; color: #$color;"></div>
+        </template>
+      </div>
+    </header>
+    <div id="column_footer"></div>
+  </div>
+
+  <div id="content">
+    <span id="player-div"></span>
+    <div id="roll-div"></div>
+    <div id="players-pawn-div"></div>
+    <div id="board-div">
+      <canvas width="500px" height="500px" id="board-canvas"></canvas>
+    </div>
   </div>
   <script type="text/javascript" src="/js/game_of_goose.js"></script>
 </body>
