@@ -13,6 +13,7 @@ class GooseContext {
     rollQueue: Queue<void>
     startQueue: Queue<void>
     rollAnimationDoneQueue: Queue<void>
+    inBoardUI = false
 
     constructor (ctx: Context, state: GameState) {
         this.ctx = ctx
@@ -60,16 +61,25 @@ class GooseContext {
         this.questions = questions
     }
 
-    async rollPhase (teamIdx: number): Promise<number> {
-        const gameUri = 'ui:///./html/game_of_the_goose.html'
-        await this.ctx.loadPage(gameUri, CommandTarget.BOTH)
-        this.ctx.userWindow.webContents.send('board', this.board)
+    async loadBoardPage (teamIdx: number) {
+        if (!this.inBoardUI) {
+            const gameUri = 'ui:///./html/game_of_the_goose.html'
+            await this.ctx.loadPage(gameUri, CommandTarget.BOTH)
+            this.ctx.userWindow.webContents.send('board', this.board)
+            this.inBoardUI = true
+        }
+
         this.ctx.userWindow.webContents.send('players', this.state.players, teamIdx)
+    }
+
+    async rollPhase (teamIdx: number): Promise<number> {
+        await this.loadBoardPage(teamIdx)
+        this.ctx.adminWindow.webContents.send('enable-roll')
         await this.rollQueue.get()
         const roll = Math.ceil(Math.random() * 6)
         this.ctx.userWindow.webContents.send('roll', roll)
         await this.rollAnimationDoneQueue.get()
-        this.ctx.adminWindow.webContents.send('roll-ack')
+        this.ctx.adminWindow.webContents.send('enable-start-question')
 
         return roll
     }
@@ -109,10 +119,18 @@ class GooseContext {
         }
         tempState.players[0].score = 0
 
+        this.inBoardUI = false
         const result = await startGenericQuestion(this.ctx, question, config, tempState)
         if (result.players.length > 0) {
-            this.state.players[teamIdx].score += result.points
+            this.updateScore(teamIdx, result.points)
         }
+    }
+
+    updateScore (teamIdx: number, scoreDiff: number) {
+        let score = this.state.players[teamIdx].score + scoreDiff
+        score = Math.max(score, 0)
+        score = Math.min(score, this.board.slots.length)
+        this.state.players[teamIdx].score = score
     }
 
     async slotPhase (slot: Slot, teamIdx: number, roll: number) {
