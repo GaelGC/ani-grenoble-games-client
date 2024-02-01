@@ -11,6 +11,16 @@ let playerSprites: ImageBitmap[] = []
 
 /* Animation routines */
 
+async function moveCurrentPlayer (destCell: number) {
+    const diff = destCell >= currentPlayer.score ? 1 : -1
+
+    while (currentPlayer.score !== destCell) {
+        await new Promise(resolve => setTimeout(resolve, 200))
+        currentPlayer.score += diff
+        drawBoard()
+    }
+}
+
 ipcRenderer.on('roll', async (_, dice: number) => {
     const rollDiv = document.getElementById('roll-div')!
     // Between 1 and 4 second.
@@ -23,13 +33,9 @@ ipcRenderer.on('roll', async (_, dice: number) => {
     rollDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
     rollDiv.style.color = '#' + currentPlayer.color
     rollDiv.textContent = `roll: ${dice.toString()}`
-    await new Promise(resolve => setTimeout(resolve, 400))
 
-    for (let i = 1; i <= dice; i++) {
-        await new Promise(resolve => setTimeout(resolve, 200))
-        currentPlayer.score++
-        drawBoard()
-    }
+    await new Promise(resolve => setTimeout(resolve, 400))
+    await moveCurrentPlayer(currentPlayer.score + dice)
 
     ipcRenderer.send('roll-animation-done')
 })
