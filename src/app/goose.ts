@@ -1,4 +1,4 @@
-import { GameConfiguration, GameState, GooseBoard, Player, Question, QuestionSet, Slot, TagSelectorSlot, TypeSelectorSlot, parseGooseBoard } from '@gaelgc/ani-grenoble-games-format'
+import { Event, GameConfiguration, GameState, GooseBoard, MoveEvent, Player, Question, QuestionSet, Slot, TagSelectorSlot, TypeSelectorSlot, parseGooseBoard } from '@gaelgc/ani-grenoble-games-format'
 import { readFileSync, writeFileSync } from 'fs'
 import { CommandTarget, Context } from './context'
 import { startGenericQuestion } from './question'
@@ -66,10 +66,11 @@ class GooseContext {
             const gameUri = 'ui:///./html/game_of_the_goose.html'
             await this.ctx.loadPage(gameUri, CommandTarget.BOTH)
             this.ctx.userWindow.webContents.send('board', this.board)
+            this.ctx.userWindow.webContents.send('players', this.state.players)
             this.inBoardUI = true
         }
 
-        this.ctx.userWindow.webContents.send('players', this.state.players, teamIdx)
+        this.ctx.userWindow.webContents.send('current-player', teamIdx)
     }
 
     async rollPhase (teamIdx: number): Promise<number> {
@@ -122,20 +123,59 @@ class GooseContext {
         this.inBoardUI = false
         const result = await startGenericQuestion(this.ctx, question, config, tempState)
         if (result.players.length > 0) {
-            this.updateScore(teamIdx, result.points)
+            await this.updateScore(teamIdx, result.points)
         }
     }
 
-    updateScore (teamIdx: number, scoreDiff: number) {
+    async updateScore (teamIdx: number, scoreDiff: number) {
         let score = this.state.players[teamIdx].score + scoreDiff
         score = Math.max(score, 0)
         score = Math.min(score, this.board.slots.length)
         this.state.players[teamIdx].score = score
+
+        if (this.inBoardUI) {
+            const moveDoneQueue = new Queue<void>('absmove-animation-done')
+            this.ctx.userWindow.webContents.send('absmove', score)
+            await moveDoneQueue.waitForElem()
+            moveDoneQueue.destroy()
+        }
+    }
+
+    async handleMoveEvent (event: MoveEvent, teamIdx: number) {
+        let relMove = 0
+
+        switch (event.movetype) {
+        case 'absolute':
+            relMove = event.nbPos - this.state.players[teamIdx].score
+            break
+        case 'relative':
+            relMove = event.nbPos
+            break
+        default: {
+            const exhaustiveCheck: never = event.movetype
+            throw new Error(`Unhandled move type: ${exhaustiveCheck}`)
+        }
+        }
+
+        await this.updateScore(teamIdx, relMove)
+    }
+
+    async handleEvent (event: Event, teamIdx: number, roll: number) {
+        await this.updateScore(teamIdx, roll)
+        await this.loadBoardPage(teamIdx)
+
+        if (event.type !== 'move') {
+            const exhaustiveCheck: never = event.type
+            throw new Error(`Unhandled event type: ${exhaustiveCheck}`)
+        }
+
+        await this.handleMoveEvent(event, teamIdx)
     }
 
     async slotPhase (slot: Slot, teamIdx: number, roll: number) {
         switch (slot.type) {
         case 'EventSlot':
+            await this.handleEvent(slot.event, teamIdx, roll)
             break
         case 'GameSlot':
             await this.handleGooseGameSlot(this.questions, slot, teamIdx, roll, this.config)

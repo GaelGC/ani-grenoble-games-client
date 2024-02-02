@@ -30,14 +30,17 @@ ipcRenderer.on('roll', async (_, dice: number) => {
         await new Promise(resolve => setTimeout(resolve, 200))
     }
 
-    rollDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
-    rollDiv.style.color = '#' + currentPlayer.color
     rollDiv.textContent = `roll: ${dice.toString()}`
 
     await new Promise(resolve => setTimeout(resolve, 400))
     await moveCurrentPlayer(currentPlayer.score + dice)
 
     ipcRenderer.send('roll-animation-done')
+})
+
+ipcRenderer.on('absmove', async (_, destPos: number) => {
+    await moveCurrentPlayer(destPos)
+    ipcRenderer.send('absmove-animation-done')
 })
 
 /* Draw routines */
@@ -61,7 +64,7 @@ function drawCell (x: number, y: number, id: number, sprite: ImageBitmap, ctx: C
 }
 
 function drawBoard () {
-    if (!board) {
+    if (!board || !players || !currentPlayer) {
         return
     }
 
@@ -115,14 +118,8 @@ ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
     drawBoard()
 })
 
-ipcRenderer.on('players', (_, _players: Player[], teamIdx: number) => {
+ipcRenderer.on('players', (_, _players: Player[]) => {
     players = _players
-    currentPlayer = players[teamIdx]
-
-    const playerDiv = document.getElementById('player-div')!
-    playerDiv.textContent = `Current player: ${currentPlayer.name}`
-    playerDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
-    playerDiv.style.color = '#' + currentPlayer.color
 
     const teamTemplate: HTMLTemplateElement = document.getElementById('team-template') as HTMLTemplateElement
     for (const player of players) {
@@ -133,6 +130,21 @@ ipcRenderer.on('players', (_, _players: Player[], teamIdx: number) => {
         teamNameDiv.textContent = player.name
         document.getElementById('teams')!.appendChild(clone)
     }
+    drawBoard()
+})
+
+ipcRenderer.on('current-player', (_, teamIdx: number) => {
+    currentPlayer = players[teamIdx]
+
+    const playerDiv = document.getElementById('player-div')!
+    playerDiv.textContent = `Current player: ${currentPlayer.name}`
+    playerDiv.style.textShadow = '0 0 4px #' + currentPlayer.color + ',0 0 5px #' + currentPlayer.color + ',0 0 10px #' + currentPlayer.color
+    playerDiv.style.color = '#' + currentPlayer.color
+
+    const rollDiv = document.getElementById('roll-div')!
+    rollDiv.style.textShadow = playerDiv.style.textShadow
+    rollDiv.style.color = playerDiv.style.color
+    rollDiv.textContent = ''
 
     drawBoard()
 })
