@@ -15,6 +15,8 @@ class GooseContext {
     rollAnimationDoneQueue: Queue<void>
     inBoardUI = false
 
+    /* Setup */
+
     constructor (ctx: Context, state: GameState) {
         this.ctx = ctx
         this.state = state
@@ -73,6 +75,8 @@ class GooseContext {
         this.ctx.userWindow.webContents.send('current-player', teamIdx)
     }
 
+    /* Interactions */
+
     async rollPhase (teamIdx: number): Promise<number> {
         await this.loadBoardPage(teamIdx)
         this.ctx.adminWindow.webContents.send('enable-roll')
@@ -84,6 +88,31 @@ class GooseContext {
 
         return roll
     }
+
+    async updateScore (teamIdx: number, scoreDiff: number) {
+        let score = this.state.players[teamIdx].score + scoreDiff
+        score = Math.max(score, 0)
+        score = Math.min(score, this.board.slots.length)
+        this.state.players[teamIdx].score = score
+
+        if (this.inBoardUI) {
+            const moveDoneQueue = new Queue<void>('absmove-animation-done')
+            this.ctx.userWindow.webContents.send('absmove', score)
+            await moveDoneQueue.waitForElem()
+            moveDoneQueue.destroy()
+        }
+    }
+
+    async winPhase (teamIdx: number) {
+        const winAckQueue = new Queue<void>('winners-ack')
+        const winUri = 'ui:///./html/winners.html'
+        await this.ctx.loadPage(winUri, CommandTarget.BOTH)
+        this.ctx.userWindow.webContents.send('player_add', this.state.players[teamIdx])
+        await winAckQueue.get()
+        winAckQueue.destroy()
+    }
+
+    /* Questions */
 
     getGooseQuestion (questions: QuestionSet, selector: TypeSelectorSlot | TagSelectorSlot): Question {
         const compatible = questions.questions.filter(x => {
@@ -127,19 +156,7 @@ class GooseContext {
         }
     }
 
-    async updateScore (teamIdx: number, scoreDiff: number) {
-        let score = this.state.players[teamIdx].score + scoreDiff
-        score = Math.max(score, 0)
-        score = Math.min(score, this.board.slots.length)
-        this.state.players[teamIdx].score = score
-
-        if (this.inBoardUI) {
-            const moveDoneQueue = new Queue<void>('absmove-animation-done')
-            this.ctx.userWindow.webContents.send('absmove', score)
-            await moveDoneQueue.waitForElem()
-            moveDoneQueue.destroy()
-        }
-    }
+    /* Events */
 
     async handleMoveEvent (event: MoveEvent, teamIdx: number) {
         let relMove = 0
@@ -172,6 +189,8 @@ class GooseContext {
         await this.handleMoveEvent(event, teamIdx)
     }
 
+    /* Main loop */
+
     async slotPhase (slot: Slot, teamIdx: number, roll: number) {
         switch (slot.type) {
         case 'EventSlot':
@@ -185,15 +204,6 @@ class GooseContext {
             throw new Error(`Unhandled color case: ${exhaustiveCheck}`)
         }
         }
-    }
-
-    async winPhase (teamIdx: number) {
-        const winAckQueue = new Queue<void>('winners-ack')
-        const winUri = 'ui:///./html/winners.html'
-        await this.ctx.loadPage(winUri, CommandTarget.BOTH)
-        this.ctx.userWindow.webContents.send('player_add', this.state.players[teamIdx])
-        await winAckQueue.get()
-        winAckQueue.destroy()
     }
 
     async run () {
