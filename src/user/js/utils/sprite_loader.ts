@@ -1,6 +1,6 @@
 import { Err, Ok, Result } from 'ts-results'
 
-async function loadImage (src: string): Promise<Result<HTMLImageElement, Error>> {
+export async function loadImage (src: string): Promise<Result<HTMLImageElement, Error>> {
     const img = new Image()
     img.src = src
     try {

@@ -1,6 +1,6 @@
-import { Coordinates, GooseBoard, Player } from '@gaelgc/ani-grenoble-games-format'
+import { Coordinates, Event, GooseBoard, Player } from '@gaelgc/ani-grenoble-games-format'
 import { ipcRenderer } from 'electron'
-import { loadSprites } from 'utils/sprite_loader'
+import { loadImage, loadSprites } from 'utils/sprite_loader'
 
 let currentPlayer: Player
 let players: Player[] = []
@@ -8,6 +8,7 @@ let board: GooseBoard
 
 let cellSprites: ImageBitmap[] = []
 let playerSprites: ImageBitmap[] = []
+let eventCardImg: ImageBitmap
 
 /* Animation routines */
 
@@ -102,6 +103,7 @@ function drawBoard () {
 ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
     const sprites = await loadSprites(curBoard.cellTileSet, 1)
     const loadedPlayerSprites = await loadSprites(curBoard.playersTileSet, 1)
+    const eventImg = await loadImage(curBoard.eventCardImage)
 
     if (sprites.err) {
         alert(sprites.val)
@@ -113,6 +115,13 @@ ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
     } else {
         playerSprites = loadedPlayerSprites.val
     }
+    if (eventImg.err) {
+        alert(eventImg.val)
+    } else {
+        eventCardImg = await createImageBitmap(eventImg.val)
+    }
+
+    ipcRenderer.send('board-ack')
 
     board = curBoard
     drawBoard()
@@ -147,4 +156,14 @@ ipcRenderer.on('current-player', (_, teamIdx: number) => {
     rollDiv.textContent = ''
 
     drawBoard()
+})
+
+ipcRenderer.on('show-event', (_, event: Event) => {
+    drawBoard()
+
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('board-canvas')!
+    const ctx = canvas.getContext('2d')!
+    ctx.drawImage(eventCardImg, 50, 130, 400, 240)
+    ctx.fillStyle = board.eventTextColor
+    ctx.fillText(event.text, 250, 250)
 })

@@ -12,7 +12,9 @@ class GooseContext {
     questions!: QuestionSet
     rollQueue: Queue<void>
     startQueue: Queue<void>
+    doEventQueue: Queue<void>
     rollAnimationDoneQueue: Queue<void>
+    boardAckQueue: Queue<void>
     inBoardUI = false
 
     /* Setup */
@@ -22,13 +24,17 @@ class GooseContext {
         this.state = state
         this.rollQueue = new Queue<void>('roll-dice')
         this.startQueue = new Queue<void>('start-question')
+        this.doEventQueue = new Queue<void>('do-event')
         this.rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
+        this.boardAckQueue = new Queue<void>('board-ack')
     }
 
     destructor () {
         this.rollQueue.destroy()
         this.startQueue.destroy()
+        this.doEventQueue.destroy()
         this.rollAnimationDoneQueue.destroy()
+        this.boardAckQueue.destroy()
     }
 
     async waitForGooseBoardSelection (): Promise<GooseBoard> {
@@ -70,6 +76,7 @@ class GooseContext {
             this.ctx.userWindow.webContents.send('board', this.board)
             this.ctx.userWindow.webContents.send('players', this.state.players)
             this.inBoardUI = true
+            await this.boardAckQueue.get()
         }
 
         this.ctx.userWindow.webContents.send('current-player', teamIdx)
@@ -180,6 +187,10 @@ class GooseContext {
     async handleEvent (event: Event, teamIdx: number, roll: number) {
         await this.updateScore(teamIdx, roll)
         await this.loadBoardPage(teamIdx)
+
+        this.ctx.userWindow.webContents.send('show-event', event)
+        this.ctx.adminWindow.webContents.send('enable-do-event')
+        await this.doEventQueue.get()
 
         if (event.type !== 'move') {
             const exhaustiveCheck: never = event.type
