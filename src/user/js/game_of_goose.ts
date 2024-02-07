@@ -47,17 +47,17 @@ ipcRenderer.on('absmove', async (_, destPos: number) => {
 /* Draw routines */
 
 function drawPlayer (ctx: CanvasRenderingContext2D, pos: Coordinates, sprite: ImageBitmap, idxOnCell: number) {
-    const positionsOnCell = [[15, 15], [50, 15], [15, 50], [50, 50]]
-    const cellSize = 100
+    const positionsOnCell = [[30, 30], [100, 30], [30, 100], [100, 100]]
+    const cellSize = 200
     idxOnCell = Math.min(idxOnCell, positionsOnCell.length - 1)
     const posOnCell = positionsOnCell[idxOnCell]
     const drawX = pos.x * cellSize + posOnCell[0]
     const drawY = pos.y * cellSize + posOnCell[1]
-    ctx.drawImage(sprite, drawX, drawY, 35, 35)
+    ctx.drawImage(sprite, drawX, drawY, 70, 70)
 }
 
 function drawCell (x: number, y: number, id: number, sprite: ImageBitmap, ctx: CanvasRenderingContext2D) {
-    const cellWidth = 100
+    const cellWidth = 200
     const cellXStart = (cellWidth) * x
     const cellYStart = (cellWidth) * y
     ctx.drawImage(sprite, cellXStart, cellYStart, cellWidth, cellWidth)
@@ -74,7 +74,7 @@ function drawBoard () {
     ctx.reset()
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.font = '30px sans-serif'
+    ctx.font = '60px sans-serif'
 
     for (const cell of board.slots) {
         drawCell(cell.pos.x, cell.pos.y, board.slots.indexOf(cell), cellSprites[cell.tile], ctx)
@@ -100,6 +100,26 @@ function drawBoard () {
 
 /* Setup routines */
 
+function setCanvasDimensions () {
+    if (!board) {
+        return
+    }
+
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('board-canvas')!
+    const boardDiv: HTMLDivElement = <HTMLDivElement> document.getElementById('board-div')!
+
+    const maxWidth = Math.round(boardDiv.clientWidth)
+    const maxHeight = Math.round(boardDiv.clientHeight)
+
+    let ratio = maxWidth / canvas.width
+    if (canvas.height * ratio > maxHeight) {
+        ratio = maxHeight / canvas.height
+    }
+
+    canvas.style.width = `${canvas.width * ratio}px`
+    canvas.style.height = `${canvas.height * ratio}px`
+}
+
 ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
     const sprites = await loadSprites(curBoard.cellTileSet, 1)
     const loadedPlayerSprites = await loadSprites(curBoard.playersTileSet, 1)
@@ -124,6 +144,16 @@ ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
     ipcRenderer.send('board-ack')
 
     board = curBoard
+
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('board-canvas')!
+    let maxX = board.slots.map(x => x.pos.x).reduce((x, y) => Math.max(x, y))
+    let maxY = board.slots.map(x => x.pos.y).reduce((x, y) => Math.max(x, y))
+    maxX = Math.max(maxX, board.winPos.x)
+    maxY = Math.max(maxX, board.winPos.y)
+    canvas.width = (maxX + 1) * 200
+    canvas.height = (maxY + 1) * 200
+
+    setCanvasDimensions()
     drawBoard()
 })
 
@@ -163,7 +193,13 @@ ipcRenderer.on('show-event', (_, event: Event) => {
 
     const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('board-canvas')!
     const ctx = canvas.getContext('2d')!
-    ctx.drawImage(eventCardImg, 50, 130, 400, 240)
+    ctx.drawImage(eventCardImg, 100, 260, 800, 480)
     ctx.fillStyle = board.eventTextColor
-    ctx.fillText(event.text, 250, 250)
+    ctx.fillText(event.text, 500, 500)
 })
+
+/* TODO: Support event redraw */
+window.onresize = () => {
+    setCanvasDimensions()
+    drawBoard()
+}

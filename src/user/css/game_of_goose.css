@@ -22,9 +22,8 @@ body {
   color: white;
 }
 
-canvas {
-  width: 500px;
-  height: 500px;
+#board-div {
+  height: 80%
 }
 
 /* Effet fond */
@@ -183,6 +182,11 @@ header{
 }
 
 #content{
-  flex:85;
+  flex: 85;
   padding-top: 5%;
+  width: 100%
+}
+
+#roll-div{
+  height: 4%;
 }
