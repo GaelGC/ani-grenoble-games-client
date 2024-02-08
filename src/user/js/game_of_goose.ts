@@ -1,5 +1,6 @@
 import { Coordinates, Event, GooseBoard, Player } from '@gaelgc/ani-grenoble-games-format'
 import { ipcRenderer } from 'electron'
+import { loadAudio } from 'utils/audio_loader'
 import { loadImage, loadSprites } from 'utils/sprite_loader'
 
 let currentPlayer: Player
@@ -10,15 +11,24 @@ let cellSprites: ImageBitmap[] = []
 let playerSprites: ImageBitmap[] = []
 let eventCardImg: ImageBitmap
 
+let pawnMoveAudio: HTMLAudioElement
+let eventRevealAudio: HTMLAudioElement
+
 /* Animation routines */
 
 async function moveCurrentPlayer (destCell: number) {
     const diff = destCell >= currentPlayer.score ? 1 : -1
 
     while (currentPlayer.score !== destCell) {
-        await new Promise(resolve => setTimeout(resolve, 200))
+        const minTimer = new Promise(resolve => setTimeout(resolve, 200))
+        const audioTimer = new Promise(resolve => {
+            pawnMoveAudio.onended = resolve
+            pawnMoveAudio.play()
+        })
         currentPlayer.score += diff
         drawBoard()
+        await minTimer
+        await audioTimer
     }
 }
 
@@ -125,6 +135,9 @@ ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
     const loadedPlayerSprites = await loadSprites(curBoard.playersTileSet, 1)
     const eventImg = await loadImage(curBoard.eventCardImage)
 
+    const pawnMoveAudioPromise = await loadAudio(curBoard.pawnMoveSound)
+    const eventRevealAudioPromise = await loadAudio(curBoard.eventRevealSound)
+
     if (sprites.err) {
         alert(sprites.val)
     } else {
@@ -139,6 +152,17 @@ ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
         alert(eventImg.val)
     } else {
         eventCardImg = await createImageBitmap(eventImg.val)
+    }
+
+    if (pawnMoveAudioPromise.err) {
+        alert(pawnMoveAudioPromise.val)
+    } else {
+        pawnMoveAudio = pawnMoveAudioPromise.val
+    }
+    if (eventRevealAudioPromise.err) {
+        alert(eventRevealAudioPromise.val)
+    } else {
+        eventRevealAudio = eventRevealAudioPromise.val
     }
 
     ipcRenderer.send('board-ack')
@@ -196,6 +220,8 @@ ipcRenderer.on('show-event', (_, event: Event) => {
     ctx.drawImage(eventCardImg, 100, 260, 800, 480)
     ctx.fillStyle = board.eventTextColor
     ctx.fillText(event.text, 500, 500)
+
+    eventRevealAudio.play()
 })
 
 /* TODO: Support event redraw */
