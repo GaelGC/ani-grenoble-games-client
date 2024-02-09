@@ -4,9 +4,31 @@ import { CommandTarget, Context } from './context'
 import { startGenericQuestion } from './question'
 import { Queue } from './utils'
 
+class GooseState {
+    players: Player[]
+    skips: Map<Player, number>
+    currentTeam: number
+
+    constructor (players: Player[]) {
+        this.players = players
+        this.skips = new Map()
+        this.currentTeam = -1
+    }
+
+    advanceTeam (): number {
+        if (this.currentTeam === -1) {
+            this.currentTeam = 0
+            return this.currentTeam
+        }
+
+        this.currentTeam = (this.currentTeam + 1) % this.players.length
+        return this.currentTeam
+    }
+}
+
 class GooseContext {
     ctx: Context
-    state: GameState
+    state: GooseState
     config!: GameConfiguration
     board!: GooseBoard
     questions!: QuestionSet
@@ -21,7 +43,8 @@ class GooseContext {
 
     constructor (ctx: Context, state: GameState) {
         this.ctx = ctx
-        this.state = state
+        this.state = new GooseState(state.players)
+
         this.rollQueue = new Queue<void>('roll-dice')
         this.startQueue = new Queue<void>('start-question')
         this.doEventQueue = new Queue<void>('do-event')
@@ -261,8 +284,9 @@ class GooseContext {
     async run () {
         await (this.setup())
 
-        let teamIdx = 0
         while (true) {
+            const teamIdx = this.state.advanceTeam()
+
             const roll = await this.rollPhase(teamIdx)
             const slotIdx: number = Math.min(this.board.slots.length, roll + this.state.players[teamIdx].score)
             await this.startQueue.get()
@@ -276,8 +300,6 @@ class GooseContext {
                 await this.winPhase(teamIdx)
                 return
             }
-
-            teamIdx = (teamIdx + 1) % this.state.players.length
         }
     }
 }
