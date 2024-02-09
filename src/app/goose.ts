@@ -177,6 +177,20 @@ class GooseContext {
         winAckQueue.destroy()
     }
 
+    async onSkippedPlayerTurn (teamIdx: number) {
+        await this.loadBoardPage(teamIdx)
+
+        const skipEvent: Event = {
+            type: 'skip',
+            nbTurns: 1,
+            text: 'Tour sauté'
+        }
+
+        this.ctx.userWindow.webContents.send('show-event', skipEvent)
+        this.ctx.adminWindow.webContents.send('enable-do-event')
+        await this.doEventQueue.get()
+    }
+
     /* Questions */
 
     getGooseQuestion (questions: QuestionSet, selector: TypeSelectorSlot | TagSelectorSlot): Question {
@@ -281,6 +295,8 @@ class GooseContext {
             await this.handleMoveEvent(event, teamIdx)
         } else if (event.type === 'swap') {
             this.handleSwapEvent(event, teamIdx)
+        } else if (event.type === 'skip') {
+            this.state.registerTeamSkip(teamIdx, event.nbTurns)
         } else {
             const exhaustiveCheck: never = event
             throw new Error(`Unhandled event type: ${exhaustiveCheck}`)
@@ -308,7 +324,7 @@ class GooseContext {
         await (this.setup())
 
         while (true) {
-            const teamIdx = await this.state.advanceTeam()
+            const teamIdx = await this.state.advanceTeam(this.onSkippedPlayerTurn.bind(this))
 
             const roll = await this.rollPhase(teamIdx)
             const slotIdx: number = Math.min(this.board.slots.length, roll + this.state.players[teamIdx].score)
