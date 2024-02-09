@@ -1,4 +1,4 @@
-import { Event, GameConfiguration, GameState, GooseBoard, MoveEvent, Player, Question, QuestionSet, Slot, TagSelectorSlot, TypeSelectorSlot, parseGooseBoard } from '@gaelgc/ani-grenoble-games-format'
+import { Event, GameConfiguration, GameState, GooseBoard, MoveEvent, Player, Question, QuestionSet, Slot, SwapEvent, TagSelectorSlot, TypeSelectorSlot, parseGooseBoard } from '@gaelgc/ani-grenoble-games-format'
 import { readFileSync, writeFileSync } from 'fs'
 import { CommandTarget, Context } from './context'
 import { startGenericQuestion } from './question'
@@ -96,7 +96,7 @@ class GooseContext {
         return roll
     }
 
-    async updateScore (teamIdx: number, scoreDiff: number) {
+    async movePawn (teamIdx: number, scoreDiff: number) {
         let score = this.state.players[teamIdx].score + scoreDiff
         score = Math.max(score, 0)
         score = Math.min(score, this.board.slots.length)
@@ -107,6 +107,18 @@ class GooseContext {
             this.ctx.userWindow.webContents.send('absmove', score)
             await moveDoneQueue.waitForElem()
             moveDoneQueue.destroy()
+        }
+    }
+
+    swapPawns (team1Idx: number, team2Idx: number) {
+        const team1 = this.state.players[team1Idx]
+        const team2 = this.state.players[team2Idx]
+        const tmp = team1.score
+        team1.score = team2.score
+        team2.score = tmp
+
+        if (this.inBoardUI) {
+            this.ctx.userWindow.webContents.send('swap-players', team1Idx, team2Idx)
         }
     }
 
@@ -159,7 +171,7 @@ class GooseContext {
         this.inBoardUI = false
         const result = await startGenericQuestion(this.ctx, question, config, tempState)
         if (result.players.length > 0) {
-            await this.updateScore(teamIdx, result.points)
+            await this.movePawn(teamIdx, result.points)
         }
     }
 
@@ -181,23 +193,52 @@ class GooseContext {
         }
         }
 
-        await this.updateScore(teamIdx, relMove)
+        await this.movePawn(teamIdx, relMove)
+    }
+
+    handleSwapEvent (event: SwapEvent, teamIdx: number) {
+        let otherPlayerIdx = 0
+        const players = this.state.players
+        const scoreMap = players.map(x => x.score)
+
+        const selectCompatible = (predicate: (player: Player) => Boolean) => {
+            const compatible = players.filter(predicate)
+            const choice = compatible[Math.floor(Math.random() * compatible.length)]
+            return players.indexOf(choice)
+        }
+
+        if (event.swapType === 'best') {
+            const max = scoreMap.reduce((x, y) => x >= y ? x : y)
+            otherPlayerIdx = selectCompatible(player => player.score === max)
+        } else if (event.swapType === 'worst') {
+            const min = scoreMap.reduce((x, y) => x < y ? x : y)
+            otherPlayerIdx = selectCompatible(player => player.score === min)
+        } else if (event.swapType === 'random') {
+            otherPlayerIdx = selectCompatible(() => true)
+        } else {
+            const exhaustiveCheck: never = event.swapType
+            throw new Error(`Unhandled move type: ${exhaustiveCheck}`)
+        }
+
+        this.swapPawns(teamIdx, otherPlayerIdx)
     }
 
     async handleEvent (event: Event, teamIdx: number, roll: number) {
-        await this.updateScore(teamIdx, roll)
+        await this.movePawn(teamIdx, roll)
         await this.loadBoardPage(teamIdx)
 
         this.ctx.userWindow.webContents.send('show-event', event)
         this.ctx.adminWindow.webContents.send('enable-do-event')
         await this.doEventQueue.get()
 
-        if (event.type !== 'move') {
-            const exhaustiveCheck: never = event.type
+        if (event.type === 'move') {
+            await this.handleMoveEvent(event, teamIdx)
+        } else if (event.type === 'swap') {
+            this.handleSwapEvent(event, teamIdx)
+        } else {
+            const exhaustiveCheck: never = event
             throw new Error(`Unhandled event type: ${exhaustiveCheck}`)
         }
-
-        await this.handleMoveEvent(event, teamIdx)
     }
 
     /* Main loop */

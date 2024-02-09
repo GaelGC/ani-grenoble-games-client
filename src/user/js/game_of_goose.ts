@@ -54,6 +54,16 @@ ipcRenderer.on('absmove', async (_, destPos: number) => {
     ipcRenderer.send('absmove-animation-done')
 })
 
+ipcRenderer.on('swap-players', async (_, team1Idx: number, team2Idx: number) => {
+    const team1 = players[team1Idx]
+    const team2 = players[team2Idx]
+    const tmp = team1.score
+    team1.score = team2.score
+    team2.score = tmp
+
+    drawBoard()
+})
+
 /* Draw routines */
 
 function drawPlayer (ctx: CanvasRenderingContext2D, pos: Coordinates, sprite: ImageBitmap, idxOnCell: number) {
