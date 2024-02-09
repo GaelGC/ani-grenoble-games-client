@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'fs'
 import { CommandTarget, Context } from './context'
 import { startGenericQuestion } from './question'
 import { Queue } from './utils'
+import { assert } from 'console'
 
 class GooseState {
     players: Player[]
@@ -15,14 +16,36 @@ class GooseState {
         this.currentTeam = -1
     }
 
-    advanceTeam (): number {
+    async advanceTeam (onSkip?: (teamIdx: number) => Promise<void>): Promise<number> {
         if (this.currentTeam === -1) {
             this.currentTeam = 0
             return this.currentTeam
         }
 
-        this.currentTeam = (this.currentTeam + 1) % this.players.length
+        while (true) {
+            this.currentTeam = (this.currentTeam + 1) % this.players.length
+            const player = this.players[this.currentTeam]
+            if (!this.skips.has(player)) {
+                break
+            }
+
+            if (onSkip) {
+                await onSkip(this.currentTeam)
+            }
+            const remainingSkips = this.skips.get(player)! - 1
+            if (remainingSkips === 0) {
+                this.skips.delete(player)
+            } else {
+                this.skips.set(player, remainingSkips)
+            }
+        }
+
         return this.currentTeam
+    }
+
+    registerTeamSkip (teamIdx: number, nbTurns: number) {
+        assert(nbTurns > 0, 'Asked for a 0/negative number of turn skips')
+        this.skips.set(this.players[teamIdx], nbTurns)
     }
 }
 
@@ -285,7 +308,7 @@ class GooseContext {
         await (this.setup())
 
         while (true) {
-            const teamIdx = this.state.advanceTeam()
+            const teamIdx = await this.state.advanceTeam()
 
             const roll = await this.rollPhase(teamIdx)
             const slotIdx: number = Math.min(this.board.slots.length, roll + this.state.players[teamIdx].score)
