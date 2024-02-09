@@ -232,6 +232,13 @@ class GooseContext {
         const result = await startGenericQuestion(this.ctx, question, config, tempState)
         if (result.players.length > 0) {
             await this.movePawn(teamIdx, result.points)
+            if (slot.onWin) {
+                await this.handleEvent(slot.onWin, teamIdx)
+            }
+        } else {
+            if (slot.onLose) {
+                await this.handleEvent(slot.onLose, teamIdx)
+            }
         }
     }
 
@@ -283,8 +290,7 @@ class GooseContext {
         this.swapPawns(teamIdx, otherPlayerIdx)
     }
 
-    async handleEvent (event: Event, teamIdx: number, roll: number) {
-        await this.movePawn(teamIdx, roll)
+    async handleEvent (event: Event, teamIdx: number) {
         await this.loadBoardPage(teamIdx)
 
         this.ctx.userWindow.webContents.send('show-event', event)
@@ -308,7 +314,8 @@ class GooseContext {
     async slotPhase (slot: Slot, teamIdx: number, roll: number) {
         switch (slot.type) {
         case 'EventSlot':
-            await this.handleEvent(slot.event, teamIdx, roll)
+            await this.movePawn(teamIdx, roll)
+            await this.handleEvent(slot.event, teamIdx)
             break
         case 'GameSlot':
             await this.handleGooseGameSlot(this.questions, slot, teamIdx, roll, this.config)
