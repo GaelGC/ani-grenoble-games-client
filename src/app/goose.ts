@@ -2,13 +2,15 @@ import { Event, GameConfiguration, GameState, GooseBoard, MoveEvent, Player, Que
 import { readFileSync, writeFileSync } from 'fs'
 import { CommandTarget, Context } from './context'
 import { startGenericQuestion } from './question'
-import { Queue } from './utils'
+import { Queue, unreachable } from './utils'
 import { assert } from 'console'
 
-class GooseState {
-    players: Player[]
-    skips: Map<Player, number>
-    currentTeam: number
+class TeamTurnManager {
+    turnSkipListener?: (teamIdx: number) => Promise<void>
+
+    private players: Player[]
+    private skips: Map<Player, number>
+    private currentTeam: number
 
     constructor (players: Player[]) {
         this.players = players
@@ -16,10 +18,10 @@ class GooseState {
         this.currentTeam = -1
     }
 
-    async advanceTeam (onSkip?: (teamIdx: number) => Promise<void>): Promise<number> {
+    async getNextTeam (): Promise<Player> {
         if (this.currentTeam === -1) {
             this.currentTeam = 0
-            return this.currentTeam
+            return this.players[this.currentTeam]
         }
 
         while (true) {
@@ -29,9 +31,10 @@ class GooseState {
                 break
             }
 
-            if (onSkip) {
-                await onSkip(this.currentTeam)
+            if (this.turnSkipListener) {
+                await this.turnSkipListener(this.currentTeam)
             }
+
             const remainingSkips = this.skips.get(player)! - 1
             if (remainingSkips === 0) {
                 this.skips.delete(player)
@@ -40,18 +43,127 @@ class GooseState {
             }
         }
 
-        return this.currentTeam
+        return this.players[this.currentTeam]
     }
 
-    registerTeamSkip (teamIdx: number, nbTurns: number) {
+    registerTeamSkip (player: Player, nbTurns: number) {
         assert(nbTurns > 0, 'Asked for a 0/negative number of turn skips')
-        this.skips.set(this.players[teamIdx], nbTurns)
+        this.skips.set(player, nbTurns)
+    }
+}
+
+class ScoreManager {
+    private scores: Map<Player, number>
+    private pendingScores: Map<Player, number>
+    private winningScore: number
+    private winner?: Player
+
+    winListener?: (winner: Player) => Promise<void>
+    pendingScoreCommitListener?: (player: Player, newScore: number) => Promise<void>
+    pendingScoreDropListener?: (player: Player, droppedScore: number, currentScore: number) => Promise<void>
+    pendingScoreChangeListener?: (player: Player, oldScore: number, newScore: number) => Promise<void>
+    swapListener?: (player1: Player, player2: Player) => Promise<void>
+
+    constructor (players: Player[], winningScore: number) {
+        this.scores = new Map()
+        this.pendingScores = new Map()
+        this.winningScore = winningScore
+
+        for (const player of players) {
+            this.scores.set(player, 0)
+        }
+    }
+
+    hasWinner (): boolean {
+        return this.winner !== undefined
+    }
+
+    async setWinner (player: Player) {
+        this.winner = player
+        if (this.winListener) {
+            await this.winListener(player)
+        }
+    }
+
+    async commitPendingScore (player: Player) {
+        const optionalNewScore = this.pendingScores.get(player)
+        if (optionalNewScore !== undefined) {
+            this.scores.set(player, optionalNewScore)
+            this.pendingScores.delete(player)
+            if (this.pendingScoreCommitListener) {
+                await this.pendingScoreCommitListener(player, optionalNewScore)
+            }
+            if (optionalNewScore >= this.winningScore) {
+                await this.setWinner(player)
+            }
+        }
+    }
+
+    async dropPendingScore (player: Player) {
+        const pendingScore = this.pendingScores.get(player)
+        if (pendingScore === undefined) {
+            return
+        }
+
+        if (this.pendingScoreDropListener) {
+            await this.pendingScoreDropListener(player, pendingScore, this.scores.get(player)!)
+        }
+
+        this.pendingScores.delete(player)
+    }
+
+    async setScore (player: Player, pending: 'immediate' | 'pending', kind: 'absolute' | 'relative', score: number): Promise<number> {
+        const currentScore = this.pendingScores.get(player) ?? this.scores.get(player)!
+        let newScore = currentScore
+
+        if (kind === 'absolute') {
+            newScore = score
+        } else if (kind === 'relative') {
+            newScore = currentScore + score
+        } else {
+            unreachable(kind)
+        }
+
+        if (newScore > this.winningScore) {
+            newScore = this.winningScore
+        }
+        this.pendingScores.set(player, newScore)
+
+        if (pending === 'pending') {
+            if (this.pendingScoreChangeListener) {
+                await this.pendingScoreChangeListener(player, currentScore, newScore)
+            }
+        } else if (pending === 'immediate') {
+            await this.commitPendingScore(player)
+        } else {
+            unreachable(pending)
+        }
+
+        return newScore
+    }
+
+    async swapPlayers (player1: Player, player2: Player) {
+        await this.commitPendingScore(player1)
+        await this.commitPendingScore(player2)
+        const tmp = this.score(player1)
+        this.scores.set(player1, this.score(player2))
+        this.scores.set(player2, tmp)
+        if (this.swapListener) {
+            await this.swapListener(player1, player2)
+        }
+    }
+
+    score (player: Player): number {
+        return this.scores.get(player)!
     }
 }
 
 class GooseContext {
     ctx: Context
-    state: GooseState
+    turnManager: TeamTurnManager
+    scoreManager: ScoreManager
+
+    players: Player[]
     config!: GameConfiguration
     board!: GooseBoard
     questions!: QuestionSet
@@ -64,15 +176,26 @@ class GooseContext {
 
     /* Setup */
 
-    constructor (ctx: Context, state: GameState) {
+    constructor (ctx: Context, state: GameState, board: GooseBoard, questions: QuestionSet) {
         this.ctx = ctx
-        this.state = new GooseState(state.players)
+        this.turnManager = new TeamTurnManager(state.players)
+        this.turnManager.turnSkipListener = this.playerSkipHandler.bind(this)
 
+        this.scoreManager = new ScoreManager(state.players, board.slots.length)
+        this.scoreManager.winListener = this.winHandler.bind(this)
+        this.scoreManager.pendingScoreChangeListener = this.pendingMoveHandler.bind(this)
+        this.scoreManager.pendingScoreCommitListener = this.moveHandler.bind(this)
+        this.scoreManager.swapListener = this.pawnSwapHandler.bind(this)
+
+        this.players = state.players
         this.rollQueue = new Queue<void>('roll-dice')
         this.startQueue = new Queue<void>('start-question')
         this.doEventQueue = new Queue<void>('do-event')
         this.rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
         this.boardAckQueue = new Queue<void>('board-ack')
+        this.board = board
+        this.config = questions.configuration
+        this.questions = questions
     }
 
     destructor () {
@@ -83,44 +206,12 @@ class GooseContext {
         this.boardAckQueue.destroy()
     }
 
-    async waitForGooseBoardSelection (): Promise<GooseBoard> {
-        const pickedFile = new Queue<string>('goose-board-file')
-
-        const fileName = await pickedFile.get()
-        const json = readFileSync(fileName).toString()
-        const parsed = parseGooseBoard(json)
-        if (parsed.err) {
-            throw parsed.val
-        }
-
-        const oldVersion = JSON.parse(json).version
-        if (oldVersion !== parsed.val.version) {
-            writeFileSync(`${fileName}_updated`, JSON.stringify(parsed.val, undefined, 4))
-        }
-
-        pickedFile.destroy()
-        return parsed.val
-    }
-
-    async setup () {
-        this.ctx.userWindow.webContents.send('game-select')
-        const pack = this.ctx.waitForPackSelection()
-        const boardPromise = this.waitForGooseBoardSelection()
-        const initUri = 'ui:///./html/game_of_the_goose_init.html'
-        await this.ctx.loadPage(initUri, CommandTarget.ADMIN)
-
-        const questions = await pack
-        this.board = await boardPromise
-        this.config = questions.configuration
-        this.questions = questions
-    }
-
     async loadBoardPage (teamIdx: number) {
         if (!this.inBoardUI) {
             const gameUri = 'ui:///./html/game_of_the_goose.html'
             await this.ctx.loadPage(gameUri, CommandTarget.BOTH)
             this.ctx.userWindow.webContents.send('board', this.board)
-            this.ctx.userWindow.webContents.send('players', this.state.players)
+            this.ctx.userWindow.webContents.send('players', this.players.map(x => <Player>{ ...x, score: this.scoreManager.score(x) }))
             this.inBoardUI = true
             await this.boardAckQueue.get()
         }
@@ -130,8 +221,14 @@ class GooseContext {
 
     /* Interactions */
 
-    async rollPhase (teamIdx: number): Promise<number> {
-        await this.loadBoardPage(teamIdx)
+    async pawnSwapHandler (team1: Player, team2: Player) {
+        if (this.inBoardUI) {
+            this.ctx.userWindow.webContents.send('swap-players', this.players.indexOf(team1), this.players.indexOf(team2))
+        }
+    }
+
+    async rollPhase (player: Player): Promise<number> {
+        await this.loadBoardPage(this.players.indexOf(player))
         this.ctx.adminWindow.webContents.send('enable-roll')
         await this.rollQueue.get()
         const roll = Math.ceil(Math.random() * 6)
@@ -142,12 +239,7 @@ class GooseContext {
         return roll
     }
 
-    async movePawn (teamIdx: number, scoreDiff: number) {
-        let score = this.state.players[teamIdx].score + scoreDiff
-        score = Math.max(score, 0)
-        score = Math.min(score, this.board.slots.length)
-        this.state.players[teamIdx].score = score
-
+    async moveHandler (player: Player, score: number) {
         if (this.inBoardUI) {
             const moveDoneQueue = new Queue<void>('absmove-animation-done')
             this.ctx.userWindow.webContents.send('absmove', score)
@@ -156,28 +248,24 @@ class GooseContext {
         }
     }
 
-    swapPawns (team1Idx: number, team2Idx: number) {
-        const team1 = this.state.players[team1Idx]
-        const team2 = this.state.players[team2Idx]
-        const tmp = team1.score
-        team1.score = team2.score
-        team2.score = tmp
-
-        if (this.inBoardUI) {
-            this.ctx.userWindow.webContents.send('swap-players', team1Idx, team2Idx)
-        }
+    pendingMoveHandler (player: Player, oldScore: number, score: number) {
+        return this.moveHandler(player, score)
     }
 
-    async winPhase (teamIdx: number) {
+    async swapPawns (team1: Player, team2: Player) {
+        await this.scoreManager.swapPlayers(team1, team2)
+    }
+
+    async winHandler (winner: Player) {
         const winAckQueue = new Queue<void>('winners-ack')
         const winUri = 'ui:///./html/winners.html'
         await this.ctx.loadPage(winUri, CommandTarget.BOTH)
-        this.ctx.userWindow.webContents.send('player_add', this.state.players[teamIdx])
+        this.ctx.userWindow.webContents.send('player_add', winner)
         await winAckQueue.get()
         winAckQueue.destroy()
     }
 
-    async onSkippedPlayerTurn (teamIdx: number) {
+    async playerSkipHandler (teamIdx: number) {
         await this.loadBoardPage(teamIdx)
 
         const skipEvent: Event = {
@@ -214,95 +302,79 @@ class GooseContext {
     }
 
     async handleGooseGameSlot (questions: QuestionSet, slot: TagSelectorSlot | TypeSelectorSlot,
-        teamIdx: number, roll: number, config: GameConfiguration) {
+        player: Player, roll: number, config: GameConfiguration) {
         const question = this.getGooseQuestion(questions, slot)
         question.points = roll
 
         const tempPlayer: Player = {
-            name: this.state.players[teamIdx].name,
+            name: player.name,
             score: 0,
-            color: this.state.players[teamIdx].color
+            color: player.color
         }
         const tempState: GameState = {
             players: [tempPlayer]
         }
-        tempState.players[0].score = 0
 
         this.inBoardUI = false
         const result = await startGenericQuestion(this.ctx, question, config, tempState)
         if (result.players.length > 0) {
-            await this.movePawn(teamIdx, result.points)
+            await this.scoreManager.commitPendingScore(player)
             if (slot.onWin) {
-                await this.handleEvent(slot.onWin, teamIdx)
+                await this.handleEvent(slot.onWin, player)
             }
         } else {
+            await this.scoreManager.dropPendingScore(player)
             if (slot.onLose) {
-                await this.handleEvent(slot.onLose, teamIdx)
+                await this.handleEvent(slot.onLose, player)
             }
         }
     }
 
     /* Events */
 
-    async handleMoveEvent (event: MoveEvent, teamIdx: number) {
-        let relMove = 0
-
-        switch (event.movetype) {
-        case 'absolute':
-            relMove = event.nbPos - this.state.players[teamIdx].score
-            break
-        case 'relative':
-            relMove = event.nbPos
-            break
-        default: {
-            const exhaustiveCheck: never = event.movetype
-            throw new Error(`Unhandled move type: ${exhaustiveCheck}`)
-        }
-        }
-
-        await this.movePawn(teamIdx, relMove)
+    async handleMoveEvent (event: MoveEvent, player: Player) {
+        await this.scoreManager.setScore(player, 'immediate', event.movetype, event.nbPos)
     }
 
-    handleSwapEvent (event: SwapEvent, teamIdx: number) {
-        let otherPlayerIdx = 0
-        const players = this.state.players
-        const scoreMap = players.map(x => x.score)
+    async handleSwapEvent (event: SwapEvent, player: Player) {
+        let otherPlayer: Player | undefined
+        const scoreMap = this.players.map(x => this.scoreManager.score(x))
 
         const selectCompatible = (predicate: (player: Player) => Boolean) => {
-            const compatible = players.filter(predicate)
+            const compatible = this.players.filter(predicate)
             const choice = compatible[Math.floor(Math.random() * compatible.length)]
-            return players.indexOf(choice)
+            return choice
         }
 
         if (event.swapType === 'best') {
             const max = scoreMap.reduce((x, y) => x >= y ? x : y)
-            otherPlayerIdx = selectCompatible(player => player.score === max)
+            otherPlayer = selectCompatible(player => this.scoreManager.score(player) === max)
         } else if (event.swapType === 'worst') {
             const min = scoreMap.reduce((x, y) => x < y ? x : y)
-            otherPlayerIdx = selectCompatible(player => player.score === min)
+            otherPlayer = selectCompatible(player => this.scoreManager.score(player) === min)
         } else if (event.swapType === 'random') {
-            otherPlayerIdx = selectCompatible(() => true)
+            otherPlayer = selectCompatible(() => true)
         } else {
             const exhaustiveCheck: never = event.swapType
             throw new Error(`Unhandled move type: ${exhaustiveCheck}`)
         }
 
-        this.swapPawns(teamIdx, otherPlayerIdx)
+        await this.swapPawns(player, otherPlayer)
     }
 
-    async handleEvent (event: Event, teamIdx: number) {
-        await this.loadBoardPage(teamIdx)
+    async handleEvent (event: Event, player: Player) {
+        await this.loadBoardPage(this.players.indexOf(player))
 
         this.ctx.userWindow.webContents.send('show-event', event)
         this.ctx.adminWindow.webContents.send('enable-do-event')
         await this.doEventQueue.get()
 
         if (event.type === 'move') {
-            await this.handleMoveEvent(event, teamIdx)
+            await this.handleMoveEvent(event, player)
         } else if (event.type === 'swap') {
-            this.handleSwapEvent(event, teamIdx)
+            await this.handleSwapEvent(event, player)
         } else if (event.type === 'skip') {
-            this.state.registerTeamSkip(teamIdx, event.nbTurns)
+            this.turnManager.registerTeamSkip(player, event.nbTurns)
         } else {
             const exhaustiveCheck: never = event
             throw new Error(`Unhandled event type: ${exhaustiveCheck}`)
@@ -311,14 +383,14 @@ class GooseContext {
 
     /* Main loop */
 
-    async slotPhase (slot: Slot, teamIdx: number, roll: number) {
+    async slotPhase (slot: Slot, player: Player, roll: number) {
         switch (slot.type) {
         case 'EventSlot':
-            await this.movePawn(teamIdx, roll)
-            await this.handleEvent(slot.event, teamIdx)
+            await this.scoreManager.commitPendingScore(player)
+            await this.handleEvent(slot.event, player)
             break
         case 'GameSlot':
-            await this.handleGooseGameSlot(this.questions, slot, teamIdx, roll, this.config)
+            await this.handleGooseGameSlot(this.questions, slot, player, roll, this.config)
             break
         default: {
             const exhaustiveCheck: never = slot
@@ -328,30 +400,56 @@ class GooseContext {
     }
 
     async run () {
-        await (this.setup())
+        while (!this.scoreManager.hasWinner()) {
+            const player = await this.turnManager.getNextTeam()
 
-        while (true) {
-            const teamIdx = await this.state.advanceTeam(this.onSkippedPlayerTurn.bind(this))
-
-            const roll = await this.rollPhase(teamIdx)
-            const slotIdx: number = Math.min(this.board.slots.length, roll + this.state.players[teamIdx].score)
+            const roll = await this.rollPhase(player)
+            const slotIdx = await this.scoreManager.setScore(player, 'pending', 'relative', roll)
             await this.startQueue.get()
 
             const slot : Slot = slotIdx === this.board.slots.length
                 ? { type: 'GameSlot', selector: 'TagSelector', tags: ['final'], pos: { x: 0, y: 0 }, tile: 0 }
                 : this.board.slots[slotIdx]
-            await this.slotPhase(slot, teamIdx, roll)
-
-            if (this.state.players[teamIdx].score >= this.board.slots.length) {
-                await this.winPhase(teamIdx)
-                return
-            }
+            await this.slotPhase(slot, player, roll)
         }
     }
 }
 
 export async function runGoose (ctx: Context, state: GameState) {
-    const gooseCtx = new GooseContext(ctx, state)
+    async function waitForGooseBoardSelection (): Promise<GooseBoard> {
+        const pickedFile = new Queue<string>('goose-board-file')
+
+        const fileName = await pickedFile.get()
+        const json = readFileSync(fileName).toString()
+        const parsed = parseGooseBoard(json)
+        if (parsed.err) {
+            throw parsed.val
+        }
+
+        const oldVersion = JSON.parse(json).version
+        if (oldVersion !== parsed.val.version) {
+            writeFileSync(`${fileName}_updated`, JSON.stringify(parsed.val, undefined, 4))
+        }
+
+        pickedFile.destroy()
+        return parsed.val
+    }
+
+    async function setup (): Promise<[QuestionSet, GooseBoard]> {
+        ctx.userWindow.webContents.send('game-select')
+        const pack = ctx.waitForPackSelection()
+        const boardPromise = waitForGooseBoardSelection()
+        const initUri = 'ui:///./html/game_of_the_goose_init.html'
+        await ctx.loadPage(initUri, CommandTarget.ADMIN)
+
+        const questions = await pack
+        const board = await boardPromise
+
+        return [questions, board]
+    }
+
+    const [questions, board] = await setup()
+    const gooseCtx = new GooseContext(ctx, state, board, questions)
     await gooseCtx.run()
     gooseCtx.destructor()
 }
