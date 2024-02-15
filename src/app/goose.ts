@@ -8,31 +8,33 @@ import { assert } from 'console'
 class TeamTurnManager {
     turnSkipListener?: (teamIdx: number) => Promise<void>
 
+    displayCurrentTeamCallback?: (team: Player) => Promise<void>
+
     private players: Player[]
     private skips: Map<Player, number>
-    private currentTeam: number
+    private currentTeamIdx: number
 
     constructor (players: Player[]) {
         this.players = players
         this.skips = new Map()
-        this.currentTeam = -1
+        this.currentTeamIdx = -1
     }
 
     async getNextTeam (): Promise<Player> {
-        if (this.currentTeam === -1) {
-            this.currentTeam = 0
-            return this.players[this.currentTeam]
+        if (this.currentTeamIdx === -1) {
+            this.currentTeamIdx = 0
+            return this.players[this.currentTeamIdx]
         }
 
         while (true) {
-            this.currentTeam = (this.currentTeam + 1) % this.players.length
-            const player = this.players[this.currentTeam]
+            this.currentTeamIdx = (this.currentTeamIdx + 1) % this.players.length
+            const player = this.players[this.currentTeamIdx]
             if (!this.skips.has(player)) {
                 break
             }
 
             if (this.turnSkipListener) {
-                await this.turnSkipListener(this.currentTeam)
+                await this.turnSkipListener(this.currentTeamIdx)
             }
 
             const remainingSkips = this.skips.get(player)! - 1
@@ -43,12 +45,19 @@ class TeamTurnManager {
             }
         }
 
-        return this.players[this.currentTeam]
+        return this.players[this.currentTeamIdx]
     }
 
     registerTeamSkip (player: Player, nbTurns: number) {
         assert(nbTurns > 0, 'Asked for a 0/negative number of turn skips')
         this.skips.set(player, nbTurns)
+    }
+
+    async display () {
+        if (!this.displayCurrentTeamCallback) {
+            return
+        }
+        await this.displayCurrentTeamCallback(this.players[this.currentTeamIdx])
     }
 }
 
@@ -63,6 +72,8 @@ class ScoreManager {
     pendingScoreDropListener?: (player: Player, droppedScore: number, currentScore: number) => Promise<void>
     pendingScoreChangeListener?: (player: Player, oldScore: number, newScore: number) => Promise<void>
     swapListener?: (player1: Player, player2: Player) => Promise<void>
+
+    displayCallback?: (players: Player[]) => Promise<void>
 
     constructor (players: Player[], winningScore: number) {
         this.scores = new Map()
@@ -156,6 +167,50 @@ class ScoreManager {
     score (player: Player): number {
         return this.scores.get(player)!
     }
+
+    async display (players: Player[]) {
+        if (this.displayCallback) {
+            await this.displayCallback(players.map(x => <Player>{ ...x, score: this.score(x) }))
+        }
+    }
+}
+
+class BoardManager {
+    rollListener?: (roll: number) => Promise<void>
+
+    displayBoardCallback?: (board: GooseBoard) => Promise<void>
+
+    private board: GooseBoard
+    private scoreSetCallback: (player: Player, roll: number) => Promise<number>
+
+    constructor (board: GooseBoard, scoreSetCallback: (player: Player, roll: number) => Promise<number>) {
+        this.board = board
+        this.scoreSetCallback = scoreSetCallback
+    }
+
+    private getSlot (slotIdx: number): Slot {
+        if (slotIdx === this.board.slots.length) {
+            return { type: 'GameSlot', selector: 'TagSelector', tags: ['final'], pos: { x: 0, y: 0 }, tile: 0 }
+        }
+        return this.board.slots[slotIdx]
+    }
+
+    async roll (player: Player): Promise<Slot> {
+        const roll = Math.ceil(Math.random() * 6)
+        if (this.rollListener) {
+            await this.rollListener(roll)
+        }
+
+        const cellIdx = await this.scoreSetCallback(player, roll)
+
+        return this.getSlot(cellIdx)
+    }
+
+    async display () {
+        if (this.displayBoardCallback) {
+            await this.displayBoardCallback(this.board)
+        }
+    }
 }
 
 class GooseContext {
@@ -165,7 +220,6 @@ class GooseContext {
 
     players: Player[]
     config!: GameConfiguration
-    board!: GooseBoard
     questions!: QuestionSet
     rollQueue: Queue<void>
     startQueue: Queue<void>
@@ -173,6 +227,7 @@ class GooseContext {
     rollAnimationDoneQueue: Queue<void>
     boardAckQueue: Queue<void>
     inBoardUI = false
+    boardManager: BoardManager
 
     /* Setup */
 
@@ -180,12 +235,18 @@ class GooseContext {
         this.ctx = ctx
         this.turnManager = new TeamTurnManager(state.players)
         this.turnManager.turnSkipListener = this.playerSkipHandler.bind(this)
+        this.turnManager.displayCurrentTeamCallback = this.currentTeamDisplayHandler.bind(this)
 
         this.scoreManager = new ScoreManager(state.players, board.slots.length)
         this.scoreManager.winListener = this.winHandler.bind(this)
         this.scoreManager.pendingScoreChangeListener = this.pendingMoveHandler.bind(this)
         this.scoreManager.pendingScoreCommitListener = this.moveHandler.bind(this)
         this.scoreManager.swapListener = this.pawnSwapHandler.bind(this)
+        this.scoreManager.displayCallback = this.teamDisplayHandler.bind(this)
+
+        this.boardManager = new BoardManager(board, (player, roll) => this.scoreManager.setScore(player, 'pending', 'relative', roll))
+        this.boardManager.rollListener = this.onRoll.bind(this)
+        this.boardManager.displayBoardCallback = this.boardDisplayHandler.bind(this)
 
         this.players = state.players
         this.rollQueue = new Queue<void>('roll-dice')
@@ -193,7 +254,6 @@ class GooseContext {
         this.doEventQueue = new Queue<void>('do-event')
         this.rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
         this.boardAckQueue = new Queue<void>('board-ack')
-        this.board = board
         this.config = questions.configuration
         this.questions = questions
     }
@@ -206,17 +266,25 @@ class GooseContext {
         this.boardAckQueue.destroy()
     }
 
-    async loadBoardPage (teamIdx: number) {
+    async teamDisplayHandler (players: Player[]) {
+        this.ctx.userWindow.webContents.send('players', players)
+    }
+
+    async currentTeamDisplayHandler (player: Player) {
+        this.ctx.userWindow.webContents.send('current-player', this.players.indexOf(player))
+    }
+
+    async boardDisplayHandler (board: GooseBoard) {
         if (!this.inBoardUI) {
             const gameUri = 'ui:///./html/game_of_the_goose.html'
             await this.ctx.loadPage(gameUri, CommandTarget.BOTH)
-            this.ctx.userWindow.webContents.send('board', this.board)
-            this.ctx.userWindow.webContents.send('players', this.players.map(x => <Player>{ ...x, score: this.scoreManager.score(x) }))
             this.inBoardUI = true
+            this.ctx.userWindow.webContents.send('board', board)
+
+            await this.scoreManager.display(this.players)
             await this.boardAckQueue.get()
         }
-
-        this.ctx.userWindow.webContents.send('current-player', teamIdx)
+        await this.turnManager.display()
     }
 
     /* Interactions */
@@ -227,16 +295,19 @@ class GooseContext {
         }
     }
 
-    async rollPhase (player: Player): Promise<number> {
-        await this.loadBoardPage(this.players.indexOf(player))
-        this.ctx.adminWindow.webContents.send('enable-roll')
-        await this.rollQueue.get()
-        const roll = Math.ceil(Math.random() * 6)
+    async onRoll (roll: number) {
         this.ctx.userWindow.webContents.send('roll', roll)
         await this.rollAnimationDoneQueue.get()
-        this.ctx.adminWindow.webContents.send('enable-start-question')
+    }
 
-        return roll
+    async rollPhase (player: Player): Promise<Slot> {
+        await this.boardManager.display()
+        this.ctx.adminWindow.webContents.send('enable-roll')
+        await this.rollQueue.get()
+
+        const cell = await this.boardManager.roll(player)
+
+        return cell
     }
 
     async moveHandler (player: Player, score: number) {
@@ -265,8 +336,8 @@ class GooseContext {
         winAckQueue.destroy()
     }
 
-    async playerSkipHandler (teamIdx: number) {
-        await this.loadBoardPage(teamIdx)
+    async playerSkipHandler () {
+        await this.boardManager.display()
 
         const skipEvent: Event = {
             type: 'skip',
@@ -302,9 +373,8 @@ class GooseContext {
     }
 
     async handleGooseGameSlot (questions: QuestionSet, slot: TagSelectorSlot | TypeSelectorSlot,
-        player: Player, roll: number, config: GameConfiguration) {
+        player: Player, config: GameConfiguration) {
         const question = this.getGooseQuestion(questions, slot)
-        question.points = roll
 
         const tempPlayer: Player = {
             name: player.name,
@@ -363,7 +433,7 @@ class GooseContext {
     }
 
     async handleEvent (event: Event, player: Player) {
-        await this.loadBoardPage(this.players.indexOf(player))
+        await this.boardManager.display()
 
         this.ctx.userWindow.webContents.send('show-event', event)
         this.ctx.adminWindow.webContents.send('enable-do-event')
@@ -383,14 +453,14 @@ class GooseContext {
 
     /* Main loop */
 
-    async slotPhase (slot: Slot, player: Player, roll: number) {
+    async slotPhase (slot: Slot, player: Player) {
         switch (slot.type) {
         case 'EventSlot':
             await this.scoreManager.commitPendingScore(player)
             await this.handleEvent(slot.event, player)
             break
         case 'GameSlot':
-            await this.handleGooseGameSlot(this.questions, slot, player, roll, this.config)
+            await this.handleGooseGameSlot(this.questions, slot, player, this.config)
             break
         default: {
             const exhaustiveCheck: never = slot
@@ -402,15 +472,12 @@ class GooseContext {
     async run () {
         while (!this.scoreManager.hasWinner()) {
             const player = await this.turnManager.getNextTeam()
+            const slot = await this.rollPhase(player)
 
-            const roll = await this.rollPhase(player)
-            const slotIdx = await this.scoreManager.setScore(player, 'pending', 'relative', roll)
+            this.ctx.adminWindow.webContents.send('enable-start-question')
             await this.startQueue.get()
 
-            const slot : Slot = slotIdx === this.board.slots.length
-                ? { type: 'GameSlot', selector: 'TagSelector', tags: ['final'], pos: { x: 0, y: 0 }, tile: 0 }
-                : this.board.slots[slotIdx]
-            await this.slotPhase(slot, player, roll)
+            await this.slotPhase(slot, player)
         }
     }
 }
