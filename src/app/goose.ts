@@ -168,9 +168,10 @@ class ScoreManager {
         return this.scores.get(player)!
     }
 
-    async display (players: Player[]) {
+    async display () {
         if (this.displayCallback) {
-            await this.displayCallback(players.map(x => <Player>{ ...x, score: this.score(x) }))
+            const players = Array.from(this.scores.keys()).map(x => <Player>{ ...x, score: this.score(x) })
+            await this.displayCallback(players)
         }
     }
 }
@@ -213,104 +214,64 @@ class BoardManager {
     }
 }
 
-class GooseContext {
-    ctx: Context
-    turnManager: TeamTurnManager
-    scoreManager: ScoreManager
+class UIManager {
+    private ctx: Context
+    private inBoardUI = false
+    private turnManager: TeamTurnManager
+    private scoreManager: ScoreManager
+    private boardManager: BoardManager
 
-    players: Player[]
-    config!: GameConfiguration
-    questions!: QuestionSet
-    rollQueue: Queue<void>
-    startQueue: Queue<void>
-    doEventQueue: Queue<void>
-    rollAnimationDoneQueue: Queue<void>
-    boardAckQueue: Queue<void>
-    inBoardUI = false
-    boardManager: BoardManager
+    private boardAckQueue = new Queue<void>('board-ack')
+    private rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
+    private doEventQueue = new Queue<void>('do-event')
 
-    /* Setup */
+    private playerIdxResolver: (player: Player) => number
 
-    constructor (ctx: Context, state: GameState, board: GooseBoard, questions: QuestionSet) {
+    constructor (ctx: Context, turnManager: TeamTurnManager, scoreManager: ScoreManager,
+        boardManager: BoardManager, playerIdxResolver: ((player: Player) => number)) {
         this.ctx = ctx
-        this.turnManager = new TeamTurnManager(state.players)
-        this.turnManager.turnSkipListener = this.playerSkipHandler.bind(this)
+
+        this.turnManager = turnManager
         this.turnManager.displayCurrentTeamCallback = this.currentTeamDisplayHandler.bind(this)
 
-        this.scoreManager = new ScoreManager(state.players, board.slots.length)
-        this.scoreManager.winListener = this.winHandler.bind(this)
-        this.scoreManager.pendingScoreChangeListener = this.pendingMoveHandler.bind(this)
-        this.scoreManager.pendingScoreCommitListener = this.moveHandler.bind(this)
+        this.scoreManager = scoreManager
+        this.scoreManager.displayCallback = this.displayTeam.bind(this)
         this.scoreManager.swapListener = this.pawnSwapHandler.bind(this)
-        this.scoreManager.displayCallback = this.teamDisplayHandler.bind(this)
+        this.scoreManager.pendingScoreCommitListener = this.movePawn.bind(this)
+        this.scoreManager.pendingScoreChangeListener = this.tempMovePawn.bind(this)
 
-        this.boardManager = new BoardManager(board, (player, roll) => this.scoreManager.setScore(player, 'pending', 'relative', roll))
+        this.boardManager = boardManager
+        this.boardManager.displayBoardCallback = this.displayBoard.bind(this)
         this.boardManager.rollListener = this.onRoll.bind(this)
-        this.boardManager.displayBoardCallback = this.boardDisplayHandler.bind(this)
 
-        this.players = state.players
-        this.rollQueue = new Queue<void>('roll-dice')
-        this.startQueue = new Queue<void>('start-question')
-        this.doEventQueue = new Queue<void>('do-event')
-        this.rollAnimationDoneQueue = new Queue<void>('roll-animation-done')
-        this.boardAckQueue = new Queue<void>('board-ack')
-        this.config = questions.configuration
-        this.questions = questions
+        this.playerIdxResolver = playerIdxResolver
     }
 
-    destructor () {
-        this.rollQueue.destroy()
-        this.startQueue.destroy()
-        this.doEventQueue.destroy()
-        this.rollAnimationDoneQueue.destroy()
+    destroy () {
         this.boardAckQueue.destroy()
+        this.rollAnimationDoneQueue.destroy()
+        this.doEventQueue.destroy()
     }
 
-    async teamDisplayHandler (players: Player[]) {
+    private async displayBoard (board: GooseBoard) {
+        this.ctx.userWindow.webContents.send('board', board)
+    }
+
+    private async displayTeam (players: Player[]) {
         this.ctx.userWindow.webContents.send('players', players)
     }
 
-    async currentTeamDisplayHandler (player: Player) {
-        this.ctx.userWindow.webContents.send('current-player', this.players.indexOf(player))
+    private async currentTeamDisplayHandler (player: Player) {
+        this.ctx.userWindow.webContents.send('current-player', this.playerIdxResolver(player))
     }
 
-    async boardDisplayHandler (board: GooseBoard) {
-        if (!this.inBoardUI) {
-            const gameUri = 'ui:///./html/game_of_the_goose.html'
-            await this.ctx.loadPage(gameUri, CommandTarget.BOTH)
-            this.inBoardUI = true
-            this.ctx.userWindow.webContents.send('board', board)
-
-            await this.scoreManager.display(this.players)
-            await this.boardAckQueue.get()
-        }
-        await this.turnManager.display()
-    }
-
-    /* Interactions */
-
-    async pawnSwapHandler (team1: Player, team2: Player) {
+    private async pawnSwapHandler (team1: Player, team2: Player) {
         if (this.inBoardUI) {
-            this.ctx.userWindow.webContents.send('swap-players', this.players.indexOf(team1), this.players.indexOf(team2))
+            this.ctx.userWindow.webContents.send('swap-players', this.playerIdxResolver(team1), this.playerIdxResolver(team2))
         }
     }
 
-    async onRoll (roll: number) {
-        this.ctx.userWindow.webContents.send('roll', roll)
-        await this.rollAnimationDoneQueue.get()
-    }
-
-    async rollPhase (player: Player): Promise<Slot> {
-        await this.boardManager.display()
-        this.ctx.adminWindow.webContents.send('enable-roll')
-        await this.rollQueue.get()
-
-        const cell = await this.boardManager.roll(player)
-
-        return cell
-    }
-
-    async moveHandler (player: Player, score: number) {
+    private async movePawn (player: Player, score: number) {
         if (this.inBoardUI) {
             const moveDoneQueue = new Queue<void>('absmove-animation-done')
             this.ctx.userWindow.webContents.send('absmove', score)
@@ -319,8 +280,93 @@ class GooseContext {
         }
     }
 
-    pendingMoveHandler (player: Player, oldScore: number, score: number) {
-        return this.moveHandler(player, score)
+    private tempMovePawn (player: Player, oldScore: number, score: number) {
+        return this.movePawn(player, score)
+    }
+
+    private async onRoll (roll: number) {
+        this.ctx.userWindow.webContents.send('roll', roll)
+        await this.rollAnimationDoneQueue.get()
+    }
+
+    async displayMainView () {
+        if (!this.inBoardUI) {
+            const gameUri = 'ui:///./html/game_of_the_goose.html'
+            await this.ctx.loadPage(gameUri, CommandTarget.BOTH)
+            this.inBoardUI = true
+
+            await this.boardManager.display()
+            await this.scoreManager.display()
+            await this.boardAckQueue.get()
+        }
+        await this.turnManager.display()
+    }
+
+    hideBoard () {
+        this.inBoardUI = false
+    }
+
+    async displayEvent (event: Event) {
+        await this.displayMainView()
+
+        this.ctx.userWindow.webContents.send('show-event', event)
+        this.ctx.adminWindow.webContents.send('enable-do-event')
+        await this.doEventQueue.get()
+    }
+}
+
+class GooseContext {
+    ctx: Context
+    turnManager: TeamTurnManager
+    scoreManager: ScoreManager
+    boardManager: BoardManager
+    uiManager: UIManager
+
+    players: Player[]
+    config!: GameConfiguration
+    questions!: QuestionSet
+    rollQueue: Queue<void>
+    startQueue: Queue<void>
+
+    /* Setup */
+
+    constructor (ctx: Context, state: GameState, board: GooseBoard, questions: QuestionSet) {
+        this.ctx = ctx
+        this.turnManager = new TeamTurnManager(state.players)
+
+        this.turnManager.turnSkipListener = this.playerSkipHandler.bind(this)
+
+        this.scoreManager = new ScoreManager(state.players, board.slots.length)
+        this.scoreManager.winListener = this.winHandler.bind(this)
+
+        this.boardManager = new BoardManager(board, (player, roll) => this.scoreManager.setScore(player, 'pending', 'relative', roll))
+
+        this.uiManager = new UIManager(ctx, this.turnManager, this.scoreManager, this.boardManager,
+            (player: Player) => this.players.indexOf(player))
+
+        this.players = state.players
+        this.rollQueue = new Queue<void>('roll-dice')
+        this.startQueue = new Queue<void>('start-question')
+        this.config = questions.configuration
+        this.questions = questions
+    }
+
+    destructor () {
+        this.rollQueue.destroy()
+        this.startQueue.destroy()
+        this.uiManager.destroy()
+    }
+
+    /* Interactions */
+
+    async rollPhase (player: Player): Promise<Slot> {
+        await this.uiManager.displayMainView()
+        this.ctx.adminWindow.webContents.send('enable-roll')
+        await this.rollQueue.get()
+
+        const cell = await this.boardManager.roll(player)
+
+        return cell
     }
 
     async swapPawns (team1: Player, team2: Player) {
@@ -337,17 +383,13 @@ class GooseContext {
     }
 
     async playerSkipHandler () {
-        await this.boardManager.display()
-
         const skipEvent: Event = {
             type: 'skip',
             nbTurns: 1,
             text: 'Tour sauté'
         }
 
-        this.ctx.userWindow.webContents.send('show-event', skipEvent)
-        this.ctx.adminWindow.webContents.send('enable-do-event')
-        await this.doEventQueue.get()
+        await this.uiManager.displayEvent(skipEvent)
     }
 
     /* Questions */
@@ -385,7 +427,7 @@ class GooseContext {
             players: [tempPlayer]
         }
 
-        this.inBoardUI = false
+        this.uiManager.hideBoard()
         const result = await startGenericQuestion(this.ctx, question, config, tempState)
         if (result.players.length > 0) {
             await this.scoreManager.commitPendingScore(player)
@@ -433,11 +475,7 @@ class GooseContext {
     }
 
     async handleEvent (event: Event, player: Player) {
-        await this.boardManager.display()
-
-        this.ctx.userWindow.webContents.send('show-event', event)
-        this.ctx.adminWindow.webContents.send('enable-do-event')
-        await this.doEventQueue.get()
+        await this.uiManager.displayEvent(event)
 
         if (event.type === 'move') {
             await this.handleMoveEvent(event, player)
