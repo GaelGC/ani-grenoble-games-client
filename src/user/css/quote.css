@@ -68,7 +68,11 @@ body{
     margin-right: 0.5em;
     margin-left: 0.5px;
     color: #fff;
-    white-space: pre;
+    max-width: 80vw;
+    max-height: 65vh;
+    overflow: auto;
+    text-overflow: ellipsis;
+    white-space: normal;
 }
 
   /* Answer & Hints */
@@ -83,6 +87,7 @@ body{
   #answer{
     margin-top: 0.5em;
     color: white;
+    white-space: normal;
   }
 
   #hints{
