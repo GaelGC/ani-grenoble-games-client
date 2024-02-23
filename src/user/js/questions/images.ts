@@ -1,35 +1,41 @@
 import { ipcRenderer } from 'electron'
 
-let imageColumn = 0
+// TODO : Move into a model or declare it in question format
+let size = 0
+let divNumber = 0
+const maxImageLine = 2
 
 ipcRenderer.on('show-image', (_, image: string) => {
-    const imagesDiv = document.getElementById('images-div')!
-    const template = document.getElementById('image-template') as HTMLTemplateElement
-    const clone = document.importNode(template.content, true)
-    const cloneImg = <HTMLImageElement>clone.getElementById('image-elem')
-    cloneImg.src = image
-    imagesDiv.appendChild(clone)
-
-    const size = imagesDiv.children.length - 1
-
-    if (size % 2 !== 0) {
-        imageColumn++
+    const heart = document.getElementById('gameHeart')!
+    if (size % maxImageLine === 0) {
+        divNumber++
+        const div = document.createElement('div')
+        div.setAttribute('id', 'images-div' + divNumber)
+        div.setAttribute('class', 'imgbox')
+        heart.appendChild(div)
     }
 
-    if (size <= 1) {
-        imagesDiv.style.gridTemplateColumns = '1fr'
-        resizeImg(imagesDiv.children, 50)
-    } else if (size > 1 && size <= 4) {
-        imagesDiv.style.gridTemplateColumns = '1fr 1fr'
-        resizeImg(imagesDiv.children, 30)
-    } else {
-        imagesDiv.style.gridTemplateColumns = ('1fr ').repeat(imageColumn)
-        resizeImg(imagesDiv.children, 40 / imageColumn)
+    const img = document.createElement('img')
+    img.setAttribute('id', 'image-elem')
+    img.setAttribute('class', 'center-fit')
+    img.src = image
+    size++
+
+    const imagesDiv = document.getElementById('images-div' + divNumber)!
+    imagesDiv.appendChild(img)
+    imagesDiv.style.gridTemplateColumns = ('1fr ').repeat(maxImageLine)
+    for (let i = 1; i < heart.children.length; i++) {
+        const imagesDiv = document.getElementById('images-div' + i)!
+        if (heart.children.length > maxImageLine) {
+            resizeImg(imagesDiv.children, 60 / (heart.children.length - 1))
+        } else {
+            resizeImg(imagesDiv.children, 60 / maxImageLine)
+        }
     }
 })
 
 function resizeImg (array: HTMLCollection, imgSize: number) {
-    for (let i = 1; i < array.length; i++) {
-        array[i].setAttribute('style', 'margin: 0.5em; width: ' + imgSize + 'vw; height: ' + imgSize + 'vh; object-fit: contain')
+    for (let i = 0; i < array.length; i++) {
+        array[i].setAttribute('style', 'margin: 0.0em; width: ' + imgSize + 'vw; height: ' + imgSize + 'vh; object-fit: contain')
     }
 }
