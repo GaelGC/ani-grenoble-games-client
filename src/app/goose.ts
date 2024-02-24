@@ -1,4 +1,4 @@
-import { Event, GameConfiguration, GameState, GooseBoard, MoveEvent, Player, Question, QuestionSet, Slot, SwapEvent, TagSelectorSlot, TypeSelectorSlot, parseGooseBoard } from '@gaelgc/ani-grenoble-games-format'
+import { Event, GameConfiguration, GameSlot, GameState, GooseBoard, MoveEvent, Player, Question, QuestionSet, QuestionWinners, Slot, SwapEvent, TagSelectorSlot, TypeSelectorSlot, parseGooseBoard } from '@gaelgc/ani-grenoble-games-format'
 import { readFileSync, writeFileSync } from 'fs'
 import { CommandTarget, Context } from './context'
 import { startGenericQuestion } from './question'
@@ -315,16 +315,69 @@ class UIManager {
     }
 }
 
+class QuestionManager {
+    onQuestionWin?: (player: Player) => void
+    onQuestionLose?: (player: Player) => void
+    eventCallback?: (event: Event, player: Player) => Promise<void>
+
+    private config!: GameConfiguration
+    private questions!: Question[]
+    private runQuestionCallback: (question: Question, config: GameConfiguration, slot: GameSlot, player: Player) => Promise<QuestionWinners>
+
+    constructor (questions: QuestionSet,
+        runQuestionCallback: (question: Question, config: GameConfiguration, slot: GameSlot, player: Player) => Promise<QuestionWinners>) {
+        this.config = questions.configuration
+        /* Take a copy of the question set, not the orignal */
+        this.questions = questions.questions.map(x => x)
+        this.runQuestionCallback = runQuestionCallback
+    }
+
+    private getGooseQuestion (slot: TypeSelectorSlot | TagSelectorSlot): Question {
+        const compatible = this.questions.filter(x => {
+            if (slot.selector === 'TagSelector') {
+                return x.tags.filter(tag => slot.tags.includes(tag)).length === slot.tags.length
+            } else if (slot.selector === 'TypeSelector') {
+                return slot.types.includes(x.type)
+            }
+            return false
+        })
+
+        if (compatible.length === 0) {
+            throw Error('Could not find compatible question')
+        }
+        const idx = Math.floor(Math.random() * compatible.length)
+        if (compatible.length !== 1) {
+            this.questions.splice(this.questions.indexOf(compatible[idx]), 1)
+        }
+        return compatible[idx]
+    }
+
+    async handleGooseGameSlot (slot: TagSelectorSlot | TypeSelectorSlot, player: Player): Promise<void> {
+        const question = this.getGooseQuestion(slot)
+
+        const result = await this.runQuestionCallback(question, this.config, slot, player)
+
+        const won = result.players.length > 0
+        const evt = won ? slot.onWin : slot.onLose
+        const resultCallback = won ? this.onQuestionWin : this.onQuestionLose
+        if (resultCallback) {
+            resultCallback(player)
+        }
+        if (evt && this.eventCallback) {
+            this.eventCallback(evt, player)
+        }
+    }
+}
+
 class GooseContext {
     ctx: Context
     turnManager: TeamTurnManager
     scoreManager: ScoreManager
     boardManager: BoardManager
     uiManager: UIManager
+    questionManager: QuestionManager
 
     players: Player[]
-    config!: GameConfiguration
-    questions!: QuestionSet
     rollQueue: Queue<void>
     startQueue: Queue<void>
 
@@ -344,11 +397,14 @@ class GooseContext {
         this.uiManager = new UIManager(ctx, this.turnManager, this.scoreManager, this.boardManager,
             (player: Player) => this.players.indexOf(player))
 
+        this.questionManager = new QuestionManager(questions, this.runQuestionCallback.bind(this))
+        this.questionManager.onQuestionLose = this.scoreManager.dropPendingScore.bind(this.scoreManager)
+        this.questionManager.onQuestionWin = this.scoreManager.commitPendingScore.bind(this.scoreManager)
+        this.questionManager.eventCallback = this.handleEvent.bind(this)
+
         this.players = state.players
         this.rollQueue = new Queue<void>('roll-dice')
         this.startQueue = new Queue<void>('start-question')
-        this.config = questions.configuration
-        this.questions = questions
     }
 
     destructor () {
@@ -392,32 +448,7 @@ class GooseContext {
         await this.uiManager.displayEvent(skipEvent)
     }
 
-    /* Questions */
-
-    getGooseQuestion (questions: QuestionSet, selector: TypeSelectorSlot | TagSelectorSlot): Question {
-        const compatible = questions.questions.filter(x => {
-            if (selector.selector === 'TagSelector') {
-                return x.tags.filter(tag => selector.tags.includes(tag)).length === selector.tags.length
-            } else if (selector.selector === 'TypeSelector') {
-                return selector.types.includes(x.type)
-            }
-            return false
-        })
-
-        if (compatible.length === 0) {
-            throw Error('Could not find compatible question')
-        }
-        const idx = Math.floor(Math.random() * compatible.length)
-        if (compatible.length !== 1) {
-            questions.questions.splice(questions.questions.indexOf(compatible[idx]), 1)
-        }
-        return compatible[idx]
-    }
-
-    async handleGooseGameSlot (questions: QuestionSet, slot: TagSelectorSlot | TypeSelectorSlot,
-        player: Player, config: GameConfiguration) {
-        const question = this.getGooseQuestion(questions, slot)
-
+    async runQuestionCallback (question: Question, config: GameConfiguration, slot: GameSlot, player: Player): Promise<QuestionWinners> {
         const tempPlayer: Player = {
             name: player.name,
             score: 0,
@@ -428,18 +459,7 @@ class GooseContext {
         }
 
         this.uiManager.hideBoard()
-        const result = await startGenericQuestion(this.ctx, question, config, tempState)
-        if (result.players.length > 0) {
-            await this.scoreManager.commitPendingScore(player)
-            if (slot.onWin) {
-                await this.handleEvent(slot.onWin, player)
-            }
-        } else {
-            await this.scoreManager.dropPendingScore(player)
-            if (slot.onLose) {
-                await this.handleEvent(slot.onLose, player)
-            }
-        }
+        return await startGenericQuestion(this.ctx, question, config, tempState)
     }
 
     /* Events */
@@ -497,9 +517,10 @@ class GooseContext {
             await this.scoreManager.commitPendingScore(player)
             await this.handleEvent(slot.event, player)
             break
-        case 'GameSlot':
-            await this.handleGooseGameSlot(this.questions, slot, player, this.config)
+        case 'GameSlot': {
+            await this.questionManager.handleGooseGameSlot(slot, player)
             break
+        }
         default: {
             const exhaustiveCheck: never = slot
             throw new Error(`Unhandled color case: ${exhaustiveCheck}`)
