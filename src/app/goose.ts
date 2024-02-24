@@ -369,6 +369,74 @@ class QuestionManager {
     }
 }
 
+class EventManager {
+    private displayEvent: (event: Event) => Promise<void>
+    private registerTeamSkip: (player: Player, nbTurns: number) => void
+    private setPlayerScore: (player: Player, pending: 'immediate' | 'pending', kind: 'absolute' | 'relative', score: number) => Promise<number>
+    private players: Player[]
+    private getPlayerScore: (Player: Player) => number
+    private swapPlayers: (team1: Player, team2: Player) => Promise<void>
+
+    constructor (players: Player[],
+        displayEvent: (event: Event) => Promise<void>,
+        registerTeamSkip: (player: Player, nbTurns: number) => void,
+        setPlayerScore: (player: Player, pending: 'immediate' | 'pending', kind: 'absolute' | 'relative', score: number) => Promise<number>,
+        getPlayerScore: (Player: Player) => number,
+        swapPlayers: (team1: Player, team2: Player) => Promise<void>) {
+        this.players = players
+        this.displayEvent = displayEvent
+        this.registerTeamSkip = registerTeamSkip
+        this.setPlayerScore = setPlayerScore
+        this.getPlayerScore = getPlayerScore
+        this.swapPlayers = swapPlayers
+    }
+
+    async handleEvent (event: Event, player: Player) {
+        await this.displayEvent(event)
+
+        if (event.type === 'move') {
+            await this.handleMoveEvent(event, player)
+        } else if (event.type === 'swap') {
+            await this.handleSwapEvent(event, player)
+        } else if (event.type === 'skip') {
+            this.registerTeamSkip(player, event.nbTurns)
+        } else {
+            const exhaustiveCheck: never = event
+            throw new Error(`Unhandled event type: ${exhaustiveCheck}`)
+        }
+    }
+
+    private async handleMoveEvent (event: MoveEvent, player: Player) {
+        await this.setPlayerScore(player, 'immediate', event.movetype, event.nbPos)
+    }
+
+    private async handleSwapEvent (event: SwapEvent, player: Player) {
+        let otherPlayer: Player | undefined
+        const scoreMap = this.players.map(x => this.getPlayerScore(x))
+
+        const selectCompatible = (predicate: (player: Player) => Boolean) => {
+            const compatible = this.players.filter(predicate)
+            const choice = compatible[Math.floor(Math.random() * compatible.length)]
+            return choice
+        }
+
+        if (event.swapType === 'best') {
+            const max = scoreMap.reduce((x, y) => x >= y ? x : y)
+            otherPlayer = selectCompatible(player => this.getPlayerScore(player) === max)
+        } else if (event.swapType === 'worst') {
+            const min = scoreMap.reduce((x, y) => x < y ? x : y)
+            otherPlayer = selectCompatible(player => this.getPlayerScore(player) === min)
+        } else if (event.swapType === 'random') {
+            otherPlayer = selectCompatible(() => true)
+        } else {
+            const exhaustiveCheck: never = event.swapType
+            throw new Error(`Unhandled move type: ${exhaustiveCheck}`)
+        }
+
+        await this.swapPlayers(player, otherPlayer)
+    }
+}
+
 class GooseContext {
     ctx: Context
     turnManager: TeamTurnManager
@@ -376,6 +444,7 @@ class GooseContext {
     boardManager: BoardManager
     uiManager: UIManager
     questionManager: QuestionManager
+    eventManager: EventManager
 
     players: Player[]
     rollQueue: Queue<void>
@@ -397,10 +466,14 @@ class GooseContext {
         this.uiManager = new UIManager(ctx, this.turnManager, this.scoreManager, this.boardManager,
             (player: Player) => this.players.indexOf(player))
 
+        this.eventManager = new EventManager(state.players, this.uiManager.displayEvent.bind(this.uiManager),
+            this.turnManager.registerTeamSkip.bind(this.turnManager), this.scoreManager.setScore.bind(this.scoreManager),
+            this.scoreManager.score.bind(this.scoreManager), this.scoreManager.swapPlayers.bind(this.scoreManager))
+
         this.questionManager = new QuestionManager(questions, this.runQuestionCallback.bind(this))
         this.questionManager.onQuestionLose = this.scoreManager.dropPendingScore.bind(this.scoreManager)
         this.questionManager.onQuestionWin = this.scoreManager.commitPendingScore.bind(this.scoreManager)
-        this.questionManager.eventCallback = this.handleEvent.bind(this)
+        this.questionManager.eventCallback = this.eventManager.handleEvent.bind(this.eventManager)
 
         this.players = state.players
         this.rollQueue = new Queue<void>('roll-dice')
@@ -423,10 +496,6 @@ class GooseContext {
         const cell = await this.boardManager.roll(player)
 
         return cell
-    }
-
-    async swapPawns (team1: Player, team2: Player) {
-        await this.scoreManager.swapPlayers(team1, team2)
     }
 
     async winHandler (winner: Player) {
@@ -462,60 +531,13 @@ class GooseContext {
         return await startGenericQuestion(this.ctx, question, config, tempState)
     }
 
-    /* Events */
-
-    async handleMoveEvent (event: MoveEvent, player: Player) {
-        await this.scoreManager.setScore(player, 'immediate', event.movetype, event.nbPos)
-    }
-
-    async handleSwapEvent (event: SwapEvent, player: Player) {
-        let otherPlayer: Player | undefined
-        const scoreMap = this.players.map(x => this.scoreManager.score(x))
-
-        const selectCompatible = (predicate: (player: Player) => Boolean) => {
-            const compatible = this.players.filter(predicate)
-            const choice = compatible[Math.floor(Math.random() * compatible.length)]
-            return choice
-        }
-
-        if (event.swapType === 'best') {
-            const max = scoreMap.reduce((x, y) => x >= y ? x : y)
-            otherPlayer = selectCompatible(player => this.scoreManager.score(player) === max)
-        } else if (event.swapType === 'worst') {
-            const min = scoreMap.reduce((x, y) => x < y ? x : y)
-            otherPlayer = selectCompatible(player => this.scoreManager.score(player) === min)
-        } else if (event.swapType === 'random') {
-            otherPlayer = selectCompatible(() => true)
-        } else {
-            const exhaustiveCheck: never = event.swapType
-            throw new Error(`Unhandled move type: ${exhaustiveCheck}`)
-        }
-
-        await this.swapPawns(player, otherPlayer)
-    }
-
-    async handleEvent (event: Event, player: Player) {
-        await this.uiManager.displayEvent(event)
-
-        if (event.type === 'move') {
-            await this.handleMoveEvent(event, player)
-        } else if (event.type === 'swap') {
-            await this.handleSwapEvent(event, player)
-        } else if (event.type === 'skip') {
-            this.turnManager.registerTeamSkip(player, event.nbTurns)
-        } else {
-            const exhaustiveCheck: never = event
-            throw new Error(`Unhandled event type: ${exhaustiveCheck}`)
-        }
-    }
-
     /* Main loop */
 
     async slotPhase (slot: Slot, player: Player) {
         switch (slot.type) {
         case 'EventSlot':
             await this.scoreManager.commitPendingScore(player)
-            await this.handleEvent(slot.event, player)
+            await this.eventManager.handleEvent(slot.event, player)
             break
         case 'GameSlot': {
             await this.questionManager.handleGooseGameSlot(slot, player)
