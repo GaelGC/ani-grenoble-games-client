@@ -21,6 +21,8 @@ ipcRenderer.on('hint', async (_, hint: string) => {
     }
     const len = hint.length
     const fontSize = 3 - 0.1 * (len / 20)
+    const answerDiv = document.getElementById('answer')!
+    answerDiv.style.width = 80 + '%'
 
     const clone = document.importNode(hintTemplate.content, true)
     clone.getElementById('hint')!.textContent = hint

@@ -59,7 +59,7 @@ body{
 	flex-wrap:  wrap;
   height: 30vw;
   justify-content: space-around;
-  margin-left: 10em;
+  margin-left: 20vw;
 }
   
 #quote-div {
@@ -71,7 +71,6 @@ body{
     max-width: 80vw;
     max-height: 65vh;
     overflow: auto;
-    text-overflow: ellipsis;
     white-space: normal;
 }
 
