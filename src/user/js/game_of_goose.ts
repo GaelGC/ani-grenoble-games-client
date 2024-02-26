@@ -95,6 +95,9 @@ function drawBoard () {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.font = '60px sans-serif'
+    const eventCanvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('event-canvas')!
+    const eventCtx = eventCanvas.getContext('2d')!
+    eventCtx.reset()
 
     for (const cell of board.slots) {
         drawCell(cell.pos.x, cell.pos.y, board.slots.indexOf(cell), cellSprites[cell.tile], ctx)
@@ -138,6 +141,17 @@ function setCanvasDimensions () {
 
     canvas.style.width = `${canvas.width * ratio}px`
     canvas.style.height = `${canvas.height * ratio}px`
+
+    const eventCanvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('event-canvas')!
+    const eventDiv: HTMLDivElement = <HTMLDivElement> document.getElementById('event-div')!
+
+    const eventMaxWidth = Math.round(eventDiv.clientWidth)
+    const eventMaxHeight = Math.round(eventDiv.clientHeight)
+
+    eventCanvas.width = eventMaxWidth
+    eventCanvas.height = eventMaxHeight
+    eventCanvas.style.width = `${eventMaxWidth}px`
+    eventCanvas.style.height = `${eventMaxHeight}px`
 }
 
 ipcRenderer.on('board', async (_, curBoard: GooseBoard) => {
@@ -225,11 +239,22 @@ ipcRenderer.on('current-player', (_, teamIdx: number) => {
 ipcRenderer.on('show-event', (_, event: Event) => {
     drawBoard()
 
-    const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('board-canvas')!
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('event-canvas')!
     const ctx = canvas.getContext('2d')!
-    ctx.drawImage(eventCardImg, 100, 260, 800, 480)
+    ctx.font = '30px Arial'
+
+    // TODO Do better, the size and position of the image
+    // should be adapted to some extend
+    ctx.drawImage(eventCardImg, 400, 100, 1200, 705)
     ctx.fillStyle = board.eventTextColor
-    ctx.fillText(event.text, 500, 500)
+    const x = 700
+    const y = 350
+    const lineheight = 30
+    const lines = event.text.split('\n')
+
+    for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], x, y + (i * lineheight))
+    }
 
     eventRevealAudio.play()
 })
