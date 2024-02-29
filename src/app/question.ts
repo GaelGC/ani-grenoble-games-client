@@ -13,8 +13,13 @@ async function startQuestion (ctx: Context, q: Question, htmlPath: string, confi
         ctx.userWindow.webContents.send('update-winners', winners)
     }
 
+    const resetCallback = () => {
+        ctx.mustReset = true
+    }
+
     ipcMain.on('reveal-answer', answerCallback)
     ipcMain.on('admin-update-winners', updateWinnersCallback)
+    ipcMain.on('admin-reset', resetCallback)
     const adminQuestionWaiter = new Condition('admin_question_ready')
     const winnersQueue = new Queue<QuestionWinners>('admin-send-winners')
 

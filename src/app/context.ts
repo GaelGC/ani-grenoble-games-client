@@ -18,6 +18,7 @@ export class Context {
     constructor (userWindow: BrowserWindow, adminWindow: BrowserWindow) {
         this.userWindow = userWindow
         this.adminWindow = adminWindow
+        this.mustReset = false
         this.state = {
             players: []
         }
@@ -61,28 +62,29 @@ export class Context {
     }
 
     async run () {
-        await this.setupTeams()
-        await this.runMain()
+        while (true) {
+            await this.setupTeams()
+            await this.runMain()
+        }
     }
 
     async runMain () {
         const { players, mode } = await waitForTeamsSelection(this)
         this.state.players = players
 
-        while (true) {
-            if (mode === 'debug') {
-                await this.debug()
-            } else if (mode === 'random') {
-                await this.randomGame()
-            } else if (mode === 'game-of-the-goose') {
-                await runGoose(this, this.state)
-            } else {
-                throw Error(`Invalid main page ${mode} requested`)
-            }
-            for (const player of this.state.players) {
-                player.score = 0
-            }
+        if (mode === 'debug') {
+            await this.debug()
+        } else if (mode === 'random') {
+            await this.randomGame()
+        } else if (mode === 'game-of-the-goose') {
+            await runGoose(this, this.state)
+        } else {
+            throw Error(`Invalid main page ${mode} requested`)
         }
+        for (const player of this.state.players) {
+            player.score = 0
+        }
+        this.mustReset = false
     }
 
     async waitForPackSelection (): Promise<QuestionSet> {
@@ -122,7 +124,7 @@ export class Context {
         const questions = await pack
         questions.configuration = await this.waitForConfiguration(questions.configuration)
 
-        while (questions.questions.length !== 0) {
+        while (questions.questions.length !== 0 && !this.mustReset) {
             let questionIdx = 0
             if (questions.configuration.playlist === 'random') {
                 questionIdx = Math.floor(Math.random() * questions.questions.length)
@@ -137,6 +139,9 @@ export class Context {
             }
         }
 
+        if (this.mustReset) {
+            return
+        }
         const winAckQueue = new Queue<void>('winners-ack')
         const winUri = 'ui:///./html/winners.html'
         await this.loadPage(winUri, CommandTarget.BOTH)
@@ -165,6 +170,7 @@ export class Context {
     // Et les variables pour les evenements ici
     userWindow: BrowserWindow
     adminWindow: BrowserWindow
+    mustReset: Boolean
     state: GameState
     giveHintListener: (event: any, hint: string) => void
     packPath: string = ''

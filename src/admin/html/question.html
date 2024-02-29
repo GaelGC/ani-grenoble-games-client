@@ -7,6 +7,7 @@
   </template>
 </div>
 <hr />
+
 <div id="score">
   <div class="number-input">
     <button onclick="this.parentNode.querySelector('input[type=number]').stepDown()" ></button>
@@ -26,4 +27,7 @@
     </template>
   </div>
   <button class="cyberpunk2077" onclick="submitWinners(); this.disabled = true;">Question suivante</button>
+</div>
+<div id="menu-return-button">
+  <button class="cyberpunk2077" onclick="toMainMenu()">Menu principal</button>
 </div>

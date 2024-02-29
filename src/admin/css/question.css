@@ -39,6 +39,13 @@ hr{
   text-align: center;
 }
 
+#menu-return-button {
+    position: absolute;
+    bottom: 5em;
+    left: -20px;
+    width: 20%;
+}
+
 /* */
 
 #score{
