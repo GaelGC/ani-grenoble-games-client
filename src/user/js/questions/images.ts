@@ -36,6 +36,6 @@ ipcRenderer.on('show-image', (_, image: string) => {
 
 function resizeImg (array: HTMLCollection, imgSize: number) {
     for (let i = 0; i < array.length; i++) {
-        array[i].setAttribute('style', 'margin: 0.0em; width: ' + imgSize + 'vw; height: ' + imgSize + 'vh; object-fit: contain')
+        array[i].setAttribute('style', 'margin: 0.5em; width: ' + imgSize + 'vw; height: ' + imgSize + 'vh; object-fit: contain')
     }
 }

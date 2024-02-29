@@ -56,37 +56,47 @@ body{
 
 #gameHeart{
   display: flex;
-	flex-wrap:  wrap;
+  flex-wrap: wrap;
   height: 30vw;
   justify-content: space-around;
   margin-left: 20vw;
 }
   
 #quote-div {
-    width: 80%;
-    margin: auto;
-    margin-right: 0.5em;
-    margin-left: 0.5px;
-    color: #fff;
-    max-width: 80vw;
-    max-height: 65vh;
-    overflow: auto;
-    white-space: normal;
+  width: 80%;
+  margin: auto;
+  margin-right: 0.5em;
+  margin-left: 0.5px;
+  color: #fff;
+  max-width: 80vw;
+  max-height: 60vh;
+  overflow: auto;
+  white-space: normal;
+  margin-top: 10%;
 }
 
   /* Answer & Hints */
 
   #question-div{
     width: 70vw;
-    height: 30%;
+    height: 20vh;
     justify-content: center;
-      margin-top: 2em;
+    margin-top: 2em;
   }
 
   #answer{
     margin-top: 0.5em;
+    height: fit-content;
     color: white;
     white-space: normal;
+    border-image: linear-gradient(
+      to left,
+      rgba(18,15,23,1) 0%,
+      #23cf4c 48%,
+      rgba(18,15,23,1)
+    ) 1;
+    border-style: solid;
+    border-width: 0px;
   }
 
   #hints{

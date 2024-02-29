@@ -37,4 +37,5 @@ ipcRenderer.on('answer', async (_, answer: string) => {
 
     answerDiv.textContent = answer
     answerDiv.style.fontSize = fontSize + 'vh'
+    answerDiv.style.borderWidth = '2px'
 })

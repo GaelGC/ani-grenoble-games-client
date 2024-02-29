@@ -55,10 +55,10 @@ header{
 
 #gameHeart{
   display: flex;
-	flex-wrap:  wrap;
+  flex-wrap: wrap;
   height: 30vw;
   justify-content: space-around;
-  margin-left: 10em;
+  margin-left: 20vw;
 }
 
   #imgbox {
@@ -82,14 +82,23 @@ header{
 
   #question-div{
     width: 70vw;
-    height: 30%;
+    height: 20vh;
     justify-content: center;
-      margin-top: 2em;
+    margin-top: 2em;
   }
 
   #answer{
     margin-top: 0.5em;
+    height: fit-content;
     color: white;
+    border-style: solid;
+    border-image: linear-gradient(
+      to left,
+      rgba(18,15,23,1) 0%,
+      rgb(68, 154, 252) 48%,
+      rgba(18,15,23,1)
+    ) 1;
+    border-width: 0px;
   }
 
   #hints{
