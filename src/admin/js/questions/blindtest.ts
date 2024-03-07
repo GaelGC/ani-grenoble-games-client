@@ -1,5 +1,6 @@
-import { ipcRenderer } from 'electron'
+import { ProtocolResponse, ipcRenderer } from 'electron'
 import { BlindTestQuestion, GameConfiguration } from '@gaelgc/ani-grenoble-games-format'
+import { log } from 'console'
 
 let config: GameConfiguration
 ipcRenderer.on('question-configuration', (_, c) => {
@@ -19,11 +20,30 @@ ipcRenderer.on('question-data', (_, q) => {
 
     const audio = <HTMLAudioElement>document.getElementById('audio')
     audio.src = question.path
-    if (config?.randomSample) {
-        audio.addEventListener('loadeddata', () => {
-            let maxStartPoint = audio.duration - 20
-            maxStartPoint = Math.max(0, maxStartPoint)
-            audio.currentTime = Math.random() * maxStartPoint
-        })
+
+    // Vitesse x2
+    // audio.playbackRate = 2
+    const audioCtx = new AudioContext()
+    const source = audioCtx.createMediaElementSource(audio)
+
+    const normalizeAsync = async () => {
+        log('start ' + question.path)
+        const response = await fetch(question.path)
+        log('response')
+        const myArrayBuffer = await audioCtx.decodeAudioData(await response.arrayBuffer())
+        log('arraybuffer')
+
+        for (let channel = 0; channel < myArrayBuffer.numberOfChannels; channel++) {
+            const bufferData = myArrayBuffer.getChannelData(channel)
+            let maxVolume = 0
+            for (let i = 0; i < bufferData.length; i++) {
+                const volume = Math.abs(bufferData[i])
+                if (volume > maxVolume) {
+                    maxVolume = volume
+                }
+            }
+            log('maxvol' + maxVolume)
+        }
     }
+    normalizeAsync()
 })
