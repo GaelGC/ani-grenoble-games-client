@@ -5,9 +5,9 @@
 
 #answer{
     font-size: 1.7em;
-    width: 80%;
+    width: 97.5%;
     justify-content: center;
-    white-space: pre;
+    white-space: normal;
 }
 #general{
     width: 100%;

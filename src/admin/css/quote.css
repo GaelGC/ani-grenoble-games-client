@@ -2,7 +2,18 @@
     font-size: 1em;
     font-weight: 500;
     color: white;
-    white-space: pre;
+    white-space: normal;
+}
+
+#text{
+    margin-top: 1em;
+    font-size: 1em;
+    font-weight: 500;
+    color: white;
+    white-space: normal;
+    max-height: 40vh;
+    overflow: auto;
+    text-overflow: ellipsis;
 }
 
 audio{

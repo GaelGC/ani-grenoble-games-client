@@ -10,4 +10,5 @@ ipcRenderer.on('question-data', (_, q) => {
         document.getElementById('audio-div')!.appendChild(clone)
     }
     document.getElementById('answer')!.textContent = question.answer
+    document.getElementById('text')!.textContent = question.text
 })

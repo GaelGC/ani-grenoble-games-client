@@ -76,6 +76,14 @@ ipcRenderer.on('game-state-data', (_, s) => {
     }
 })
 
+export function toMainMenu () {
+    const confirmBox = confirm('Voulez vous retourner au menu principal ?')
+    if (confirmBox) {
+        ipcRenderer.send('admin-reset')
+        submitWinners()
+    }
+}
+
 export function revealAnswer () {
     ipcRenderer.send('reveal-answer')
 }

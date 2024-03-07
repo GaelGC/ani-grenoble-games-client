@@ -55,22 +55,23 @@ header{
   
   #gameHeart{
     display: flex;
-    flex-wrap:  wrap;
+    flex-wrap: wrap;
     height: 30vw;
     justify-content: space-around;
-    margin-left: 10em;
+    margin-left: 20vw;
   }
 
   .imgbox {
-    display: grid;
-    height: 100%;
+    display: flex;
+    justify-content: center;
     width: 80%;
-    margin: 0.5em;
+    height: min-content;
+    max-height: 80%;
     }
   
     .center-fit {
-    max-width: 30vw;
-    max-height: 30vh;
+    max-width: 50vw;
+    max-height: 50vh;
     margin: auto;
     }
 
@@ -89,12 +90,21 @@ header{
     width: 70vw;
     height: 30%;
     justify-content: center;
-      margin-top: 2em;
+    margin-top: 2em;
   }
 
   #answer{
     margin-top: 0.5em;
+    height: fit-content;
     color: white;
+    border-style: solid;
+    border-image: linear-gradient(
+      to left,
+      rgba(18,15,23,1) 0%,
+      #db5fd1dc 48%,
+      rgba(18,15,23,1)
+    ) 1;
+    border-width: 0px;
   }
 
   #hints{

@@ -20,19 +20,22 @@ ipcRenderer.on('hint', async (_, hint: string) => {
         }
     }
     const len = hint.length
-    const fontSize = 1 - 0.1 * (len / 10)
+    const fontSize = 3 - 0.1 * (len / 20)
+    const answerDiv = document.getElementById('answer')!
+    answerDiv.style.width = 80 + '%'
 
     const clone = document.importNode(hintTemplate.content, true)
     clone.getElementById('hint')!.textContent = hint
-    clone.getElementById('hint')!.style.fontSize = fontSize + 'em'
+    clone.getElementById('hint')!.style.fontSize = fontSize + 'vh'
     document.getElementById('hints')?.appendChild(clone)
 })
 
 ipcRenderer.on('answer', async (_, answer: string) => {
     const answerDiv = document.getElementById('answer')!
     const len = answer.length
-    const fontSize = 1.5 - 0.1 * (len / 10)
+    const fontSize = 4.5 - 0.1 * (len / 20)
 
     answerDiv.textContent = answer
-    answerDiv.style.fontSize = fontSize + 'em'
+    answerDiv.style.fontSize = fontSize + 'vh'
+    answerDiv.style.borderWidth = '2px'
 })

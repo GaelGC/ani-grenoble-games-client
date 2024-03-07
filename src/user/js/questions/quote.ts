@@ -8,8 +8,8 @@ ipcRenderer.on('question-data', (_, q: unknown) => {
     for (const _len of lens) {
         len = _len > len ? _len : len
     }
-    const fontSize = 55 / len
+    const fontSize = 4
 
     document.getElementById('quote-div')!.textContent = question.text
-    document.getElementById('quote-div')!.style.fontSize = fontSize + 'em'
+    document.getElementById('quote-div')!.style.fontSize = fontSize + 'vh'
 })
