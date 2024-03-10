@@ -5,7 +5,7 @@ import { startGenericQuestion } from './question'
 import { Queue, unreachable } from './utils'
 import { assert } from 'console'
 
-class TeamTurnManager {
+export class TeamTurnManager {
     turnSkipListener?: (teamIdx: number) => Promise<void>
 
     displayCurrentTeamCallback?: (team: Player) => Promise<void>
@@ -61,7 +61,7 @@ class TeamTurnManager {
     }
 }
 
-class ScoreManager {
+export class ScoreManager {
     private scores: Map<Player, number>
     private pendingScores: Map<Player, number>
     private winningScore: number
@@ -176,7 +176,7 @@ class ScoreManager {
     }
 }
 
-class BoardManager {
+export class BoardManager {
     rollListener?: (roll: number) => Promise<void>
 
     displayBoardCallback?: (board: GooseBoard) => Promise<void>
@@ -315,7 +315,7 @@ class UIManager {
     }
 }
 
-class QuestionManager {
+export class QuestionManager {
     onQuestionWin?: (player: Player) => void
     onQuestionLose?: (player: Player) => void
     eventCallback?: (event: Event, player: Player) => Promise<void>
@@ -369,7 +369,7 @@ class QuestionManager {
     }
 }
 
-class EventManager {
+export class EventManager {
     private displayEvent: (event: Event) => Promise<void>
     private registerTeamSkip: (player: Player, nbTurns: number) => void
     private setPlayerScore: (player: Player, pending: 'immediate' | 'pending', kind: 'absolute' | 'relative', score: number) => Promise<number>
