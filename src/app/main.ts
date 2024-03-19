@@ -1,8 +1,19 @@
-import { app, BrowserWindow, session, ProtocolResponse } from 'electron'
+import { app, BrowserWindow, session, ProtocolResponse, protocol } from 'electron'
 import { Context } from './context'
 import { join } from 'path'
 
 let ctx: Context
+
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'question',
+        privileges: { supportFetchAPI: true }
+    },
+    {
+        scheme: 'ui',
+        privileges: { supportFetchAPI: true }
+    }
+])
 
 app.on('ready', async () => {
     console.log('App is ready')
