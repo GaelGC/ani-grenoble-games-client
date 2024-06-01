@@ -44,10 +44,11 @@ body{
   }
   
   #titre{
+    margin: auto;
     position: relative;
     font-size: 1em;
     font-weight: 900;
-    top: -100px;
+    top: -130px;
     color: #36f362;
   }
 
