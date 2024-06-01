@@ -44,11 +44,10 @@ header{
 }
 
 #titre{
-  margin: auto;
   position: relative;
   font-size: 0.7em;
   font-weight: 900;
-  top: -130px;
+  top: -100px;
   color: #ff93f6;
 }
   

@@ -54,6 +54,7 @@ p{
 
 #teams{
 	display: grid;
+	grid-template-columns: 1fr 1fr 1fr 1fr;
 	overflow-wrap: break-word;
     margin-top: 13vw;
 }
@@ -120,10 +121,6 @@ p{
 	align-content: space-around;
 	height: auto;
 	padding: 0.0em;
-}
-
-#div{
-    max-block-size: fit-content;
 }
 
 /* Effet fond */
