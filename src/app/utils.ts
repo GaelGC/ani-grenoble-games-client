@@ -43,3 +43,8 @@ export class Condition extends Queue<void> {
         return this.get()
     }
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function unreachable (x: never): never {
+    throw new Error('Theoretically unreachable code reached')
+}

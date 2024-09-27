@@ -42,9 +42,7 @@ ipcRenderer.on('roll', async (_, dice: number) => {
     }
 
     rollDiv.textContent = `roll: ${dice.toString()}`
-
     await new Promise(resolve => setTimeout(resolve, 400))
-    await moveCurrentPlayer(currentPlayer.score + dice)
 
     ipcRenderer.send('roll-animation-done')
 })
