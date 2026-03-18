@@ -11,13 +11,17 @@ import { runGoose } from './goose'
 export enum CommandTarget {
     ADMIN = 1,
     USER = 2,
-    BOTH = ADMIN | USER
+    DB = 4,
+    LAUNCHER = 8,
+    BOTH = ADMIN | USER | DB | LAUNCHER
 }
 
 export class Context {
-    constructor (userWindow: BrowserWindow, adminWindow: BrowserWindow) {
+    constructor (userWindow: BrowserWindow, adminWindow: BrowserWindow, dbWindow: BrowserWindow, launchWindow: BrowserWindow) {
         this.userWindow = userWindow
         this.adminWindow = adminWindow
+        this.dbWindow = dbWindow
+        this.launchWindow = launchWindow
         this.mustReset = false
         this.state = {
             players: []
@@ -28,7 +32,7 @@ export class Context {
         }
         ipcMain.on('give-hint', this.giveHintListener)
 
-        for (const partitionName of ['user', 'admin']) {
+        for (const partitionName of ['user', 'admin', 'db', 'launcher']) {
             const partition = `persist:${partitionName}`
             const selectedSession = session.fromPartition(partition)
             selectedSession.protocol.registerFileProtocol('question', (request, callback) => {
@@ -48,7 +52,9 @@ export class Context {
     async loadPage (uri: string, target: CommandTarget) {
         const targets: [CommandTarget, BrowserWindow][] = [
             [CommandTarget.ADMIN, this.adminWindow],
-            [CommandTarget.USER, this.userWindow]
+            [CommandTarget.USER, this.userWindow],
+            [CommandTarget.DB, this.dbWindow],
+            [CommandTarget.LAUNCHER, this.launchWindow]
         ]
         for (const [targetType, window] of targets) {
             if (target & targetType) {
@@ -61,10 +67,54 @@ export class Context {
         await this.loadPage('ui:///./html/index.html', CommandTarget.BOTH)
     }
 
-    async run () {
+    async gameLoop () {
         while (true) {
             await this.setupTeams()
             await this.runMain()
+        }
+    }
+
+    async run () {
+        while (true) {
+            this.userWindow.hide()
+            this.adminWindow.hide()
+            this.dbWindow.hide()
+
+            await this.loadPage('ui:///./html/index.html', CommandTarget.LAUNCHER)
+            this.launchWindow.show()
+
+            const playQueue = new Queue<void>('play')
+            const dbQueue = new Queue<void>('db')
+
+            const launcherChoice = await Promise.race([
+                playQueue.get().then(() => 'play'),
+                dbQueue.get().then(() => 'db')
+            ])
+
+            playQueue.destroy()
+            dbQueue.destroy()
+            this.launchWindow.hide()
+
+            if (launcherChoice === 'db') {
+                await this.loadPage('ui:///./html/index.html', CommandTarget.DB)
+                this.dbWindow.show()
+                const backQueue = new Queue<void>('launcher')
+                await backQueue.get()
+                backQueue.destroy()
+                this.dbWindow.hide()
+            } else {
+                await this.loadPage('ui:///./html/index.html', CommandTarget.ADMIN)
+                this.userWindow.show()
+                this.adminWindow.show()
+                const backQueue = new Queue<void>('launcher')
+                await Promise.race([
+                    backQueue.get(),
+                    this.gameLoop()
+                ])
+                backQueue.destroy()
+                this.userWindow.hide()
+                this.adminWindow.hide()
+            }
         }
     }
 
@@ -170,6 +220,8 @@ export class Context {
     // Et les variables pour les evenements ici
     userWindow: BrowserWindow
     adminWindow: BrowserWindow
+    dbWindow: BrowserWindow
+    launchWindow : BrowserWindow
     mustReset: Boolean
     state: GameState
     giveHintListener: (event: any, hint: string) => void

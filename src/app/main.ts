@@ -8,7 +8,7 @@ app.on('ready', async () => {
     console.log('App is ready')
 
     const windows = new Map<string, BrowserWindow>()
-    for (const key of ['admin', 'user']) {
+    for (const key of ['admin', 'user', 'db', 'launcher']) {
         const window = new BrowserWindow({
             autoHideMenuBar: true,
             webPreferences: {
@@ -45,6 +45,11 @@ app.on('ready', async () => {
         })
     }
 
-    ctx = new Context(windows.get('user')!, windows.get('admin')!)
+    for (const window of windows.values()) {
+        window.on('close', () => {
+            app.quit()
+        })
+    }
+    ctx = new Context(windows.get('user')!, windows.get('admin')!, windows.get('db')!, windows.get('launcher')!)
     await ctx.run()
 })

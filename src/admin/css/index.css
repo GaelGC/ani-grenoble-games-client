@@ -25,6 +25,26 @@ h1{
     text-align: center;
 }
 
+#launcher-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #120f17;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 17px;
+    font-family: inherit;
+    line-height: 1;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+#launcher-btn:hover{
+    background-color: #2d2b36;
+}
+
 #teams{
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;

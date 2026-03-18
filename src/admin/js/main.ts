@@ -47,3 +47,7 @@ export function onTeamNameFieldChange (name: string) {
     const button = document.getElementById('add-team-button')! as HTMLButtonElement
     button.disabled = invalid
 }
+
+function launcher() {
+    ipcRenderer.send('launcher')
+}
