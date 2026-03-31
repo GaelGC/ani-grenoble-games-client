@@ -22,7 +22,7 @@ h1{
     text-align: center;
 }
 
-#launcher-btn {
+.nav-btn{
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -38,11 +38,157 @@ h1{
     transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-#launcher-btn:hover{
+/* LE FORMULAIRE DE CONNEXION LA */
+#login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 2em;
+}
+
+#login-form input {
+    background-color: #120f17;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: white;
+    font-family: inherit;
+    font-size: 17px;
+    padding: 10px 20px;
+    width: 300px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+#login-form input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+#login-form input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+#login-error {
+    color: #ff6b6b;
+    font-size: 15px;
+    font-weight: 400;
+}
+
+#password-wrapper {
+    position: relative;
+    width: 300px;
+}
+
+#password-wrapper input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#toggle-password {
+    color: rgba(255, 255, 255, 0.3);
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+}
+
+/* LA PARTIE DB LA */
+#DB_rec {
+    display: flex;
+    flex-direction: column;
+    background-color: #120f17;
+    border: solid white 2px;
+    border-radius: 10px;
+    width: 90%;
+    min-width: 300px;
+    max-height: calc(100vh - 200px);;
+    margin: 2em auto;
+    padding: 0 28px 20px;
+    overflow-x: auto;
+}
+
+#DB_rec > div:first-child {
+    padding-bottom: 1em;
+    flex-shrink: 0;
+}
+
+#file-container {
+    overflow-y: auto;
+    overflow-x: auto;
+    flex-grow: 1;
+    min-height: 0;
+    min-width: 1000px;
+}
+
+#nav{
+    padding: 20px 0 20px 0;
+    background-color: #120f17;
+    position: sticky;
+    top: 0;
+}
+
+#breadcrumb{
+    font-size: medium;
+}
+
+/* LA SEARCHBAR */
+#search-bar {
+    background-color: #120f17;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 8px 15px;
+    font-family: inherit;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+#search-bar:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+#search-bar::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+
+/* LA TABLE DE LA BASE DE DONNEES LAAAAAA */
+table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+th{
     background-color: #2d2b36;
 }
 
-#icon{
+.path-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 0;
+}
+
+tbody tr:hover{
+    background-color: #2d2b36;
+}
+
+.preview-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.nav-btn:hover{
+    background-color: #2d2b36;
+}
+
+.icon{
     width: 20px;
 }
 
@@ -50,6 +196,132 @@ h1{
     display: block;
     margin: 0 auto;
 }
+
+/* APERCU DES FICHIERS */
+#preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+#preview-backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#preview-content {
+    position: relative;
+    background: #120f17;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 30px;
+    max-width: 80%;
+    max-height: 80%;
+    overflow: auto;
+    z-index: 11;
+}
+
+#preview-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+#preview-body pre {
+    color: white;
+    font-size: 14px;
+    font-family: monospace;
+    white-space: pre-wrap; /* évite le scroll horizontal */
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* LES CHECKBOXES */
+.file-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    background-color: #120f17;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.file-checkbox:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.file-checkbox:checked {
+    background-color: white;
+    border-color: white;
+}
+
+.file-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid #120f17;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+}
+
+
+/* POPUP DE CONFIRMATION */
+#confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+#confirm-backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#confirm-content {
+    position: relative;
+    background: #120f17;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 30px;
+    z-index: 11;
+    text-align: center;
+}
+
+#confirm-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
 
 /* Effet fond */
 

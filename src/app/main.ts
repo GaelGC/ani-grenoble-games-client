@@ -22,6 +22,10 @@ app.on('ready', async () => {
         })
         windows.set(key, window)
 
+        // if (key === 'db') {
+        //     window.webContents.openDevTools();
+        // }
+        //
         const protocol = 'ui'
         const protocolPrefix = `${protocol}://`
         const patchURL = function (url: string): string {

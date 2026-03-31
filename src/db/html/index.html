@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 
 <head>
     <title>Admin_DB</title>
@@ -13,17 +13,87 @@
     <div  class="c-hud__content" >
         <h1> AniGame__Database </h1>
 
-        <h2>La base de donnée est pas encore au point, mais ça taff dur</h2>
-        <img id="bonk" src="../img/bonk.gif" width="524">
+<!--        &lt;!&ndash; PLACEHOLDERS &ndash;&gt;-->
+<!--        <h2>La base de donnée est pas encore au point, mais ça taff dur</h2>-->
+<!--        <img id="bonk" src="../img/bonk.gif" width="524">-->
+
+        <!-- CA TAFF DUR ICI LA TABARNAK DE COLIS -->
 
         <div>
-            <button id="launcher-btn" onclick="toLauncher()">
-                <img id="icon" src="../img/fleche-gauche.png" alt="fleche gauche">Retour au<br>Launcher
+            <button class="nav-btn" onclick="toLauncher();">
+                <img class="icon" src="../img/fleche-gauche.png" alt="fleche gauche">Retour au<br>Launcher
             </button>
         </div>
+        <div id="login-form">
+            <input id="username" type="text" placeholder="Nom d'utilisateur">
+            <div id="password-wrapper">
+                <input id="password" type="password" placeholder="Mot de passe">
+                <button id="toggle-password" onclick="togglePassword()">👁</button>
+            </div>
+            <button class="nav-btn" onclick="login()">Se connecter</button>
+            <p id="login-error"></p>
+        </div>
+
+        <div id="DB_rec" style="display: none">
+            <div id="nav">
+                <div>
+                    <button class="nav-btn" onclick="ArriereMecreant()">
+                        <img class="icon" src="../img/fleche-gauche.png"> ARRIEEEEEEEREEEEU MECREANNNT
+                    </button>
+                    <input id="search-bar" type="text" placeholder="Rechercher..." oninput="search()">
+                    <span id="index-status">Indexation...</span>
+
+                    <button class="nav-btn" onclick="document.getElementById('file-input').click()">
+                        <img class="icon" src="../img/plus.png"> Ajouter
+                    </button>
+                    <input id="file-input" type="file" style="display:none" multiple onchange="uploadFiles(this.files)">
+
+                    <button class="nav-btn" id="delete-selected-btn" style="display:none" onclick="deleteSelected()">
+                        🗑 Supprimer la sélection
+                    </button>
+                </div>
+                <div id="breadcrumb"></div>
+            </div>
+            <div id="file-container">
+                <table id="file-list">
+                    <thead>
+                    <tr>
+                        <th style="width: 37%"><input type="checkbox" id="select-all" onclick="toggleSelectAll()"> Nom</th>
+                        <th style="width: 12%">Type</th>
+                        <th style="width: 12%">Taille</th>
+                        <th style="width: 10%">Aperçu</th>
+                        <th style="width: 18%">Modifié le</th>
+                        <th style="width: 8%">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="file-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="preview-modal" style="display:none;">
+            <div id="preview-backdrop" onclick="closePreview()"></div>
+            <div id="preview-content">
+                <button id="preview-close" onclick="closePreview()">✕</button>
+                <div id="preview-body"></div>
+            </div>
+        </div>
+
+        <div id="confirm-modal" style="display:none;">
+            <div id="confirm-backdrop"></div>
+            <div id="confirm-content">
+                <p id="confirm-message"></p>
+                <div id="confirm-buttons">
+                    <button class="nav-btn" id="confirm-ok">Confirmer</button>
+                    <button class="nav-btn" id="confirm-cancel">Annuler</button>
+                </div>
+            </div>
+        </div>
+
 
     </div>
 
 </body>
 <script type="text/javascript" src="../js/main.js"></script>
+<script type="text/javascript" src="../js/edit.ts"></script>
 </html>

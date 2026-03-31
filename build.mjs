@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
-import { execSync } from "child_process";
-import { cpSync, mkdirSync } from "fs";
-import { join } from "path";
+import { execSync } from 'child_process'
+import { cpSync, mkdirSync } from 'fs'
+import { join } from 'path'
 
-const ROOT = process.cwd();
+const ROOT = process.cwd()
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function run(cmd) {
-  console.log(`\n▶ ${cmd}`);
-  execSync(cmd, { stdio: "inherit" });
+    console.log(`\n▶ ${cmd}`)
+    execSync(cmd, { stdio: 'inherit' })
 }
 
 function copy(srcGlob, destDir) {
