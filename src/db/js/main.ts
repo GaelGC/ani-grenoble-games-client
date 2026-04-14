@@ -19,6 +19,7 @@ window.onload = function () {
 
 let client = null;
 let currentPath = '/';
+let currentFile = null;
 
 //  ----------- LOGIN ---------------------
 async function login() {
@@ -26,12 +27,20 @@ async function login() {
     const password = (document.getElementById('password') as HTMLInputElement).value;
 
     try {
-        client = createClient('http://192.168.1.200:8000/remote.php/dav/files/' + username + '/', {
+        client = createClient('https://stock.ani-grenoble.fr/remote.php/dav/files/' + username + '/', {
             username,
             password
         });
 
         await client.getDirectoryContents('/');
+
+        try {
+            const configText = await client.getFileContents('/lalaleguac.json', { format: 'text' }) as string;
+            const config = JSON.parse(configText);
+            await ipcRenderer.invoke('db:connect', config);
+        } catch (e) {
+            console.warn('DB non disponible:', e);
+        }
 
         document.getElementById('login-form').style.display = 'none';
         document.getElementById('DB_rec').style.display = 'block';
@@ -41,6 +50,7 @@ async function login() {
             document.getElementById('index-status').textContent = '';
         });
     } catch (e) {
+        console.error(e);
         document.getElementById('login-error').textContent = 'Identifiants incorrects';
     }
 }
@@ -60,7 +70,22 @@ async function listFiles(path = '/') {
     document.querySelectorAll('th')[3].style.display = '';
     document.querySelectorAll('th')[2].textContent = 'Taille';
     currentPath = path;
-    const files = await client.getDirectoryContents(path);
+    const response = await client.getDirectoryContents(path, {
+        data: `<?xml version="1.0"?>
+    <d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+        <d:prop>
+            <d:getlastmodified/>
+            <d:getcontentlength/>
+            <d:getcontenttype/>
+            <d:resourcetype/>
+            <oc:fileid/>
+        </d:prop>
+    </d:propfind>`,
+        details: true
+    });
+    const files = response.data;
+
+    console.log('test fileid :', files[0]);
 
     const tbody = document.getElementById('file-body');
     tbody.innerHTML = '';
@@ -78,7 +103,7 @@ async function listFiles(path = '/') {
             <td>${size}</td>
             <td class="preview-cell"></td>
             <td>${date}</td>
-            <td><button class="delete-btn">🗑</button></td>
+            <td><button class="delete-btn icon"><img class="icon" src="../img/poubelle.png"></button></td>
         `;
 
         const deleteBtn = row.querySelector('.delete-btn') as HTMLElement;
@@ -135,7 +160,7 @@ async function openPreview(file) {
     if (file.type === 'directory') return;
 
     const mime = file.mime || '';
-    const url = 'http://192.168.1.200:8000/remote.php/dav/files/'
+    const url = 'https://stock.ani-grenoble.fr/remote.php/dav/files/'
         + (document.getElementById('username') as HTMLInputElement).value
         + file.filename;
     console.log('url :', url);
@@ -178,6 +203,13 @@ async function openPreview(file) {
         body.textContent = 'Aperçu non disponible pour ce type de fichier.';
     }
 
+    currentFile = file;
+    const metadata = await ipcRenderer.invoke('db:get-metadata', file.props.fileid);
+    (document.getElementById('meta-artiste') as HTMLInputElement).value = metadata?.artiste || '';
+    (document.getElementById('meta-genre') as HTMLInputElement).value = metadata?.genre || '';
+    (document.getElementById('meta-annee') as HTMLInputElement).value = metadata?.annee || '';
+    (document.getElementById('meta-indice') as HTMLInputElement).value = metadata?.indice || '';
+    (document.getElementById('meta-nom-musique') as HTMLInputElement).value = metadata?.nom_musique || '';
     document.getElementById('preview-modal').style.display = 'flex';
 }
 
@@ -207,11 +239,45 @@ async function loadThumbnail(file, cell) {
     }
 }
 
+async function saveMetadata() {
+    if (!currentFile) return;
+    await ipcRenderer.invoke('db:set-metadata', currentFile.props.fileid, {
+        artiste: (document.getElementById('meta-artiste') as HTMLInputElement).value,
+        genre: (document.getElementById('meta-genre') as HTMLInputElement).value,
+        annee: parseInt((document.getElementById('meta-annee') as HTMLInputElement).value) || null,
+        indice: (document.getElementById('meta-indice') as HTMLInputElement).value,
+        nom_musique: (document.getElementById('meta-nom-musique') as HTMLInputElement).value,
+    });
+
+    const btn = document.getElementById('meta-save');
+    btn.textContent = '✓ Sauvegardé !';
+    btn.style.borderColor = 'rgba(100, 200, 100, 0.5)';
+    btn.style.color = '#90ee90';
+    setTimeout(() => {
+        btn.textContent = 'Sauvegarder';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+    }, 2000);
+}
+
 // --------------- NAVIGATION -----------------------
 let allFiles = [];
 
 async function indexFiles(path = '/') {
-    const files = await client.getDirectoryContents(path);
+    const response = await client.getDirectoryContents(path, {
+        data: `<?xml version="1.0"?>
+    <d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+        <d:prop>
+            <d:getlastmodified/>
+            <d:getcontentlength/>
+            <d:getcontenttype/>
+            <d:resourcetype/>
+            <oc:fileid/>
+        </d:prop>
+    </d:propfind>`,
+        details: true
+    });
+    const files = response.data;
     for (const file of files) {
         allFiles.push(file);
         if (file.type === 'directory') {
@@ -394,6 +460,13 @@ function updateDeleteSelectedBtn() {
     document.getElementById('delete-selected-btn').style.display =
         checked > 0 ? 'inline-flex' : 'none';
 }
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Delete') {
+        const checked = document.querySelectorAll('.file-checkbox:checked').length;
+        if (checked > 0) deleteSelected();
+    }
+});
 
 function toggleSelectAll() {
     const selectAll = document.getElementById('select-all') as HTMLInputElement;

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <title>Création / édition de quiz</title>
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/quiz.css">
+    <meta charset="UTF-8">
+</head>
+
+<body class="c-hud">
+<div class="c-hud__inner"></div>
+
+<div class="c-hud__content">
+    <h1>AniGame__QuizMaker</h1>
+
+    <div id="qm-app">
+
+        <div id="qm-topbar">
+            <a href="index.html"><button class="nav-btn">Retour</button></a>
+            <span id="qm-filename">nouveau-quiz.json</span>
+            <div id="qm-topbar-right">
+                <button class="nav-btn" onclick="exportQuiz()">Exporter ↓</button>
+            </div>
+        </div>
+
+        <div id="qm-cols">
+
+            <div id="qm-sidebar">
+                <div class="qm-col-hd">
+                    <span>Nextcloud</span>
+                    <span id="qm-refresh" onclick="qmRefreshTree()">↻</span>
+                </div>
+                <div id="qm-tree"></div>
+                <div id="qm-nc-hint">← Clique sur un fichier pour l'assigner</div>
+            </div>
+
+            <div id="qm-center">
+
+                <div id="qm-neutral">
+                    <button id="qm-plus-btn" onclick="qmShowTypePicker()">+</button>
+                    <div id="qm-neutral-label">Nouvelle question</div>
+                    <div id="qm-type-picker" style="display:none">
+                        <button class="qm-type-opt" onclick="qmOpenForm('BlindTestQuestion')">
+                            <span class="qm-badge qm-bt">BT</span> Blind test
+                        </button>
+                        <button class="qm-type-opt" onclick="qmOpenForm('ImagesQuestion')">
+                            <span class="qm-badge qm-im">IMG</span> Images ×4
+                        </button>
+                        <button class="qm-type-opt" onclick="qmOpenForm('QuoteQuestion')">
+                            <span class="qm-badge qm-qu">CIT</span> Citation
+                        </button>
+                    </div>
+                </div>
+
+                <div id="qm-form" style="display:none">
+                    <div id="qm-form-typebar">
+                        <span id="qm-form-badge"></span>
+                        <span id="qm-editing-label"></span>
+                    </div>
+                    <div id="qm-form-body"></div>
+                    <div id="qm-form-footer">
+                        <button class="nav-btn" onclick="qmCancelForm()">Annuler</button>
+                        <button class="nav-btn" id="qm-submit-btn" onclick="qmSubmitForm()">Ajouter à la liste →</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="qm-list-col">
+                <div class="qm-col-hd">
+                    <span>Questions</span>
+                    <span id="qm-q-count"></span>
+                </div>
+                <div id="qm-list-body"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="qm-export-modal" style="display:none">
+        <div id="qm-export-backdrop" onclick="closeExportModal()"></div>
+        <div id="qm-export-content">
+            <h3>Exporter le quiz</h3>
+            <p>Nom du fichier</p>
+            <input type="text" id="qm-export-name" placeholder="mon-quiz.json">
+            <div id="qm-export-buttons">
+                <button class="nav-btn" onclick="exportLocal()">Télécharger en local</button>
+                <button class="nav-btn" onclick="exportNextcloud()">Envoyer sur Nextcloud</button>
+            </div>
+            <button class="nav-btn" onclick="closeExportModal()">Annuler</button>
+        </div>
+    </div>
+
+</div>
+</body>
+
+<script type="text/javascript" src="../js/main.js"></script>
+<script type="text/javascript" src="../js/edit.js"></script>
+<script type="text/javascript" src="../js/quiz.js"></script>
+</html>

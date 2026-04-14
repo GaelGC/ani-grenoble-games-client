@@ -104,9 +104,10 @@ h1{
     background-color: #120f17;
     border: solid white 2px;
     border-radius: 10px;
-    width: 90%;
+
     min-width: 300px;
-    max-height: calc(100vh - 200px);;
+    width: 1600px;
+    max-height: 400px;
     margin: 2em auto;
     padding: 0 28px 20px;
     overflow-x: auto;
@@ -130,6 +131,7 @@ h1{
     background-color: #120f17;
     position: sticky;
     top: 0;
+    z-index: 1;
 }
 
 #breadcrumb{
@@ -191,6 +193,12 @@ tbody tr:hover{
 .icon{
     width: 20px;
 }
+.delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
 
 #bonk{
     display: block;
@@ -243,9 +251,70 @@ tbody tr:hover{
     color: white;
     font-size: 14px;
     font-family: monospace;
-    white-space: pre-wrap; /* évite le scroll horizontal */
+    white-space: pre-wrap;
     max-height: 60vh;
     overflow-y: auto;
+}
+
+#preview-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+#preview-body {
+    flex: 1;
+}
+
+#preview-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 200px;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    padding-left: 30px;
+}
+
+#preview-metadata h3 {
+    color: white;
+    margin: 0 0 10px 0;
+    font-size: 16px;
+}
+
+#preview-metadata label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    margin-bottom: -4px;
+}
+
+#preview-metadata input {
+    background: #2d2b36;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: white;
+    padding: 8px 10px;
+    font-size: 14px;
+    outline: none;
+}
+
+#preview-metadata input:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+#meta-save {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: #2d2b36;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#meta-save:hover {
+    background: #3d3b46;
 }
 
 /* LES CHECKBOXES */

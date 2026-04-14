@@ -1,0 +1,523 @@
+#quiz-maker {
+    display: flex;
+    flex-direction: column;
+    background-color: #120f17;
+    border: solid white 2px;
+    border-radius: 10px;
+    /*width: 100%;*/
+    height: 65%;
+    max-width: 90%;
+    margin: 1em auto;
+    padding: 0 28px 20px;
+    overflow-x: auto;
+    scrollbar-color: #3d3b46 #2d2b36;
+    scrollbar-width: thin;
+}
+
+#qm-app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#qm-cols {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+}
+
+#qm-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+}
+
+#qm-filename {
+    font-size: 13px;
+    opacity: 0.6;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 3px 10px;
+}
+
+#qm-topbar-right {
+    margin-left: auto;
+}
+
+#qm-sidebar {
+    width: 210px;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#qm-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+#qm-nc-hint {
+    padding: 7px 10px;
+    font-size: 11px;
+    opacity: 0.5;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.qm-col-hd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.5;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+}
+
+#qm-refresh {
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#qm-refresh:hover {
+    opacity: 1;
+}
+
+.qm-folder {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.qm-folder:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+.qm-file {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 6px 4px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.qm-file:hover {
+    background: rgba(255,255,255,0.06);
+    opacity: 1;
+}
+
+.qm-file.qm-selected {
+    background: rgba(100,160,255,0.15);
+    opacity: 1;
+    color: #8ab4f8;
+}
+
+.qm-ext {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: auto;
+    background: rgba(255,255,255,0.08);
+    opacity: 0.7;
+}
+
+#qm-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    overflow: hidden;
+}
+
+#qm-neutral {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+}
+
+#qm-plus-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: transparent;
+    font-size: 28px;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+#qm-plus-btn:hover {
+    border-color: rgba(255,255,255,0.5);
+    color: white;
+}
+
+#qm-neutral-label {
+    font-size: 12px;
+    opacity: 0.4;
+}
+
+#qm-type-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.qm-type-opt {
+    padding: 7px 16px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.qm-type-opt:hover {
+    border-color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.05);
+}
+
+.qm-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.qm-bt { background: #003245; color: #2596be; }
+.qm-im { background: #005015; color: #1fc345; }
+.qm-qu { background: #500049; color: #f062e3; }
+
+#qm-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#qm-form-typebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+}
+
+#qm-editing-label {
+    font-size: 11px;
+    opacity: 0.4;
+    margin-left: auto;
+}
+
+#qm-form-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.qm-field-label {
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0.5;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 5px;
+}
+
+.qm-input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: white;
+    font-family: inherit;
+    width: 100%;
+}
+
+.qm-input:focus {
+    outline: none;
+    border-color: rgba(100,160,255,0.6);
+}
+
+.qm-ffile {
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+.qm-ffile:hover {
+    border-color: #3d3b46;
+    color: rgba(255,255,255,0.7);
+}
+
+.qm-ffile.qm-filled {
+    border-style: solid;
+    border-color: #3d3b46;
+    background: rgba(100,160,255,0.08);
+    color: rgba(255,255,255,0.7);
+}
+
+.qm-ffile .qm-clr {
+    margin-left: auto;
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 15px;
+}
+
+.qm-ffile .qm-clr:hover {
+    opacity: 1;
+}
+
+.qm-imgs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.qm-img-slot {
+    border: 1px dashed rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 36px;
+    transition: border-color 0.15s;
+}
+
+.qm-img-slot:hover {
+    border-color: rgba(80,200,140,0.5);
+    color: rgba(255,255,255,0.7);
+}
+
+.qm-img-slot.qm-filled {
+    border-style: solid;
+    border-color: rgba(80,200,140,0.5);
+    background: rgba(80,200,140,0.08);
+    color: #7ddcaa;
+}
+
+.qm-img-slot .qm-clr {
+    margin-left: auto;
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.qm-add-hint {
+    font-size: 11px;
+    color: #8ab4f8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 4px;
+}
+
+#qm-form-footer {
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#qm-list-col {
+    width: 210px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#qm-list-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.qm-q-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 7px 8px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.qm-q-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.qm-q-item.qm-editing {
+    border-color: rgba(100,160,255,0.4);
+    background: rgba(100,160,255,0.08);
+}
+
+.qm-q-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.qm-q-name {
+    font-size: 11px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 3px;
+}
+
+.qm-q-sub {
+    font-size: 10px;
+    opacity: 0.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.qm-q-del {
+    opacity: 0.3;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.qm-q-del:hover {
+    opacity: 1;
+    color: #ff8a8a;
+}
+
+#qm-export-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#qm-export-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+}
+
+#qm-export-content {
+    position: relative;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 24px;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#qm-export-content h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+#qm-export-content p {
+    font-size: 12px;
+    opacity: 0.5;
+    margin: 0;
+}
+
+#qm-export-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#qm-list-empty {
+    padding: 20px 8px;
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.3;
+}
+
+
+/* LA BARRE DE RECHERCHE LA */
+#qm-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+#qm-search {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: white;
+    font-family: inherit;
+}
+
+#qm-search:focus {
+    outline: none;
+    border-color: rgba(100,160,255,0.5);
+}
+
+.qm-img-active {
+    border-color: rgba(100,160,255,0.6) !important;
+    background: rgba(100,160,255,0.08);
+}

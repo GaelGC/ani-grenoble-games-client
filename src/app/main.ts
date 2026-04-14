@@ -1,7 +1,8 @@
-import { app, BrowserWindow, session, ProtocolResponse } from 'electron'
+import { app, BrowserWindow, session, ProtocolResponse, dialog } from 'electron'
 import { Context } from './context'
 import { join } from 'path'
-
+import { connectDB, getFileMetadata, setFileMetadata } from './database'
+import * as fs from 'fs'
 let ctx: Context
 
 app.on('ready', async () => {
@@ -22,10 +23,11 @@ app.on('ready', async () => {
         })
         windows.set(key, window)
 
+        // // POUR AFFICHER CETTE FICHUE CONSOLE PASKE SINON CA ME FAIT UNE CAPTURE D ECRAN DE SA TABARNAK
         // if (key === 'db') {
         //     window.webContents.openDevTools();
         // }
-        //
+
         const protocol = 'ui'
         const protocolPrefix = `${protocol}://`
         const patchURL = function (url: string): string {
@@ -54,6 +56,28 @@ app.on('ready', async () => {
             app.quit()
         })
     }
+    const { ipcMain } = require('electron')
+
+    ipcMain.handle('db:connect', async (_event: any, config: any) => {
+        await connectDB(config)
+    })
+
+    ipcMain.handle('db:get-metadata', async (_event: Electron.IpcMainInvokeEvent, fileid: number) => {
+        return await getFileMetadata(fileid)
+    })
+
+    ipcMain.handle('db:set-metadata', async (_event: Electron.IpcMainInvokeEvent, fileid: number, data: { artiste?: string, genre?: string, annee?: number, indice?: string }) => {
+        await setFileMetadata(fileid, data)
+    })
+    ipcMain.handle('quiz:save-local', async (_event: Electron.IpcMainInvokeEvent, { filename, json }: { filename: string, json: string }) => {
+        const { filePath } = await dialog.showSaveDialog({
+            defaultPath: filename,
+            filters: [{ name: 'JSON', extensions: ['json'] }]
+        })
+        if (filePath) {
+            fs.writeFileSync(filePath, json, 'utf-8')
+        }
+    })
     ctx = new Context(windows.get('user')!, windows.get('admin')!, windows.get('db')!, windows.get('launcher')!)
     await ctx.run()
 })
