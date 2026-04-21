@@ -35,7 +35,7 @@ async function login() {
         await client.getDirectoryContents('/');
 
         try {
-            const configText = await client.getFileContents('/lalaleguac.json', { format: 'text' }) as string;
+            const configText = await client.getFileContents('Quiz ressources/lalaleguac.json', { format: 'text' }) as string;
             const config = JSON.parse(configText);
             await ipcRenderer.invoke('db:connect', config);
         } catch (e) {
@@ -195,21 +195,49 @@ async function openPreview(file) {
         if (mime.startsWith('video/')) (media as HTMLVideoElement).style.maxWidth = '100%';
         body.appendChild(media);
     } else if (mime.startsWith('text/') || mime === 'application/json') {
-        const content = await client.getFileContents(file.filename, { format: 'text' });
+        const content = await client.getFileContents(file.filename, { format: 'text' }) as string;
+
+        if (mime === 'application/json') {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'nav-btn';
+            editBtn.textContent = 'Modifier ce quiz';
+            editBtn.style.marginBottom = '10px';
+            editBtn.onclick = () => {
+                closePreview();
+                const data = JSON.parse(content);
+                questions = data.questions || [];
+                quizName = file.basename.replace('.json', '');
+                openQuizMaker(true);
+                qmRenderList();
+            };
+            body.appendChild(editBtn);
+        }
         const pre = document.createElement('pre');
-        pre.textContent = content as string;
+        pre.textContent = content;
         body.appendChild(pre);
     } else {
         body.textContent = 'Aperçu non disponible pour ce type de fichier.';
     }
 
     currentFile = file;
-    const metadata = await ipcRenderer.invoke('db:get-metadata', file.props.fileid);
-    (document.getElementById('meta-artiste') as HTMLInputElement).value = metadata?.artiste || '';
-    (document.getElementById('meta-genre') as HTMLInputElement).value = metadata?.genre || '';
-    (document.getElementById('meta-annee') as HTMLInputElement).value = metadata?.annee || '';
-    (document.getElementById('meta-indice') as HTMLInputElement).value = metadata?.indice || '';
-    (document.getElementById('meta-nom-musique') as HTMLInputElement).value = metadata?.nom_musique || '';
+
+    if (mime === 'application/json') {
+        // Vide et masque les champs metadata pour les JSON
+        (document.getElementById('meta-artiste') as HTMLInputElement).value = '';
+        (document.getElementById('meta-genre') as HTMLInputElement).value = '';
+        (document.getElementById('meta-annee') as HTMLInputElement).value = '';
+        (document.getElementById('meta-indice') as HTMLInputElement).value = '';
+        (document.getElementById('meta-nom-musique') as HTMLInputElement).value = '';
+        document.getElementById('preview-metadata').style.display = 'none'; // si t'as un wrapper
+    } else {
+        document.getElementById('preview-metadata').style.display = ''; // remet visible
+        const metadata = await ipcRenderer.invoke('db:get-metadata', file.props.fileid);
+        (document.getElementById('meta-artiste') as HTMLInputElement).value = metadata?.artiste || '';
+        (document.getElementById('meta-genre') as HTMLInputElement).value = metadata?.genre || '';
+        (document.getElementById('meta-annee') as HTMLInputElement).value = metadata?.annee || '';
+        (document.getElementById('meta-indice') as HTMLInputElement).value = metadata?.indice || '';
+        (document.getElementById('meta-nom-musique') as HTMLInputElement).value = metadata?.nom_musique || '';
+    }
     document.getElementById('preview-modal').style.display = 'flex';
 }
 

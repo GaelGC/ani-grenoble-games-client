@@ -3,6 +3,8 @@ import { Context } from './context'
 import { join } from 'path'
 import { connectDB, getFileMetadata, setFileMetadata } from './database'
 import * as fs from 'fs'
+
+import * as path from 'path'
 let ctx: Context
 
 app.on('ready', async () => {
@@ -23,10 +25,10 @@ app.on('ready', async () => {
         })
         windows.set(key, window)
 
-        // // POUR AFFICHER CETTE FICHUE CONSOLE PASKE SINON CA ME FAIT UNE CAPTURE D ECRAN DE SA TABARNAK
-        // if (key === 'db') {
-        //     window.webContents.openDevTools();
-        // }
+//        // POUR AFFICHER CETTE FICHUE CONSOLE PASKE SINON CA ME FAIT UNE CAPTURE D ECRAN DE SA TABARNAK
+//        if (key === 'db') {
+//            window.webContents.openDevTools();
+//        }
 
         const protocol = 'ui'
         const protocolPrefix = `${protocol}://`
@@ -77,6 +79,25 @@ app.on('ready', async () => {
         if (filePath) {
             fs.writeFileSync(filePath, json, 'utf-8')
         }
+    })
+    ipcMain.handle('quiz:export', async (_event: Electron.IpcMainInvokeEvent, { quizName, files }: { quizName: string, files: { destPath: string, buffer: number[] }[] }) => {
+        const { filePaths } = await dialog.showOpenDialog({
+            title: 'Choisir un dossier d\'export',
+            properties: ['openDirectory']
+        });
+
+        if (!filePaths || !filePaths[0]) return { cancelled: true };
+
+        const exportRoot = path.join(filePaths[0], quizName);
+
+        for (const file of files) {
+            const fullPath = path.join(exportRoot, file.destPath);
+            const dir = path.dirname(fullPath);
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(fullPath, Buffer.from(file.buffer));
+        }
+
+        return { cancelled: false, exportPath: exportRoot };
     })
     ctx = new Context(windows.get('user')!, windows.get('admin')!, windows.get('db')!, windows.get('launcher')!)
     await ctx.run()

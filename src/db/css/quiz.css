@@ -521,3 +521,111 @@
     border-color: rgba(100,160,255,0.6) !important;
     background: rgba(100,160,255,0.08);
 }
+
+/* popup  */
+#quiz-name-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#quiz-name-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+}
+
+#quiz-name-content {
+    position: relative;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 24px;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#quiz-name-content h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+#quiz-name-input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    max-width: 50%;
+    color: white;
+    font-family: inherit;
+    width: 100%;
+}
+#quiz-name-input:focus {
+    outline: none;
+    border-color: rgba(100,160,255,0.6);
+}
+
+#quiz-modal-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+}
+
+.quiz-modal-tab {
+    font-size: 12px;
+    padding: 5px 14px;
+    border: 0.5px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+}
+
+.quiz-modal-tab.active {
+    background: rgba(255,255,255,0.08);
+    color: white;
+    border-color: rgba(255,255,255,0.3);
+}
+
+#quiz-list-existing {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.quiz-existing-item {
+    padding: 8px 12px;
+    border: 0.5px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.7);
+}
+
+.quiz-existing-item:hover {
+    background: rgba(255,255,255,0.05);
+    color: white;
+}
+
+#quiz-tab-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#quiz-tab-create {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

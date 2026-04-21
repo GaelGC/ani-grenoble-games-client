@@ -3,8 +3,33 @@ let formType: string | null = null;
 let formData: any = {};
 let activeImageSlot: number | null = null;
 
-function openQuizMaker() {
+var quizName: string = '';
+
+var questions: any[] = [];
+
+
+function openQuizMakerPrompt() {
+    const modal = document.getElementById('quiz-name-modal');
+    const input = document.getElementById('quiz-name-input') as HTMLInputElement;
+    input.value = '';
+    modal.style.display = 'flex';
+    input.focus();
+    input.onkeydown = (e) => { if (e.key === 'Enter') confirmQuizName(); };
+}
+
+function confirmQuizName() {
+    const input = document.getElementById('quiz-name-input') as HTMLInputElement;
+    const name = input.value.trim();
+    if (!name) return;
+    quizName = name;
+    document.getElementById('quiz-name-modal').style.display = 'none';
+    openQuizMaker(false);
+}
+
+function openQuizMaker(keepQuestions: boolean = false) {
     qmAllFiles = [];
+    if (!keepQuestions) questions = [];
+    document.getElementById('qm-filename').textContent = quizName + '.json';
     document.getElementById('DB_rec').style.display = 'none';
     document.getElementById('quiz-maker').style.display = 'block';
     qmRenderTree('/Quiz ressources');
@@ -69,6 +94,7 @@ async function qmLoadChildren(path: string, container: HTMLElement) {
             <d:prop>
                 <d:getcontenttype/>
                 <d:resourcetype/>
+                <oc:fileid/>
             </d:prop>
         </d:propfind>`,
         details: true
@@ -111,6 +137,7 @@ async function qmIndexAll(path: string) {
 }
 
 function qmFileClick(file: any) {
+    console.log('file :', file);
     if (!formType) return;
 
     const mime = file.mime || '';
@@ -445,9 +472,8 @@ async function qmLoadPreview(filename: string, mime: string, container: HTMLElem
 
 // LA COLONNE DE DROITE
 
-let questions: any[] = [];
 
-function qmSubmitForm() {
+async function qmSubmitForm() {
     if (!formData.answer) {
         alert('La réponse est obligatoire');
         return;
@@ -461,11 +487,24 @@ function qmSubmitForm() {
         return;
     }
 
+    let hints: string[] = [];
+    if (formType === 'BlindTestQuestion' && formData.audio) {
+        const metadata = await ipcRenderer.invoke('db:get-metadata', formData.audio);
+        if (metadata) {
+            if (metadata.artiste) hints.push(metadata.artiste);
+            if (metadata.annee) hints.push(String(metadata.annee));
+            if (metadata.genre) hints.push(metadata.genre);
+            if (metadata.indice) hints.push(metadata.indice);
+        }
+    } else {
+        hints = formData.hints || [];
+    }
+
     const question = {
         name: 'ID_' + Math.random().toString(16).slice(2, 10),
         type: formType,
         point: 1,
-        hints: formData.hints || [],
+        hints,
         answer: formData.answer,
         ...(formType === 'BlindTestQuestion' && {
             path: formData.audio,
@@ -482,6 +521,7 @@ function qmSubmitForm() {
     questions.push(question);
     qmCancelForm();
     qmRenderList();
+    qmAutoSave();
 }
 
 function qmRenderList() {
@@ -519,6 +559,7 @@ function qmRenderList() {
             e.stopPropagation();
             questions.splice(i, 1);
             qmRenderList();
+            qmAutoSave();
         });
 
         item.onclick = () => qmEditQuestion(i);
@@ -573,4 +614,144 @@ function qmSaveEdit(i: number) {
 
     qmCancelForm();
     qmRenderList();
+    qmAutoSave();
+}
+
+// EPORT
+async function exportQuiz() {
+    if (!questions.length) {
+        alert('Aucune question à exporter');
+        return;
+    }
+
+    const files: { destPath: string, buffer: number[] }[] = [];
+
+    for (const q of questions) {
+        if (q.type === 'BlindTestQuestion') {
+            if (q.path) {
+                const buffer = await client.getFileContents(q.path) as ArrayBuffer;
+                const filename = q.path.split('/').pop();
+                files.push({
+                    destPath: 'BT/musiques/' + filename,
+                    buffer: Array.from(new Uint8Array(buffer))
+                });
+            }
+            if (q.answerImage) {
+                const buffer = await client.getFileContents(q.answerImage) as ArrayBuffer;
+                const filename = q.answerImage.split('/').pop();
+                files.push({
+                    destPath: 'BT/images/' + filename,
+                    buffer: Array.from(new Uint8Array(buffer))
+                });
+            }
+        } else if (q.type === 'ImagesQuestion') {
+            for (let i = 0; i < q.images.length; i++) {
+                const img = q.images[i];
+                if (!img) continue;
+                const buffer = await client.getFileContents(img) as ArrayBuffer;
+                const ext = img.split('.').pop();
+                files.push({
+                    destPath: '4images/' + q.answer + '/' + (i + 1) + '.' + ext,
+                    buffer: Array.from(new Uint8Array(buffer))
+                });
+            }
+        }
+    }
+    const json = JSON.stringify({ questions }, null, 2);
+    files.push({
+        destPath: 'questions.json',
+        buffer: Array.from(new TextEncoder().encode(json))
+    });
+
+    // génère le docx pour les citations
+    const citations = questions.filter(q => q.type === 'QuoteQuestion');
+    if (citations.length) {
+        let txt = '';
+        citations.forEach(q => {
+            txt += 'Question : ' + q.text + '\n\nRéponse : ' + q.answer + '\n\n';
+        });
+        files.push({
+            destPath: 'questions/citations.txt',
+            buffer: Array.from(new TextEncoder().encode(txt))
+        });
+    }
+
+    // envoie au main process
+    const result = await ipcRenderer.invoke('quiz:export', { quizName, files });
+    if (!result.cancelled) {
+        alert('Export terminé ! Dossier : ' + result.exportPath);
+    }
+}
+
+// LA POPUP DE QUAND ON CLIC SUR CREER QUIZZ
+function switchQuizTab(tab: string) {
+    document.getElementById('quiz-tab-create').style.display = tab === 'create' ? 'flex' : 'none';
+    document.getElementById('quiz-tab-edit').style.display = tab === 'edit' ? 'flex' : 'none';
+    document.querySelectorAll('.quiz-modal-tab').forEach((el, i) => {
+        el.classList.toggle('active', (i === 0 && tab === 'create') || (i === 1 && tab === 'edit'));
+    });
+    if (tab === 'edit') qmLoadExistingQuizzes();
+}
+
+async function qmLoadExistingQuizzes() {
+    const container = document.getElementById('quiz-list-existing');
+    container.innerHTML = '<div style="opacity:0.4;font-size:12px;padding:4px">Chargement...</div>';
+
+    try {
+        const response = await client.getDirectoryContents('/Quiz ressources/quizs', {
+            details: true
+        });
+        const jsons = response.data.filter(f => f.mime === 'application/json');
+
+        container.innerHTML = '';
+        if (!jsons.length) {
+            container.innerHTML = '<div style="opacity:0.4;font-size:12px;padding:4px">Aucun quiz trouvé</div>';
+            return;
+        }
+
+        jsons.forEach(file => {
+            const item = document.createElement('div');
+            item.className = 'quiz-existing-item';
+            item.textContent = file.basename;
+            item.onclick = () => loadExistingQuiz(file);
+            container.appendChild(item);
+        });
+    } catch(e) {
+        container.innerHTML = '<div style="opacity:0.4;font-size:12px;padding:4px">Erreur de chargement</div>';
+    }
+}
+
+async function loadExistingQuiz(file: any) {
+    try {
+        const content = await client.getFileContents(file.filename, { format: 'text' }) as string;
+        const data = JSON.parse(content);
+        questions = data.questions || [];
+        quizName = file.basename.replace('.json', '');
+        document.getElementById('quiz-name-modal').style.display = 'none';
+        openQuizMaker(true);
+        qmRenderList();
+    } catch(e) {
+        console.error('Erreur chargement quiz :', e);
+    }
+}
+
+// FONCTION SAUVEGARDE
+let autoSaveTimeout: any = null;
+
+function qmAutoSave() {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(async () => {
+        const json = JSON.stringify({ questions }, null, 2);
+        const path = '/Quiz ressources/quizs/' + quizName + '.json';
+        try {
+            await client.putFileContents(path, json, { overwrite: true });
+            document.getElementById('qm-filename').textContent = quizName + '.json ✓';
+            setTimeout(() => {
+                document.getElementById('qm-filename').textContent = quizName + '.json';
+            }, 2000);
+        } catch(e) {
+            console.error('Erreur autosauvegarde :', e);
+            document.getElementById('qm-filename').textContent = quizName + '.json ⚠';
+        }
+    }, 2500);
 }

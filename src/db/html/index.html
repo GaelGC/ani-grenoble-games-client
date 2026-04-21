@@ -36,7 +36,7 @@
         </div>
 
         <div id="DB_rec" style="display: none">
-            <button class="nav-btn" onclick="openQuizMaker()">Créer un quiz</button>
+            <button class="nav-btn" onclick="openQuizMakerPrompt()">Créer/ Modifier un quiz</button>
             <div id="nav">
                 <div>
                     <button class="nav-btn" onclick="ArriereMecreant()">
@@ -65,7 +65,7 @@
                         <th style="width: 12%">Taille</th>
                         <th style="width: 10%">Aperçu</th>
                         <th style="width: 18%">Modifié le</th>
-                        <th style="width: 8%">Actions</th>
+                        <th style="width: 8%"></th>
                     </tr>
                     </thead>
                     <tbody id="file-body"></tbody>
@@ -178,6 +178,28 @@
                     <button class="nav-btn" onclick="exportNextcloud()">☁️ Envoyer sur Nextcloud</button>
                 </div>
                 <button class="nav-btn" onclick="closeExportModal()">Annuler</button>
+            </div>
+        </div>
+        <div id="quiz-name-modal" style="display:none">
+            <div id="quiz-name-backdrop"></div>
+            <div id="quiz-name-content">
+                <div id="quiz-modal-tabs">
+                    <button class="quiz-modal-tab active" onclick="switchQuizTab('create')">Nouveau quiz</button>
+                    <button class="quiz-modal-tab" onclick="switchQuizTab('edit')">Modifier un quiz</button>
+                </div>
+
+                <div id="quiz-tab-create">
+                    <h3>Nom du quiz</h3>
+                    <input type="text" id="quiz-name-input" placeholder="nom du quiz">
+                    <button class="nav-btn" onclick="confirmQuizName()">Créer →</button>
+                </div>
+
+                <div id="quiz-tab-edit" style="display:none">
+                    <h3>Choisir un quiz</h3>
+                    <div id="quiz-list-existing"></div>
+                </div>
+
+                <button class="nav-btn" onclick="document.getElementById('quiz-name-modal').style.display='none'">Annuler</button>
             </div>
         </div>
     </div>
