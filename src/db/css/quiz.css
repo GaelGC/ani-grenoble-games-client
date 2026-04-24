@@ -629,3 +629,23 @@
     flex-direction: column;
     gap: 8px;
 }
+
+.qm-preview-small img {
+    width: 40% !important;
+    height: 40% !important;
+}
+
+.qm-missing {
+    border-color: rgba(255,80,80,0.4) !important;
+    background: rgba(255,80,80,0.06);
+}
+
+.qm-missing .qm-q-name {
+    color: rgba(255,120,120,0.9);
+}
+
+.qm-missing-file {
+    border-color: rgba(255,80,80,0.5) !important;
+    background: rgba(255,80,80,0.06);
+    color: rgba(255,120,120,0.9);
+}

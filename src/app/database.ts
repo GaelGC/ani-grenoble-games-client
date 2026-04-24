@@ -16,7 +16,7 @@ export async function connectDB(config: {
         password: config.password,
         database: config.database
     });
-    console.log('MariaDB connecté !');
+    console.log('MariaDB connected !');
 }
 
 export async function getFileMetadata(fileid: number) {

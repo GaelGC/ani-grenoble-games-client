@@ -212,9 +212,43 @@ async function openPreview(file) {
             };
             body.appendChild(editBtn);
         }
-        const pre = document.createElement('pre');
-        pre.textContent = content;
-        body.appendChild(pre);
+        try {
+            const data = JSON.parse(content);
+            if (data.questions && Array.isArray(data.questions)) {
+                const list = document.createElement('div');
+                list.style.maxHeight = '300px';
+                list.style.overflowY = 'auto';
+                list.style.padding = '8px';
+
+                const title = document.createElement('div');
+                title.style.opacity = '0.5';
+                title.style.fontSize = '12px';
+                title.style.marginBottom = '8px';
+                title.textContent = data.questions.length + ' question(s)';
+                list.appendChild(title);
+
+                data.questions.forEach((q: any, i: number) => {
+                    const item = document.createElement('div');
+                    item.style.padding = '4px 0';
+                    item.style.fontSize = '13px';
+                    item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                    const types = { BlindTestQuestion: '♫', ImagesQuestion: '🖼', QuoteQuestion: '🗈' };
+                    const icon = types[q.type] || '?';
+                    item.textContent = (i + 1) + '. ' + icon + ' ' + (q.answer || '(sans réponse)');
+                    list.appendChild(item);
+                });
+
+                body.appendChild(list);
+            } else {
+                const pre = document.createElement('pre');
+                pre.textContent = content;
+                body.appendChild(pre);
+            }
+        } catch (e) {
+            const pre = document.createElement('pre');
+            pre.textContent = content;
+            body.appendChild(pre);
+        }
     } else {
         body.textContent = 'Aperçu non disponible pour ce type de fichier.';
     }

@@ -107,7 +107,8 @@ h1{
 
     min-width: 300px;
     width: 85%;
-    max-height: 400px;
+    min-height: 400px;
+    height: 65%;
     margin: 2em auto;
     padding: 0 28px 20px;
     overflow-x: auto;

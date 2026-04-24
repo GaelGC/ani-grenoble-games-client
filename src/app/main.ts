@@ -1,6 +1,5 @@
 import { app, BrowserWindow, session, ProtocolResponse, dialog } from 'electron'
 import { Context } from './context'
-import { join } from 'path'
 import { connectDB, getFileMetadata, setFileMetadata } from './database'
 import * as fs from 'fs'
 
@@ -18,7 +17,7 @@ app.on('ready', async () => {
                 nodeIntegration: true,
                 contextIsolation: false,
                 partition: `persist:${key}`,
-                preload: join(__dirname, key, 'js', 'preload.js')
+                preload: path.join(__dirname, key, 'js', 'preload.js')
             },
             width: 600,
             height: 400
@@ -35,7 +34,7 @@ app.on('ready', async () => {
         const patchURL = function (url: string): string {
             url = url.substring(protocolPrefix.length)
             if (url.length !== 0 && url[0] === '/') {
-                return join(__dirname, key, url)
+                return path.join(__dirname, key, url)
             } else {
                 const curUrl = window.webContents.getURL()
                 const curDir = curUrl.substring(0, curUrl.lastIndexOf('/') + 1)

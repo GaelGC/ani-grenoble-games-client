@@ -1,13 +1,22 @@
+// Tous les fichiers audio/image indexés depuis Nextcloud
 let qmAllFiles: any[] = [];
 let formType: string | null = null;
+
 let formData: any = {};
 let activeImageSlot: number | null = null;
 
 var quizName: string = '';
-
 var questions: any[] = [];
 
 
+const QM_LABELS: Record<string, string> = { BlindTestQuestion: 'Blind test', ImagesQuestion: 'Images ×4', QuoteQuestion: 'Citation' };
+const QM_CLASSES: Record<string, string> = { BlindTestQuestion: 'qm-bt', ImagesQuestion: 'qm-im', QuoteQuestion: 'qm-qu' };
+
+
+
+// OUVERTURE / FERMETURE DU QUIZ MAKER
+
+// Affiche la modale de saisie du nom du quiz (avant d'ouvrir le quiz maker)
 function openQuizMakerPrompt() {
     const modal = document.getElementById('quiz-name-modal');
     const input = document.getElementById('quiz-name-input') as HTMLInputElement;
@@ -17,6 +26,7 @@ function openQuizMakerPrompt() {
     input.onkeydown = (e) => { if (e.key === 'Enter') confirmQuizName(); };
 }
 
+// Valide le nom saisi dans la modale et ouvre le quiz maker */
 function confirmQuizName() {
     const input = document.getElementById('quiz-name-input') as HTMLInputElement;
     const name = input.value.trim();
@@ -26,14 +36,17 @@ function confirmQuizName() {
     openQuizMaker(false);
 }
 
-function openQuizMaker(keepQuestions: boolean = false) {
+// Ouvre le quiz maker : cache l'explorateur de fichiers, affiche l'interface quiz
+async function openQuizMaker(keepQuestions: boolean = false) {
     qmAllFiles = [];
     if (!keepQuestions) questions = [];
     document.getElementById('qm-filename').textContent = quizName + '.json';
     document.getElementById('DB_rec').style.display = 'none';
     document.getElementById('quiz-maker').style.display = 'block';
     qmRenderTree('/Quiz ressources');
-    qmIndexAll('/Quiz ressources');
+    await qmIndexAll('/Quiz ressources');
+    if (keepQuestions) qmCheckMissingFiles();
+    else qmRenderList();
 }
 
 function closeQuizMaker() {
@@ -41,7 +54,8 @@ function closeQuizMaker() {
     document.getElementById('DB_rec').style.display = 'block';
 }
 
-// LA PARTIE A GAUCHE LA AVEC NEXTCLOUD
+
+// SIDEBAR GAUCHE — ARBORESCENCE NEXTCLOUD
 async function qmRenderTree(path: string) {
     const tree = document.getElementById('qm-tree');
     tree.innerHTML = '<div style="opacity:0.4;font-size:15px;padding:8px">Chargement...</div>';
@@ -68,6 +82,7 @@ async function qmRenderTree(path: string) {
             children.style.display = 'none';
             children.style.paddingLeft = '12px';
 
+            // Au clic : charge les enfants si pas encore fait, puis toggle l'affichage
             folder.onclick = async () => {
                 if (children.style.display === 'none') {
                     if (children.innerHTML === '') {
@@ -87,6 +102,7 @@ async function qmRenderTree(path: string) {
     }
 }
 
+// Charge les fichiers audio et image d'un dossier Nextcloud et les affiche dans le container.
 async function qmLoadChildren(path: string, container: HTMLElement) {
     const response = await client.getDirectoryContents(path, {
         data: `<?xml version="1.0"?>
@@ -112,6 +128,7 @@ async function qmLoadChildren(path: string, container: HTMLElement) {
     }
 }
 
+// Indexe récursivement tous les fichiers audio/image depuis un chemin Nextcloud.
 async function qmIndexAll(path: string) {
     const response = await client.getDirectoryContents(path, {
         data: `<?xml version="1.0"?>
@@ -119,6 +136,7 @@ async function qmIndexAll(path: string) {
             <d:prop>
                 <d:getcontenttype/>
                 <d:resourcetype/>
+                <oc:fileid/>
             </d:prop>
         </d:propfind>`,
         details: true
@@ -136,8 +154,18 @@ async function qmIndexAll(path: string) {
     }
 }
 
+
+// Retrouve un fichier dans qmAllFiles à partir de son fileid Nextcloud.
+// Retourne null si le fichier n'existe pas (supprimé ou non indexé).
+function qmGetFileByFileid(fileid: number): any {
+    if (!fileid) return null;
+    return qmAllFiles.find(f => f.props?.fileid === fileid);
+}
+
+
+// Gère le clic sur un fichier dans la sidebar.
+// Selon le type de question, assigne le fichier au bon champ du formulaire
 function qmFileClick(file: any) {
-    console.log('file :', file);
     if (!formType) return;
 
     const mime = file.mime || '';
@@ -146,12 +174,14 @@ function qmFileClick(file: any) {
 
     if (formType === 'BlindTestQuestion') {
         if (isAudio) {
-            formData.audio = file.filename;
+            formData.audio = file.props.fileid;
 
+            // Pré-remplit la réponse avec le nom du fichier audio si vide
             if (!formData.answer) {
                 formData.answer = file.basename.replace(/\.[^/.]+$/, '');
             }
 
+            // Cherche automatiquement une image du même nom pour answerImage
             if (!formData.answerImage) {
                 const baseName = file.basename.replace(/\.[^/.]+$/, '');
                 const matchingImage = qmAllFiles.find(f => {
@@ -161,33 +191,38 @@ function qmFileClick(file: any) {
                     return imgBase === baseName;
                 });
                 if (matchingImage) {
-                    formData.answerImage = matchingImage.filename;
+                    formData.answerImage = matchingImage.props.fileid;
                 }
             }
         } else if (isImage) {
-            formData.answerImage = file.filename;
+            formData.answerImage = file.props.fileid;
         }
         qmRenderForm();
 
     } else if (formType === 'ImagesQuestion') {
         if (isImage) {
             if (activeImageSlot !== null) {
-                formData.images[activeImageSlot] = file.filename;
+                // Remplace l'image du slot sélectionné
+                formData.images[activeImageSlot] = file.props.fileid;
                 activeImageSlot = null;
             } else {
-                formData.images.push(file.filename);
+                // Ajoute l'image en fin de liste
+                formData.images.push(file.props.fileid);
             }
             qmRenderForm();
         }
     }
 }
 
+// Refresh l'arboresence à gauche
 function qmRefreshTree() {
     qmAllFiles = [];
     qmRenderTree('/Quiz ressources');
     qmIndexAll('/Quiz ressources');
 }
 
+
+// Filtre les fichiers de la sidebar selon la saisie dans le champ de recherche
 function qmSearch() {
     const query = (document.getElementById('qm-search') as HTMLInputElement).value.toLowerCase().trim();
     const tree = document.getElementById('qm-tree');
@@ -213,11 +248,14 @@ function qmSearch() {
     });
 }
 
+
+// FORMULAIRE — CRÉATION / ÉDITION D'UNE QUESTION
 function qmShowTypePicker() {
     const picker = document.getElementById('qm-type-picker');
     picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
 }
 
+// Ouvre le formulaire pour créer une nouvelle question du type choisi
 function qmOpenForm(type: string) {
     formType = type;
     formData = type === 'BlindTestQuestion' ? { audio: '', answerImage: '', answer: '' }
@@ -228,26 +266,26 @@ function qmOpenForm(type: string) {
     document.getElementById('qm-type-picker').style.display = 'none';
     document.getElementById('qm-form').style.display = 'flex';
 
-    const labels = { BlindTestQuestion: 'Blind test', ImagesQuestion: 'Images ×4', QuoteQuestion: 'Citation' };
-    const classes = { BlindTestQuestion: 'qm-bt', ImagesQuestion: 'qm-im', QuoteQuestion: 'qm-qu' };
-    document.getElementById('qm-form-badge').innerHTML = '<span class="qm-badge ' + classes[type] + '">' + labels[type] + '</span>';
+    document.getElementById('qm-form-badge').innerHTML = '<span class="qm-badge ' + QM_CLASSES[type] + '">' + QM_LABELS[type] + '</span>';
     document.getElementById('qm-editing-label').textContent = '';
     document.getElementById('qm-submit-btn').textContent = 'Ajouter à la liste →';
 
     qmRenderForm();
 }
 
-// PARTIE DU MILIEU LA
+// Génèe un formulaire en fonction du type de question choisi
 function qmRenderForm() {
     const body = document.getElementById('qm-form-body');
     body.innerHTML = '';
 
     if (formType === 'BlindTestQuestion') {
+        const audioFile = qmGetFileByFileid(formData.audio);
+        const imageFile = qmGetFileByFileid(formData.answerImage);
         const audioDiv = document.createElement('div');
         audioDiv.innerHTML = '<div class="qm-field-label">Fichier audio</div>';
         const audioField = document.createElement('div');
-        audioField.className = 'qm-ffile ' + (formData.audio ? 'qm-filled' : '');
-        audioField.innerHTML = '<span>🎵</span><span>' + (formData.audio ? formData.audio.split('/').pop() : '<- Sélectionne une musique à gauche') + '</span>';
+        audioField.className = 'qm-ffile ' + (formData.audio ? (audioFile ? 'qm-filled' : 'qm-missing-file') : '');
+        audioField.innerHTML = '<span>♫</span><span>' + (audioFile ? audioFile.basename : (formData.audio ? 'Fichier supprimé' : '<- Sélectionne une musique à gauche')) + '</span>';
         if (formData.audio) {
             const clr = document.createElement('span');
             clr.className = 'qm-clr';
@@ -258,17 +296,16 @@ function qmRenderForm() {
         const audioPreview = document.createElement('div');
         audioDiv.appendChild(audioField);
         audioDiv.appendChild(audioPreview);
-        if (formData.audio) {
-            const mime = qmAllFiles.find(f => f.filename === formData.audio)?.mime || 'audio/mpeg';
-            qmLoadPreview(formData.audio, mime, audioPreview);
+        if (audioFile) {
+            qmLoadPreview(audioFile.filename, audioFile.mime, audioPreview);
         }
         body.appendChild(audioDiv);
 
         const imageDiv = document.createElement('div');
         imageDiv.innerHTML = '<div class="qm-field-label">Image réponse <span style="opacity:0.4;text-transform:none;font-size:10px">— optionnel</span></div>';
         const imageField = document.createElement('div');
-        imageField.className = 'qm-ffile ' + (formData.answerImage ? 'qm-filled' : '');
-        imageField.innerHTML = '<span>🖼️</span><span>' + (formData.answerImage ? formData.answerImage.split('/').pop() : '<- Sélectionne une image à gauche') + '</span>';
+        imageField.className = 'qm-ffile ' + (formData.answerImage ? (imageFile ? 'qm-filled' : 'qm-missing-file') : '');
+        imageField.innerHTML = '<span>🖼</span><span>' + (imageFile ? imageFile.basename : (formData.answerImage ? 'Fichier supprimé' : '<- Sélectionne une image à gauche')) + '</span>';
         if (formData.answerImage) {
             const clr = document.createElement('span');
             clr.className = 'qm-clr';
@@ -277,11 +314,11 @@ function qmRenderForm() {
             imageField.appendChild(clr);
         }
         const imagePreview = document.createElement('div');
+        imagePreview.classList.add('qm-preview-small');
         imageDiv.appendChild(imageField);
         imageDiv.appendChild(imagePreview);
-        if (formData.answerImage) {
-            const mime = qmAllFiles.find(f => f.filename === formData.answerImage)?.mime || 'image/jpeg';
-            qmLoadPreview(formData.answerImage, mime, imagePreview);
+        if (imageFile) {
+            qmLoadPreview(imageFile.filename, imageFile.mime, imagePreview);
         }
         body.appendChild(imageDiv);
 
@@ -296,25 +333,22 @@ function qmRenderForm() {
         answerInput.oninput = () => { formData.answer = answerInput.value; };
         answerDiv.appendChild(answerInput);
         body.appendChild(answerDiv);
+
     } else if (formType === 'ImagesQuestion') {
         const imagesDiv = document.createElement('div');
         imagesDiv.innerHTML = '<div class="qm-field-label">Images</div>';
-
         const grid = document.createElement('div');
         grid.style.display = 'grid';
         grid.style.gridTemplateColumns = '1fr 1fr';
         grid.style.gap = '8px';
         grid.style.marginBottom = '8px';
-
-        formData.images.forEach((img: string, i: number) => {
-            grid.appendChild(qmCreateImageSlot(img, i));
+        formData.images.forEach((fileid: number, i: number) => {
+            grid.appendChild(qmCreateImageSlot(fileid, i));
         });
-
         const addBtn = document.createElement('button');
         addBtn.className = 'qm-add-hint';
         addBtn.textContent = '+ Ajouter une image';
-        addBtn.onclick = () => { formData.images.push(''); qmRenderForm(); };
-
+        addBtn.onclick = () => { formData.images.push(null); qmRenderForm(); };
         imagesDiv.appendChild(grid);
         imagesDiv.appendChild(addBtn);
         body.appendChild(imagesDiv);
@@ -387,18 +421,22 @@ function qmRenderForm() {
         body.appendChild(hintsDiv);
     }
 }
-function qmCreateImageSlot(img: string, i: number): HTMLElement {
+
+
+// Crée un slot image cliquable pour ImagesQuestion.
+function qmCreateImageSlot(fileid: number | null, i: number): HTMLElement {
+    const file = qmGetFileByFileid(fileid);
     const wrapper = document.createElement('div');
 
     const slot = document.createElement('div');
-    slot.className = 'qm-ffile ' + (img ? 'qm-filled' : '');
+    slot.className = 'qm-ffile ' + (fileid ? (file ? 'qm-filled' : 'qm-missing-file') : '');
     const icon = document.createElement('span');
     icon.textContent = '🖼️';
     const label = document.createElement('span');
-    label.textContent = img ? img.split('/').pop() : 'Image ' + (i + 1);
+    label.textContent = file ? file.basename : (fileid ? '⚠ Fichier supprimé' : 'Image ' + (i + 1));
     slot.appendChild(icon);
     slot.appendChild(label);
-    if (img) {
+    if (fileid) {
         const clr = document.createElement('span');
         clr.className = 'qm-clr';
         clr.textContent = '×';
@@ -413,9 +451,8 @@ function qmCreateImageSlot(img: string, i: number): HTMLElement {
 
     const preview = document.createElement('div');
     wrapper.appendChild(preview);
-    if (img) {
-        const mime = qmAllFiles.find(f => f.filename === img)?.mime || 'image/jpeg';
-        qmLoadPreview(img, mime, preview);
+    if (fileid && file) {
+        qmLoadPreview(file.filename, file.mime, preview);
     }
 
     wrapper.onclick = () => {
@@ -427,11 +464,13 @@ function qmCreateImageSlot(img: string, i: number): HTMLElement {
     return wrapper;
 }
 
+// Vide un champ du formulaire
 function qmClearField(key: string) {
     formData[key] = '';
     qmRenderForm();
 }
 
+// Annule le formulaire en cours et réaffiche l'écran neutre */
 function qmCancelForm() {
     formType = null;
     formData = {};
@@ -439,6 +478,7 @@ function qmCancelForm() {
     document.getElementById('qm-neutral').style.display = 'flex';
 }
 
+// Charge et affiche un aperçu (audio ou image) d'un fichier Nextcloud dans un container HTML.
 async function qmLoadPreview(filename: string, mime: string, container: HTMLElement) {
     container.innerHTML = '<div style="opacity:0.4;font-size:11px;padding:4px">Chargement...</div>';
     try {
@@ -470,9 +510,11 @@ async function qmLoadPreview(filename: string, mime: string, container: HTMLElem
 }
 
 
-// LA COLONNE DE DROITE
+// ============================================================
+// COLONNE DROITE — LISTE DES QUESTIONS
+// ============================================================
 
-
+// Valide et soumet le formulaire : crée une nouvelle question et l'ajoute à la liste.
 async function qmSubmitForm() {
     if (!formData.answer) {
         alert('La réponse est obligatoire');
@@ -489,7 +531,10 @@ async function qmSubmitForm() {
 
     let hints: string[] = [];
     if (formType === 'BlindTestQuestion' && formData.audio) {
+        console.log('formData.audio :', formData.audio);
+        console.log('type :', typeof formData.audio);
         const metadata = await ipcRenderer.invoke('db:get-metadata', formData.audio);
+        console.log('metadata :', metadata);
         if (metadata) {
             if (metadata.artiste) hints.push(metadata.artiste);
             if (metadata.annee) hints.push(String(metadata.annee));
@@ -524,6 +569,7 @@ async function qmSubmitForm() {
     qmAutoSave();
 }
 
+// Affiche la liste des questions dans la colonne de droite.
 function qmRenderList() {
     const body = document.getElementById('qm-list-body');
     const count = document.getElementById('qm-q-count');
@@ -535,21 +581,23 @@ function qmRenderList() {
     }
 
     body.innerHTML = '';
-    const labels = { BlindTestQuestion: 'Blind test', ImagesQuestion: 'Images', QuoteQuestion: 'Citation' };
-    const classes = { BlindTestQuestion: 'qm-bt', ImagesQuestion: 'qm-im', QuoteQuestion: 'qm-qu' };
 
     questions.forEach((q, i) => {
         const item = document.createElement('div');
-        item.className = 'qm-q-item';
+        item.className = 'qm-q-item' + (q.hasMissingFiles ? ' qm-missing' : '');
 
+        // Sous-titre affiché sous la réponse selon le type
         let sub = '';
-        if (q.type === 'BlindTestQuestion' && q.path) sub = q.path.split('/').pop();
+        if (q.type === 'BlindTestQuestion' && q.path) {
+            const audioFile = qmGetFileByFileid(q.path);
+            sub = audioFile ? audioFile.basename : '';
+        }
         else if (q.type === 'ImagesQuestion') sub = q.images.length + ' image(s)';
         else if (q.type === 'QuoteQuestion' && q.text) sub = q.text.substring(0, 28) + '…';
 
         item.innerHTML = `
             <div class="qm-q-meta">
-                <span class="qm-badge ${classes[q.type]}">${labels[q.type]}</span>
+                <span class="qm-badge ${QM_CLASSES[q.type]}">${QM_LABELS[q.type]}</span>
                 <div class="qm-q-name">${q.answer}</div>
                 ${sub ? '<div class="qm-q-sub">' + sub + '</div>' : ''}
             </div>
@@ -567,11 +615,13 @@ function qmRenderList() {
     });
 }
 
+// Ouvre le formulaire en mode édition pour une question existante. Charge les données de la question
 function qmEditQuestion(i: number) {
     const q = questions[i];
     formType = q.type;
     formData = JSON.parse(JSON.stringify(q));
 
+    // Pour BlindTest, remet les champs audio/answerImage dans formData
     if (formType === 'BlindTestQuestion') {
         formData.audio = q.path;
         formData.answerImage = q.answerImage || '';
@@ -580,9 +630,7 @@ function qmEditQuestion(i: number) {
     document.getElementById('qm-neutral').style.display = 'none';
     document.getElementById('qm-form').style.display = 'flex';
 
-    const labels = { BlindTestQuestion: 'Blind test', ImagesQuestion: 'Images', QuoteQuestion: 'Citation' };
-    const classes = { BlindTestQuestion: 'qm-bt', ImagesQuestion: 'qm-im', QuoteQuestion: 'qm-qu' };
-    document.getElementById('qm-form-badge').innerHTML = '<span class="qm-badge ' + classes[formType] + '">' + labels[formType] + '</span>';
+    document.getElementById('qm-form-badge').innerHTML = '<span class="qm-badge ' + QM_CLASSES[formType] + '">' + QM_LABELS[formType] + '</span>';
     document.getElementById('qm-editing-label').textContent = 'Édition Q' + (i + 1);
     document.getElementById('qm-submit-btn').textContent = 'Sauvegarder';
 
@@ -591,6 +639,8 @@ function qmEditQuestion(i: number) {
 
     qmRenderForm();
 }
+
+// Sauvegarde les modifications
 function qmSaveEdit(i: number) {
     if (!formData.answer) { alert('La réponse est obligatoire'); return; }
 
@@ -617,7 +667,8 @@ function qmSaveEdit(i: number) {
     qmAutoSave();
 }
 
-// EPORT
+
+// LA FONCTION POUR EXPORTER
 async function exportQuiz() {
     if (!questions.length) {
         alert('Aucune question à exporter');
@@ -629,27 +680,31 @@ async function exportQuiz() {
     for (const q of questions) {
         if (q.type === 'BlindTestQuestion') {
             if (q.path) {
-                const buffer = await client.getFileContents(q.path) as ArrayBuffer;
-                const filename = q.path.split('/').pop();
-                files.push({
-                    destPath: 'BT/musiques/' + filename,
-                    buffer: Array.from(new Uint8Array(buffer))
-                });
+                const audioFile = qmGetFileByFileid(q.path);
+                if (audioFile) {
+                    const buffer = await client.getFileContents(audioFile.filename) as ArrayBuffer;
+                    files.push({
+                        destPath: 'BT/musiques/' + audioFile.basename,
+                        buffer: Array.from(new Uint8Array(buffer))
+                    });
+                }
             }
             if (q.answerImage) {
-                const buffer = await client.getFileContents(q.answerImage) as ArrayBuffer;
-                const filename = q.answerImage.split('/').pop();
-                files.push({
-                    destPath: 'BT/images/' + filename,
-                    buffer: Array.from(new Uint8Array(buffer))
-                });
+                const imageFile = qmGetFileByFileid(q.answerImage);
+                if (imageFile) {
+                    const buffer = await client.getFileContents(imageFile.filename) as ArrayBuffer;
+                    files.push({
+                        destPath: 'BT/images/' + imageFile.basename,
+                        buffer: Array.from(new Uint8Array(buffer))
+                    });
+                }
             }
         } else if (q.type === 'ImagesQuestion') {
             for (let i = 0; i < q.images.length; i++) {
-                const img = q.images[i];
-                if (!img) continue;
-                const buffer = await client.getFileContents(img) as ArrayBuffer;
-                const ext = img.split('.').pop();
+                const imgFile = qmGetFileByFileid(q.images[i]);
+                if (!imgFile) continue;
+                const buffer = await client.getFileContents(imgFile.filename) as ArrayBuffer;
+                const ext = imgFile.basename.split('.').pop();
                 files.push({
                     destPath: '4images/' + q.answer + '/' + (i + 1) + '.' + ext,
                     buffer: Array.from(new Uint8Array(buffer))
@@ -657,13 +712,37 @@ async function exportQuiz() {
             }
         }
     }
-    const json = JSON.stringify({ questions }, null, 2);
+
+    // Convertit les fileids en chemins locaux
+    const exportedQuestions = questions.map(q => {
+        if (q.type === 'BlindTestQuestion') {
+            const audioFile = qmGetFileByFileid(q.path);
+            const imageFile = qmGetFileByFileid(q.answerImage);
+            return {
+                ...q,
+                path: audioFile ? 'question://BT\\musiques\\' + audioFile.basename : '',
+                answerImage: imageFile ? 'question://BT\\images\\' + imageFile.basename : undefined
+            };
+        } else if (q.type === 'ImagesQuestion') {
+            return {
+                ...q,
+                images: q.images.map((fileid: number, i: number) => {
+                    const imgFile = qmGetFileByFileid(fileid);
+                    if (!imgFile) return '';
+                    const ext = imgFile.basename.split('.').pop();
+                    return 'question://4images\\' + q.answer + '\\' + (i + 1) + '.' + ext;
+                })
+            };
+        }
+        return q;
+    });
+
+    const json = JSON.stringify({ questions: exportedQuestions }, null, 2);
     files.push({
         destPath: 'questions.json',
         buffer: Array.from(new TextEncoder().encode(json))
     });
 
-    // génère le docx pour les citations
     const citations = questions.filter(q => q.type === 'QuoteQuestion');
     if (citations.length) {
         let txt = '';
@@ -676,24 +755,25 @@ async function exportQuiz() {
         });
     }
 
-    // envoie au main process
     const result = await ipcRenderer.invoke('quiz:export', { quizName, files });
     if (!result.cancelled) {
         alert('Export terminé ! Dossier : ' + result.exportPath);
     }
 }
 
-// LA POPUP DE QUAND ON CLIC SUR CREER QUIZZ
+
+// MODALE DE CRÉATION / CHARGEMENT DE QUIZ
 function switchQuizTab(tab: string) {
     document.getElementById('quiz-tab-create').style.display = tab === 'create' ? 'flex' : 'none';
     document.getElementById('quiz-tab-edit').style.display = tab === 'edit' ? 'flex' : 'none';
     document.querySelectorAll('.quiz-modal-tab').forEach((el, i) => {
         el.classList.toggle('active', (i === 0 && tab === 'create') || (i === 1 && tab === 'edit'));
     });
-    if (tab === 'edit') qmLoadExistingQuizzes();
+    if (tab === 'edit') qmLoadExistingQuizes();
 }
 
-async function qmLoadExistingQuizzes() {
+// Charge et affiche la liste des quiz existants
+async function qmLoadExistingQuizes() {
     const container = document.getElementById('quiz-list-existing');
     container.innerHTML = '<div style="opacity:0.4;font-size:12px;padding:4px">Chargement...</div>';
 
@@ -721,6 +801,7 @@ async function qmLoadExistingQuizzes() {
     }
 }
 
+// Charge un quiz existant
 async function loadExistingQuiz(file: any) {
     try {
         const content = await client.getFileContents(file.filename, { format: 'text' }) as string;
@@ -735,7 +816,9 @@ async function loadExistingQuiz(file: any) {
     }
 }
 
-// FONCTION SAUVEGARDE
+
+// SAUVEGARDE AUTOMATIQUE
+
 let autoSaveTimeout: any = null;
 
 function qmAutoSave() {
@@ -754,4 +837,31 @@ function qmAutoSave() {
             document.getElementById('qm-filename').textContent = quizName + '.json ⚠';
         }
     }, 2500);
+}
+
+
+// VÉRIFICATION DES FICHIERS MANQUANTS
+function qmCheckMissingFiles() {
+    let hasMissing = false;
+
+    questions.forEach(q => {
+        q.hasMissingFiles = false;
+
+        if (q.type === 'BlindTestQuestion') {
+            if (q.path && !qmGetFileByFileid(q.path)) q.hasMissingFiles = true;
+            if (q.answerImage && !qmGetFileByFileid(q.answerImage)) q.hasMissingFiles = true;
+        } else if (q.type === 'ImagesQuestion') {
+            q.images.forEach((fileid: number) => {
+                if (fileid && !qmGetFileByFileid(fileid)) q.hasMissingFiles = true;
+            });
+        }
+
+        if (q.hasMissingFiles) hasMissing = true;
+    });
+
+    if (hasMissing) {
+        alert('⚠ Un ou plusieurs éléments de ce quiz ont été supprimés.');
+    }
+
+    qmRenderList();
 }
